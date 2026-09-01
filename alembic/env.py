@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 # وارد کردن مدل‌ها و تنظیمات دیتابیس
 from src.domain_model.models import Base
 from src.infrastructure.database import DATABASE_URL
+from src.domain_model.auth_models import Role, User
 
 config = context.config
 
