@@ -1,37 +1,24 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional
 
-class RoleBase(BaseModel):
-    name: str = Field(..., max_length=50, description="نام سیستمی نقش (مثل ADMIN)")
-    description: Optional[str] = Field(None, max_length=200)
-    permissions: List[str] = Field(default_factory=list, description="لیست دسترسی‌ها")
-    is_active: bool = True
+class Token(BaseModel):
+    """فرمت استاندارد بازگرداندن توکن به کلاینت"""
+    access_token: str
+    token_type: str
 
-class RoleCreate(RoleBase):
-    pass
-
-class RoleResponse(RoleBase):
-    id: int
-
-    class Config:
-        from_attributes = True
+class TokenData(BaseModel):
+    """داده‌هایی که درون خود توکن (Payload) ذخیره می‌شوند"""
+    username: Optional[str] = None
 
 class UserBase(BaseModel):
-    username: str = Field(..., max_length=50)
-    full_name: str = Field(..., max_length=100)
-    telegram_id: Optional[str] = Field(None, max_length=50)
-    is_active: bool = True
-    role_id: int
+    username: str
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, description="رمز عبور خام که پیش از ذخیره هش خواهد شد")
+    password: str
 
 class UserResponse(UserBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-    role: RoleResponse
+    id: str
+    is_active: bool
 
     class Config:
         from_attributes = True

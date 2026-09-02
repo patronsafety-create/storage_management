@@ -1,39 +1,63 @@
-from sqlalchemy import String, Boolean, Integer, ForeignKey, DateTime, func
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+import uuid
 from datetime import datetime
+from typing import List
+from sqlalchemy import String, Boolean, ForeignKey, DateTime, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-# فراخوانی Base اصلی پروژه برای یکپارچگی مایگریشن‌ها
-from src.domain_model.models import Base
+class Base(DeclarativeBase):
+    pass
 
-class Role(Base):
-    __tablename__ = "roles"
+# ---------------------------------------------------------
+# جدول‌های واسط (Association Tables) برای روابط چند-به-چند
+# ---------------------------------------------------------
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-    description: Mapped[str] = mapped_column(String(200), nullable=True)
-    # ذخیره دسترسی‌ها به صورت آرایه‌ای از رشته‌ها برای انعطاف‌پذیری بالا
-    permissions: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]')
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+class UserRole(Base):
+    __tablename__ = "user_roles"
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    role_id: Mapped[str] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
 
-    # ارتباط یک‌به‌چند با کاربران
-    users: Mapped[list["User"]] = relationship("User", back_populates="role")
+class RolePermission(Base):
+    __tablename__ = "role_permissions"
+    role_id: Mapped[str] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
+    permission_id: Mapped[str] = mapped_column(ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
+
+
+# ---------------------------------------------------------
+# موجودیت‌های اصلی امنیت و مدیریت دسترسی
+# ---------------------------------------------------------
 
 class User(Base):
+    """موجودیت کاربران سیستم"""
     __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    full_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    # فیلد تلگرام برای ارسال هشدارهای سیستمی و نقطه سفارش به مدیران
-    telegram_id: Mapped[str] = mapped_column(String(50), unique=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    
-    # محدودیت RESTRICT: اجازه حذف نقشی که کاربر دارد را در سطح دیتابیس نمی‌دهد
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id", ondelete="RESTRICT"), nullable=False)
-    
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
 
-    role: Mapped["Role"] = relationship("Role", back_populates="users")
+    # ارتباط با نقش‌ها
+    roles: Mapped[List["Role"]] = relationship(secondary="user_roles", back_populates="users")
+
+class Role(Base):
+    """موجودیت نقش‌های سازمانی (مانند: مدیر عامل، سرپرست انبار)"""
+    __tablename__ = "roles"
+    
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False) # کلید سیستمی: warehouse_manager
+    title: Mapped[str] = mapped_column(String(100), nullable=False) # عنوان نمایشی: سرپرست انبار
+
+    # ارتباط با کاربران و مجوزها
+    users: Mapped[List["User"]] = relationship(secondary="user_roles", back_populates="roles")
+    permissions: Mapped[List["Permission"]] = relationship(secondary="role_permissions", back_populates="roles")
+
+class Permission(Base):
+    """موجودیت مجوزهای ریزدانه (مانند: خواندن سفارش، تایید رسید)"""
+    __tablename__ = "permissions"
+    
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False) # کلید سیستمی: order:read
+    description: Mapped[str] = mapped_column(String(255), nullable=True)
+
+    # ارتباط با نقش‌ها
+    roles: Mapped[List["Role"]] = relationship(secondary="role_permissions", back_populates="permissions")

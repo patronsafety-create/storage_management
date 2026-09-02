@@ -1,30 +1,19 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from src.api import auth
+from src.api import ui
 
-# راه‌اندازی نمونه اصلی اپلیکیشن با مستندات خودکار
+# مقداردهی اولیه اپلیکیشن FastAPI
 app = FastAPI(
-    title="Storage Management ERP",
-    description="سیستم جامع انبارداری، حسابداری و حقوق و دستمزد",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    title="Storage ERP API",
+    description="سیستم مدیریت انبار و احراز هویت",
+    version="1.0.0"
 )
 
-# تنظیمات CORS برای دسترسی رابط کاربری (Frontend) تحت وب از روی شبکه داخلی (LAN) یا سرور ابری
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# اتصال ماژول احراز هویت (Login) به اپلیکیشن اصلی
+app.include_router(auth.router)
+app.include_router(ui.router)
+# روت اصلی برای تست سلامت سرور
 
-@app.get("/health", tags=["System"])
-def health_check():
-    """
-    سرویس بررسی سلامت سیستم برای مانیتورینگ وضعیت سرور
-    """
-    return {
-        "status": "online",
-        "message": "ERP Core Service is running successfully."
-    }
+@app.get("/", tags=["General"])
+def read_root():
+    return {"message": "Storage ERP API is running"}
