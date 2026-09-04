@@ -3,6 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, case
 from typing import Optional
 
 # فراخوانی مدیریت نشست دیتابیس و مدل‌های تجاری انبار
@@ -17,7 +18,6 @@ async def get_transaction_form(request: Request, db: Session = Depends(get_db)):
     """
     رندر فرم ثبت رسید و حواله با داده‌های واقعی از دیتابیس
     """
-    # خواندن اطلاعات پایه از دیتابیس به جای داده‌های تستی
     products = db.query(Product).all()
     warehouses = db.query(Warehouse).all()
 
@@ -46,10 +46,8 @@ async def process_transaction(
     دریافت داده‌های فرم، اعتبارسنجی و ثبت امن در پایگاه‌داده با حفظ ACID
     """
     try:
-        # تبدیل ورودی متنی به نوع استاندارد Enum
         tx_enum = TransactionType.IN if transaction_type == "IN" else TransactionType.OUT
         
-        # ساخت رکورد تراکنش جدید
         new_transaction = StockTransaction(
             transaction_type=tx_enum,
             product_id=product_id,
@@ -60,13 +58,11 @@ async def process_transaction(
         )
         
         db.add(new_transaction)
-        db.commit() # ثبت قطعی در دیتابیس
+        db.commit() 
         
-        # هدایت کاربر به داشبورد پس از ثبت موفقیت‌آمیز
         return RedirectResponse(url="/dashboard", status_code=303)
         
     except IntegrityError:
-        # در صورت نقض قوانین دیتابیس (مثلاً تعداد منفی)
         db.rollback()
         return templates.TemplateResponse(
             request=request,
@@ -80,7 +76,6 @@ async def process_transaction(
             status_code=400
         )
     except Exception as e:
-        # در صورت بروز خطاهای پیش‌بینی نشده (Fail-Safe)
         db.rollback()
         return templates.TemplateResponse(
             request=request,
@@ -93,3 +88,39 @@ async def process_transaction(
             },
             status_code=500
         )
+
+@router.get("/balance", response_class=HTMLResponse)
+async def get_stock_balance(request: Request, db: Session = Depends(get_db)):
+    """
+    محاسبه و رندر گزارش ترازنامه انبار (موجودی لحظه‌ای)
+    """
+    balance_query = db.query(
+        Product.name.label("product_name"),
+        Product.uom.label("uom"),
+        func.coalesce(
+            func.sum(case((StockTransaction.transaction_type == TransactionType.IN, StockTransaction.quantity), else_=0)), 0
+        ).label('total_in'),
+        func.coalesce(
+            func.sum(case((StockTransaction.transaction_type == TransactionType.OUT, StockTransaction.quantity), else_=0)), 0
+        ).label('total_out')
+    ).outerjoin(StockTransaction, Product.id == StockTransaction.product_id) \
+     .group_by(Product.id, Product.name, Product.uom).all()
+
+    stock_balances = []
+    for row in balance_query:
+        stock_balances.append({
+            "name": row.product_name,
+            "uom": row.uom,
+            "total_in": row.total_in,
+            "total_out": row.total_out,
+            "current_balance": row.total_in - row.total_out
+        })
+
+    return templates.TemplateResponse(
+        request=request,
+        name="stock_balance.html",
+        context={
+            "request": request,
+            "stock_balances": stock_balances
+        }
+    )
