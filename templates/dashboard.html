@@ -1,35 +1,91 @@
 {% extends "base.html" %}
 
-{% block title %}داشبورد مرکزی | Storage managment{% endblock %}
+{% block title %}داشبورد مرکزی | سیستم مدیریت انبار{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mt-4">
     <div class="col-12">
-        <h3 class="mb-4 text-secondary">خلاصه وضعیت سیستم</h3>
+        <h3 class="mb-4 text-secondary fw-bold">خلاصه وضعیت سیستم</h3>
     </div>
     
+    <!-- کارت آماری تراکنش‌ها -->
     <div class="col-md-6 mb-3">
-        <div class="card text-white bg-primary shadow-sm">
+        <div class="card text-white bg-primary shadow-sm h-100 border-0">
             <div class="card-body">
                 <h5 class="card-title">تراکنش‌های انبار</h5>
-                <p class="card-text display-6 mt-3">۰ <span class="fs-6">سند</span></p>
+                <!-- خواندن عدد واقعی از دیتابیس -->
+                <p class="card-text display-6 mt-3">{{ tx_count }} <span class="fs-6 fw-normal">سند</span></p>
             </div>
         </div>
     </div>
     
+    <!-- کارت وضعیت سیستم -->
     <div class="col-md-6 mb-3">
-        <div class="card text-white bg-success shadow-sm">
+        <div class="card text-white bg-success shadow-sm h-100 border-0">
             <div class="card-body">
                 <h5 class="card-title">ظرفیت عملیاتی</h5>
-                <p class="card-text display-6 mt-3">آماده <span class="fs-6">سرویس‌دهی</span></p>
+                <p class="card-text display-6 mt-3">آماده <span class="fs-6 fw-normal">سرویس‌دهی</span></p>
             </div>
         </div>
     </div>
 </div>
+
 <!-- دکمه عملیات سریع -->
-    <div class="col-12 mt-4 text-center">
-        <a href="/inventory/transaction" class="btn btn-primary btn-lg shadow">
+<div class="row mt-4 mb-5">
+    <div class="col-12 text-center">
+        <a href="/inventory/transaction" class="btn btn-primary btn-lg shadow px-5 fw-bold">
             + ثبت تراکنش جدید در انبار
         </a>
     </div>
+</div>
+
+<!-- جدول مانیتورینگ زنده (۵ تراکنش آخر) -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h5 class="fw-bold text-secondary">آخرین تراکنش‌های ثبت‌شده</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>کد سند</th>
+                                <th>نوع عملیات</th>
+                                <th>کالا</th>
+                                <th>انبار</th>
+                                <th>تعداد / مقدار</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- حلقه Jinja2 برای چاپ سطرهای دیتابیس -->
+                            {% for tx in recent_txs %}
+                            <tr>
+                                <td class="text-muted">#{{ tx.id }}</td>
+                                <td>
+                                    {% if tx.transaction_type.value == 'IN' %}
+                                        <span class="badge bg-success px-3 py-2">رسید (IN)</span>
+                                    {% else %}
+                                        <span class="badge bg-danger px-3 py-2">حواله (OUT)</span>
+                                    {% endif %}
+                                </td>
+                                <!-- به لطف relationship در SQLAlchemy، مستقیماً به نام کالا دسترسی داریم -->
+                                <td class="fw-bold">{{ tx.product.name }}</td>
+                                <td>{{ tx.warehouse.name }}</td>
+                                <td class="fw-bold text-primary" dir="ltr">{{ tx.quantity }}</td>
+                            </tr>
+                            {% else %}
+                            <!-- حالت Empty State اگر دیتابیس خالی باشد -->
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">هیچ تراکنشی یافت نشد.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

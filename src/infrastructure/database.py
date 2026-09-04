@@ -1,18 +1,21 @@
-import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://erp_user:super_secure_password_123@localhost:5432/storage_erp")
+# استفاده از دیتابیس لوکال برای توسعه و تست سریع (Zero-Config)
+SQLALCHEMY_DATABASE_URL = "sqlite:///./enterprise_erp.db"
 
+# پارامتر check_same_thread مخصوص SQLite در محیط‌های چندنخی (FastAPI) است
 engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
+# کارخانه تولید نشست‌های دیتابیس (ACID Compliant)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# کلاس پایه برای ارث‌بری تمام مدل‌های دیتابیس
+Base = declarative_base()
+
+# سیستم تزریق وابستگی (Dependency Injection) برای کنترلرها
 def get_db():
     db = SessionLocal()
     try:

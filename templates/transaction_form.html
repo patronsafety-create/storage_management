@@ -11,10 +11,12 @@
             </div>
             <div class="card-body bg-light p-4">
                 
-                <!-- فرم ارسال اطلاعات به بک‌اند -->
+                {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+
                 <form action="/inventory/transaction" method="post">
                     
-                    <!-- نوع تراکنش -->
                     <div class="mb-4">
                         <label for="transaction_type" class="form-label fw-bold">نوع عملیات <span class="text-danger">*</span></label>
                         <select class="form-select form-select-lg" id="transaction_type" name="transaction_type" required>
@@ -25,24 +27,21 @@
                     </div>
 
                     <div class="row">
-                        <!-- انتخاب کالا -->
                         <div class="col-md-6 mb-3">
                             <label for="product_id" class="form-label fw-bold">کالا <span class="text-danger">*</span></label>
                             <select class="form-select" id="product_id" name="product_id" required>
                                 <option value="" selected disabled>جستجو و انتخاب کالا...</option>
-                                <!-- حلقه Jinja2 برای خواندن محصولات از دیتابیس -->
                                 {% for product in products %}
-                                <option value="{{ product.id }}">{{ product.name }}</option>
+                                <!-- ارسال واحد سنجش (uom) به عنوان ویژگی دیتا -->
+                                <option value="{{ product.id }}" data-uom="{{ product.uom }}">{{ product.name }} ({{ product.uom }})</option>
                                 {% endfor %}
                             </select>
                         </div>
 
-                        <!-- انتخاب انبار -->
                         <div class="col-md-6 mb-3">
                             <label for="warehouse_id" class="form-label fw-bold">انبار مبدأ/مقصد <span class="text-danger">*</span></label>
                             <select class="form-select" id="warehouse_id" name="warehouse_id" required>
                                 <option value="" selected disabled>انتخاب انبار...</option>
-                                <!-- حلقه Jinja2 برای خواندن انبارها از دیتابیس -->
                                 {% for warehouse in warehouses %}
                                 <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
                                 {% endfor %}
@@ -51,19 +50,17 @@
                     </div>
 
                     <div class="row">
-                        <!-- مقدار / تعداد -->
                         <div class="col-md-4 mb-3">
-                            <label for="quantity" class="form-label fw-bold">تعداد / مقدار <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" id="quantity" name="quantity" required placeholder="مثلاً: 50">
+                            <!-- لیبل به صورت پویا توسط جاوا اسکریپت تغییر می‌کند -->
+                            <label for="quantity" id="qty_label" class="form-label fw-bold">تعداد / مقدار <span class="text-danger">*</span></label>
+                            <input type="number" step="0.001" min="0.001" class="form-control" id="quantity" name="quantity" required placeholder="مثلاً: 15.5">
                         </div>
 
-                        <!-- شماره لات / بچ (اختیاری) -->
                         <div class="col-md-4 mb-3">
                             <label for="batch_number" class="form-label fw-bold">شماره لات (Batch)</label>
                             <input type="text" class="form-control" id="batch_number" name="batch_number" placeholder="اختیاری">
                         </div>
 
-                        <!-- سند مرجع / PO (اختیاری) -->
                         <div class="col-md-4 mb-3">
                             <label for="reference_document" class="form-label fw-bold">شماره سفارش (PO)</label>
                             <input type="text" class="form-control" id="reference_document" name="reference_document" placeholder="اختیاری">
@@ -72,7 +69,6 @@
 
                     <hr class="my-4">
                     
-                    <!-- دکمه‌های عملیاتی -->
                     <div class="d-flex justify-content-between">
                         <a href="/dashboard" class="btn btn-outline-secondary px-4">انصراف</a>
                         <button type="submit" class="btn btn-success px-5 fw-bold">ثبت نهایی تراکنش</button>
@@ -83,4 +79,16 @@
         </div>
     </div>
 </div>
+
+<!-- اسکریپت تغییر پویا لیبل مقدار بر اساس واحد کالا -->
+<script>
+    document.getElementById('product_id').addEventListener('change', function() {
+        var selectedOption = this.options[this.selectedIndex];
+        var uom = selectedOption.getAttribute('data-uom');
+        var qtyLabel = document.getElementById('qty_label');
+        if(uom) {
+            qtyLabel.innerHTML = 'مقدار (' + uom + ') <span class="text-danger">*</span>';
+        }
+    });
+</script>
 {% endblock %}
