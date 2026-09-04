@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}داشبورد مرکزی | Storage managment{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-4 text-secondary">خلاصه وضعیت سیستم</h3>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">تراکنش‌های انبار</h5>
+                <p class="card-text display-6 mt-3">۰ <span class="fs-6">سند</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">ظرفیت عملیاتی</h5>
+                <p class="card-text display-6 mt-3">آماده <span class="fs-6">سرویس‌دهی</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- دکمه عملیات سریع -->
+    <div class="col-12 mt-4 text-center">
+        <a href="/inventory/transaction" class="btn btn-primary btn-lg shadow">
+            + ثبت تراکنش جدید در انبار
+        </a>
+    </div>
+{% endblock %}
