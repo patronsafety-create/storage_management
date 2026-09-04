@@ -3,23 +3,43 @@
 {% block title %}داشبورد مرکزی | سیستم مدیریت انبار{% endblock %}
 
 {% block content %}
+<!-- سیستم نمایش پیام‌های سیستم (موفقیت یا خطا) -->
+{% if msg %}
+<div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert">
+    <strong>موفقیت!</strong> {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm" role="alert">
+    <strong>خطا!</strong> {{ error }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
 <div class="row mt-4">
-    <div class="col-12">
-        <h3 class="mb-4 text-secondary fw-bold">خلاصه وضعیت سیستم</h3>
+    <div class="col-12 d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-secondary fw-bold mb-0">خلاصه وضعیت سیستم</h3>
+        <!-- دکمه‌های فراخوانی Modal برای تعریف داده‌های پایه -->
+        <div>
+            <button type="button" class="btn btn-outline-primary shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                + تعریف کالا
+            </button>
+            <button type="button" class="btn btn-outline-secondary shadow-sm" data-bs-toggle="modal" data-bs-target="#addWarehouseModal">
+                + تعریف انبار
+            </button>
+        </div>
     </div>
     
-    <!-- کارت آماری تراکنش‌ها -->
     <div class="col-md-6 mb-3">
         <div class="card text-white bg-primary shadow-sm h-100 border-0">
             <div class="card-body">
                 <h5 class="card-title">تراکنش‌های انبار</h5>
-                <!-- خواندن عدد واقعی از دیتابیس -->
                 <p class="card-text display-6 mt-3">{{ tx_count }} <span class="fs-6 fw-normal">سند</span></p>
             </div>
         </div>
     </div>
     
-    <!-- کارت وضعیت سیستم -->
     <div class="col-md-6 mb-3">
         <div class="card text-white bg-success shadow-sm h-100 border-0">
             <div class="card-body">
@@ -30,16 +50,14 @@
     </div>
 </div>
 
-<!-- دکمه عملیات سریع -->
 <div class="row mt-4 mb-5">
     <div class="col-12 text-center">
         <a href="/inventory/transaction" class="btn btn-primary btn-lg shadow px-5 fw-bold">
-            + ثبت تراکنش جدید در انبار
+            + ثبت رسید / حواله در انبار
         </a>
     </div>
 </div>
 
-<!-- جدول مانیتورینگ زنده (۵ تراکنش آخر) -->
 <div class="row">
     <div class="col-12">
         <div class="card shadow-sm border-0">
@@ -59,7 +77,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- حلقه Jinja2 برای چاپ سطرهای دیتابیس -->
                             {% for tx in recent_txs %}
                             <tr>
                                 <td class="text-muted">#{{ tx.id }}</td>
@@ -70,13 +87,11 @@
                                         <span class="badge bg-danger px-3 py-2">حواله (OUT)</span>
                                     {% endif %}
                                 </td>
-                                <!-- به لطف relationship در SQLAlchemy، مستقیماً به نام کالا دسترسی داریم -->
                                 <td class="fw-bold">{{ tx.product.name }}</td>
                                 <td>{{ tx.warehouse.name }}</td>
                                 <td class="fw-bold text-primary" dir="ltr">{{ tx.quantity }}</td>
                             </tr>
                             {% else %}
-                            <!-- حالت Empty State اگر دیتابیس خالی باشد -->
                             <tr>
                                 <td colspan="5" class="text-center text-muted py-4">هیچ تراکنشی یافت نشد.</td>
                             </tr>
@@ -87,5 +102,67 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Modal تعریف کالا -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form action="/master-data/product" method="post">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title fw-bold" id="addProductModalLabel">تعریف کالای جدید</h5>
+            <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+                <label for="product_name" class="form-label fw-bold">نام کالا <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="product_name" name="name" required placeholder="مثلاً: میلگرد سایز ۱۴">
+            </div>
+            <div class="mb-3">
+                <label for="uom" class="form-label fw-bold">واحد سنجش <span class="text-danger">*</span></label>
+                <select class="form-select" id="uom" name="uom" required>
+                    <option value="عدد">عدد</option>
+                    <option value="تن">تن</option>
+                    <option value="کیلوگرم">کیلوگرم</option>
+                    <option value="شاخه">شاخه</option>
+                    <option value="متر">متر</option>
+                    <option value="رول">رول</option>
+                    <option value="بسته">بسته</option>
+                </select>
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-primary px-4">ذخیره کالا</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal تعریف انبار -->
+<div class="modal fade" id="addWarehouseModal" tabindex="-1" aria-labelledby="addWarehouseModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form action="/master-data/warehouse" method="post">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title fw-bold" id="addWarehouseModalLabel">تعریف انبار جدید</h5>
+            <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+                <label for="warehouse_name" class="form-label fw-bold">نام انبار <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="warehouse_name" name="name" required placeholder="مثلاً: انبار قطعات یدکی">
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-primary px-4">ذخیره انبار</button>
+          </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
