@@ -6,22 +6,30 @@ from typing import Optional
 
 from src.infrastructure.database import get_db
 from src.domain_model.inventory_models import StockTransaction
+from src.domain_model.user_models import User
+from src.api.auth import get_current_user
 
-router = APIRouter(tags=["UI"])
+# با افزودن dependencies، تمام روت‌های این فایل امن و قفل می‌شوند
+router = APIRouter(tags=["UI"], dependencies=[Depends(get_current_user)])
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request, 
-    msg: Optional[str] = None,    # دریافت پیام موفقیت از URL
-    error: Optional[str] = None,  # دریافت پیام خطا از URL
-    db: Session = Depends(get_db)
+    msg: Optional[str] = None,    
+    error: Optional[str] = None,  
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     transaction_count = db.query(StockTransaction).count()
 
-    recent_transactions = db.query(StockTransaction)\
-        .order_by(StockTransaction.created_at.desc())\
-        .limit(5).all()
+    # استفاده از پرانتز به جای بک‌اسلش (مقاوم در برابر خطای فاصله اضافه)
+    recent_transactions = (
+        db.query(StockTransaction)
+        .order_by(StockTransaction.created_at.desc())
+        .limit(5)
+        .all()
+    )
 
     return templates.TemplateResponse(
         request=request, 
@@ -30,7 +38,8 @@ async def dashboard(
             "request": request, 
             "tx_count": transaction_count,
             "recent_txs": recent_transactions,
-            "msg": msg,      # ارسال به HTML
-            "error": error   # ارسال به HTML
+            "msg": msg,      
+            "error": error,
+            "user": current_user
         }
     )

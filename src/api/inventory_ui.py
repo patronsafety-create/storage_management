@@ -6,18 +6,20 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, case
 from typing import Optional
 
-# فراخوانی مدیریت نشست دیتابیس و مدل‌های تجاری انبار
 from src.infrastructure.database import get_db
 from src.domain_model.inventory_models import Product, Warehouse, StockTransaction, TransactionType
+from src.api.auth import get_current_user
 
-router = APIRouter(prefix="/inventory", tags=["Inventory UI"])
+# با این خط، هیچکس نمی‌تواند بدون لاگین رسید یا حواله ثبت کند
+router = APIRouter(
+    prefix="/inventory", 
+    tags=["Inventory UI"],
+    dependencies=[Depends(get_current_user)]
+)
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/transaction", response_class=HTMLResponse)
 async def get_transaction_form(request: Request, db: Session = Depends(get_db)):
-    """
-    رندر فرم ثبت رسید و حواله با داده‌های واقعی از دیتابیس
-    """
     products = db.query(Product).all()
     warehouses = db.query(Warehouse).all()
 
@@ -42,9 +44,6 @@ async def process_transaction(
     reference_document: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
-    """
-    دریافت داده‌های فرم، اعتبارسنجی و ثبت امن در پایگاه‌داده با حفظ ACID
-    """
     try:
         tx_enum = TransactionType.IN if transaction_type == "IN" else TransactionType.OUT
         
@@ -91,9 +90,6 @@ async def process_transaction(
 
 @router.get("/balance", response_class=HTMLResponse)
 async def get_stock_balance(request: Request, db: Session = Depends(get_db)):
-    """
-    محاسبه و رندر گزارش ترازنامه انبار (موجودی لحظه‌ای)
-    """
     balance_query = db.query(
         Product.name.label("product_name"),
         Product.uom.label("uom"),
