@@ -4,15 +4,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from urllib.parse import quote
 
-from src.infrastructure.database import get_db
+# فراخوانی قفل مخصوص ادمین از هسته مرکزی
+from src.core.dependencies import get_db, require_admin
 from src.domain_model.inventory_models import Product, Warehouse
-from src.api.auth import get_current_user
 
-# قفل امنیتی فرم‌های پاپ‌آپ ایجاد کالا و انبار
+# 🌟 اعمال قفل مدیر: هیچ اپراتوری حتی با دانستن آدرس نمی‌تواند به این مسیرها درخواست بفرستد
 router = APIRouter(
     prefix="/master-data", 
     tags=["Master Data"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(require_admin)]
 )
 
 @router.post("/product")

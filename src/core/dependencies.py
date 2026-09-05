@@ -7,14 +7,11 @@ from src.infrastructure.database import SessionLocal
 from src.domain_model.user_models import User
 
 # --- تنظیمات امنیتی سیستم ---
-# در محیط عملیاتی، این کلیدها باید در فایل محیطی (.env) مخفی شوند
 SECRET_KEY = "enterprise-erp-super-secret-key-keep-it-safe-and-long"
 ALGORITHM = "HS256"
 
 def get_db():
-    """
-    تزریق وابستگی (Dependency Injection) برای مدیریت امن نشست‌های پایگاه‌داده
-    """
+    """تزریق وابستگی برای مدیریت امن نشست‌های پایگاه‌داده"""
     db = SessionLocal()
     try:
         yield db
@@ -22,10 +19,7 @@ def get_db():
         db.close()
 
 async def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    """
-    بررسی توکن JWT، اعتبارسنجی هویت و استخراج کاربر جاری از دیتابیس
-    این تابع به عنوان قفل امنیتی در سراسر سیستم استفاده خواهد شد.
-    """
+    """بررسی توکن JWT، اعتبارسنجی هویت و استخراج کاربر جاری"""
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
@@ -46,3 +40,16 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)) -> U
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or disabled")
         
     return user
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """
+    قفل امنیتی سطح دسترسی (RBAC): 
+    فقط کاربرانی که نقش Admin دارند اجازه عبور از این فیلتر را خواهند داشت.
+    """
+    is_admin = any(role.name == "Admin" for role in current_user.roles)
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="دسترسی غیرمجاز. این عملیات فقط برای مدیر کل سیستم امکان‌پذیر است."
+        )
+    return current_user

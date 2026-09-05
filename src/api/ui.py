@@ -4,12 +4,11 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from src.infrastructure.database import get_db
+from src.core.dependencies import get_db, get_current_user
+
 from src.domain_model.inventory_models import StockTransaction
 from src.domain_model.user_models import User
-from src.api.auth import get_current_user
 
-# با افزودن dependencies، تمام روت‌های این فایل امن و قفل می‌شوند
 router = APIRouter(tags=["UI"], dependencies=[Depends(get_current_user)])
 templates = Jinja2Templates(directory="templates")
 
@@ -23,13 +22,15 @@ async def dashboard(
 ):
     transaction_count = db.query(StockTransaction).count()
 
-    # استفاده از پرانتز به جای بک‌اسلش (مقاوم در برابر خطای فاصله اضافه)
     recent_transactions = (
         db.query(StockTransaction)
         .order_by(StockTransaction.created_at.desc())
         .limit(5)
         .all()
     )
+
+    # 🌟 بررسی نقش در لایه سرور به جای HTML
+    is_admin = any(role.name == "Admin" for role in current_user.roles)
 
     return templates.TemplateResponse(
         request=request, 
@@ -40,6 +41,7 @@ async def dashboard(
             "recent_txs": recent_transactions,
             "msg": msg,      
             "error": error,
-            "user": current_user
+            "user": current_user,
+            "is_admin": is_admin  # ارسال مستقیم نتیجه به قالب
         }
     )

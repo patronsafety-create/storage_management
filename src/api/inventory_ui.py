@@ -3,14 +3,15 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func, case
 from typing import Optional
 
-from src.infrastructure.database import get_db
-from src.domain_model.inventory_models import Product, Warehouse, StockTransaction, TransactionType
-from src.api.auth import get_current_user
+# 🌟 فراخوانی وابستگی‌های هسته و لایه سرویس جدید
+from src.core.dependencies import get_db, get_current_user
+from src.services.inventory_service import InventoryService
 
-# با این خط، هیچکس نمی‌تواند بدون لاگین رسید یا حواله ثبت کند
+from src.domain_model.inventory_models import Product, Warehouse, StockTransaction, TransactionType
+from src.domain_model.user_models import User
+
 router = APIRouter(
     prefix="/inventory", 
     tags=["Inventory UI"],
@@ -19,7 +20,11 @@ router = APIRouter(
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/transaction", response_class=HTMLResponse)
-async def get_transaction_form(request: Request, db: Session = Depends(get_db)):
+async def get_transaction_form(
+    request: Request, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     products = db.query(Product).all()
     warehouses = db.query(Warehouse).all()
 
@@ -29,7 +34,8 @@ async def get_transaction_form(request: Request, db: Session = Depends(get_db)):
         context={
             "request": request,
             "products": products,
-            "warehouses": warehouses
+            "warehouses": warehouses,
+            "user": current_user
         }
     )
 
@@ -42,7 +48,8 @@ async def process_transaction(
     quantity: float = Form(...),
     batch_number: Optional[str] = Form(None),
     reference_document: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     try:
         tx_enum = TransactionType.IN if transaction_type == "IN" else TransactionType.OUT
@@ -70,7 +77,8 @@ async def process_transaction(
                 "request": request,
                 "products": db.query(Product).all(),
                 "warehouses": db.query(Warehouse).all(),
-                "error": "خطای یکپارچگی داده: مقدار یا نوع تراکنش نامعتبر است."
+                "error": "خطای یکپارچگی داده: مقدار یا نوع تراکنش نامعتبر است.",
+                "user": current_user
             },
             status_code=400
         )
@@ -83,40 +91,27 @@ async def process_transaction(
                 "request": request,
                 "products": db.query(Product).all(),
                 "warehouses": db.query(Warehouse).all(),
-                "error": "خطای سیستمی در ثبت تراکنش رخ داده است."
+                "error": "خطای سیستمی در ثبت تراکنش رخ داده است.",
+                "user": current_user
             },
             status_code=500
         )
 
 @router.get("/balance", response_class=HTMLResponse)
-async def get_stock_balance(request: Request, db: Session = Depends(get_db)):
-    balance_query = db.query(
-        Product.name.label("product_name"),
-        Product.uom.label("uom"),
-        func.coalesce(
-            func.sum(case((StockTransaction.transaction_type == TransactionType.IN, StockTransaction.quantity), else_=0)), 0
-        ).label('total_in'),
-        func.coalesce(
-            func.sum(case((StockTransaction.transaction_type == TransactionType.OUT, StockTransaction.quantity), else_=0)), 0
-        ).label('total_out')
-    ).outerjoin(StockTransaction, Product.id == StockTransaction.product_id) \
-     .group_by(Product.id, Product.name, Product.uom).all()
-
-    stock_balances = []
-    for row in balance_query:
-        stock_balances.append({
-            "name": row.product_name,
-            "uom": row.uom,
-            "total_in": row.total_in,
-            "total_out": row.total_out,
-            "current_balance": row.total_in - row.total_out
-        })
+async def get_stock_balance(
+    request: Request, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 🌟 استفاده مستقیم از لایه سرویس - کنترلر کاملاً سبک و خوانا شد
+    stock_balances = InventoryService.calculate_stock_balances(db)
 
     return templates.TemplateResponse(
         request=request,
         name="stock_balance.html",
         context={
             "request": request,
-            "stock_balances": stock_balances
+            "stock_balances": stock_balances,
+            "user": current_user
         }
     )
