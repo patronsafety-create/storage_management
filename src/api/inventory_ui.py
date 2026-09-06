@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
 
-# 🌟 فراخوانی وابستگی‌های هسته و لایه سرویس جدید
 from src.core.dependencies import get_db, get_current_user
 from src.services.inventory_service import InventoryService
 
@@ -52,6 +51,24 @@ async def process_transaction(
     current_user: User = Depends(get_current_user)
 ):
     try:
+        # 🌟 بررسی قواعد تجاری (Business Rules) قبل از هرگونه تغییر در دیتابیس
+        if transaction_type == "OUT":
+            current_stock = InventoryService.get_current_stock(db, product_id, warehouse_id)
+            if quantity > current_stock:
+                # جلوگیری از ثبت حواله و بازگشت اخطار به کاربر
+                return templates.TemplateResponse(
+                    request=request,
+                    name="transaction_form.html",
+                    context={
+                        "request": request,
+                        "products": db.query(Product).all(),
+                        "warehouses": db.query(Warehouse).all(),
+                        "error": f"عملیات غیرمجاز! موجودی فعلی این کالا {current_stock} است و امکان صدور حواله برای {quantity} وجود ندارد.",
+                        "user": current_user
+                    },
+                    status_code=400
+                )
+
         tx_enum = TransactionType.IN if transaction_type == "IN" else TransactionType.OUT
         
         new_transaction = StockTransaction(
@@ -103,7 +120,6 @@ async def get_stock_balance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 🌟 استفاده مستقیم از لایه سرویس - کنترلر کاملاً سبک و خوانا شد
     stock_balances = InventoryService.calculate_stock_balances(db)
 
     return templates.TemplateResponse(
