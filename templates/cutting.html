@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}مدیریت دستورات برش و انبار ته‌شاخه | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-scissors text-teal me-2"></i>مدیریت دستورات برش، ته‌شاخه و پرتی آهن‌آلات
+    </h3>
+    <p class="text-secondary small mb-0">ثبت برش شاخه‌های ۱۲ متری به قطعات سفارشی مشتریان و انتقال خودکار ته‌شاخه‌ها به انبار جهت جلوگیری از اتلاف سرمایه</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/cutting/new" class="btn btn-teal">
+      <i class="bi bi-plus-circle me-1"></i>ثبت دستور برش جدید
+    </a>
+  </div>
+</div>
+
+<!-- کارت‌های آمار برش -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">کل دستورات برش انجام‌شده</div>
+          <div class="fs-4 fw-bold text-light">{{ orders | length }} فقره</div>
+        </div>
+        <div class="fs-2 text-teal opacity-75"><i class="bi bi-scissors"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-sm-6">
+    <div class="stat-card border-success border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">ته‌شاخه‌های قابل مصرف در انبار</div>
+          <div class="fs-4 fw-bold text-success">{{ remnants | length }} قطعه</div>
+        </div>
+        <div class="fs-2 text-success opacity-75"><i class="bi bi-recycle"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-sm-6">
+    <div class="stat-card border-secondary border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">قطعات پرتی زیر ۱ متر (ضایعات)</div>
+          <div class="fs-4 fw-bold text-secondary">{{ scraps | length }} مورد</div>
+        </div>
+        <div class="fs-2 text-secondary opacity-75"><i class="bi bi-trash3"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- جدول دستورات برش -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+  <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold text-light mb-0"><i class="bi bi-clock-history text-teal me-2"></i>تاریخچه دستورات برش آهن‌آلات</h5>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3">شماره دستور برش</th>
+          <th>تاریخ</th>
+          <th>کالای مادر (شاخه ۱۲ متری)</th>
+          <th>قطعه برش‌خورده تحویلی</th>
+          <th>طول باقیمانده ته‌شاخه</th>
+          <th>محل انتقال قطعه</th>
+          <th>وضعیت</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if orders %}
+          {% for o in orders %}
+          <tr>
+            <td class="px-3 fw-bold font-monospace text-teal">{{ o.order_number }}</td>
+            <td class="small text-secondary">{{ o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else '-' }}</td>
+            <td class="fw-semibold text-light">{{ o.product.name }}</td>
+            <td class="font-monospace text-warning">
+              {{ o.pieces_count }} عدد شاخه {{ "{:.2f}".format(o.cut_length) }} متری
+            </td>
+            <td class="font-monospace fw-bold text-light">
+              {{ "{:.2f}".format(o.remnant_length) }} متر
+              {% if o.remnant_weight %}
+                <span class="small text-secondary">({{ "{:.1f}".format(o.remnant_weight) }} kg)</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if o.destination == 'انبار ته‌شاخه‌ها' %}
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
+                  <i class="bi bi-check-circle me-1"></i>انبار ته‌شاخه‌ها (سرمایه نقدی)
+                </span>
+              {% else %}
+                <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-50">
+                  <i class="bi bi-trash me-1"></i>انبار ضایعات آهن
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-teal bg-opacity-25 text-teal border border-teal border-opacity-50">تکمیل‌شده</span>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="text-center py-5 text-secondary">
+              <i class="bi bi-scissors fs-1 d-block mb-2"></i>
+              هیچ دستور برشی ثبت نشده است.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

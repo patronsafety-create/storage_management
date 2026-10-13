@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}هشدارهای موجودی و نقطه سفارش | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-bell-fill text-warning me-2"></i>مرکز کنترل هوشمند هشدارهای موجودی
+    </h3>
+    <p class="text-secondary small mb-0">نظارت بر نقطه سفارش کالاها، اتمام موجودی، مازاد انبار و کالاهای راکد (Dead Stock)</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/purchases/new" class="btn btn-teal">
+      <i class="bi bi-cart-plus me-1"></i>ثبت سفارش خرید جبرانی
+    </a>
+  </div>
+</div>
+
+<!-- کارت‌های شاخص‌های وضعیت موجودی -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card border-danger border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">کالاهای ناموجود (صفر)</div>
+          <div class="fs-4 fw-bold text-danger">{{ out_of_stock | length }}</div>
+        </div>
+        <div class="fs-2 text-danger opacity-75"><i class="bi bi-exclamation-octagon-fill"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card border-warning border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">زیر نقطه سفارش مجدد</div>
+          <div class="fs-4 fw-bold text-warning">{{ low_stock | length }}</div>
+        </div>
+        <div class="fs-2 text-warning opacity-75"><i class="bi bi-bell-fill"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card border-info border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">مازاد بر ظرفیت امن</div>
+          <div class="fs-4 fw-bold text-info">{{ over_stock | length }}</div>
+        </div>
+        <div class="fs-2 text-info opacity-75"><i class="bi bi-arrow-up-circle-fill"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card border-secondary border-opacity-50">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">کالاهای راکد (Dead Stock)</div>
+          <div class="fs-4 fw-bold text-light">{{ dead_stock | length }}</div>
+        </div>
+        <div class="fs-2 text-secondary opacity-75"><i class="bi bi-pause-circle-fill"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- تب‌های دسته‌بندی هشدارها -->
+<div class="glass-card p-4">
+  <ul class="nav nav-pills mb-4 gap-2" id="alertTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active px-4" id="out-tab" data-bs-toggle="pill" data-bs-target="#outStockPane" type="button" role="tab">
+        <i class="bi bi-exclamation-circle me-1 text-danger"></i>اتمام موجودی ({{ out_of_stock | length }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link px-4" id="low-tab" data-bs-toggle="pill" data-bs-target="#lowStockPane" type="button" role="tab">
+        <i class="bi bi-bell me-1 text-warning"></i>نقطه سفارش مجدد ({{ low_stock | length }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link px-4" id="over-tab" data-bs-toggle="pill" data-bs-target="#overStockPane" type="button" role="tab">
+        <i class="bi bi-arrow-up-circle me-1 text-info"></i>مازاد انبار ({{ over_stock | length }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link px-4" id="dead-tab" data-bs-toggle="pill" data-bs-target="#deadStockPane" type="button" role="tab">
+        <i class="bi bi-clock-history me-1 text-secondary"></i>کالاهای راکد ({{ dead_stock | length }})
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="alertTabContent">
+    <!-- تب ۱: ناموجود -->
+    <div class="tab-pane fade show active" id="outStockPane" role="tabpanel">
+      {% if out_of_stock %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>کد کالا (SKU)</th>
+              <th>نام کالا</th>
+              <th>حداقل موجودی امن</th>
+              <th>نقطه سفارش</th>
+              <th>موجودی فعلی</th>
+              <th class="text-center">عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in out_of_stock %}
+            <tr>
+              <td class="font-monospace text-secondary">{{ item.product.sku or '-' }}</td>
+              <td class="fw-bold text-light">{{ item.product.name }}</td>
+              <td class="font-monospace">{{ "{:,.2f}".format(item.min_stock) }} {{ item.product.uom }}</td>
+              <td class="font-monospace text-warning">{{ "{:,.2f}".format(item.reorder_point) }} {{ item.product.uom }}</td>
+              <td class="font-monospace text-danger fw-bold">۰.۰۰ (اتمام موجودی)</td>
+              <td class="text-center">
+                <a href="/purchases/new" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-cart-plus me-1"></i>سفارش خرید فوری
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-success">
+        <i class="bi bi-check-circle-fill fs-1 d-block mb-2"></i>
+        هیچ کالای ناموجودی در سامانه وجود ندارد. وضعیت عالی است!
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- تب ۲: زیر نقطه سفارش -->
+    <div class="tab-pane fade" id="lowStockPane" role="tabpanel">
+      {% if low_stock %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>کد کالا</th>
+              <th>نام کالا</th>
+              <th>موجودی فعلی</th>
+              <th>نقطه سفارش (آستانه)</th>
+              <th>کسری تا آستانه سفارش</th>
+              <th class="text-center">عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in low_stock %}
+            {% set deficit = item.reorder_point - item.current_balance %}
+            <tr>
+              <td class="font-monospace text-secondary">{{ item.product.sku or '-' }}</td>
+              <td class="fw-bold text-light">{{ item.product.name }}</td>
+              <td class="font-monospace text-warning fw-bold">{{ "{:,.2f}".format(item.current_balance) }} {{ item.product.uom }}</td>
+              <td class="font-monospace">{{ "{:,.2f}".format(item.reorder_point) }} {{ item.product.uom }}</td>
+              <td class="font-monospace text-danger">{{ "{:,.2f}".format(deficit) }} {{ item.product.uom }}</td>
+              <td class="text-center">
+                <a href="/purchases/new" class="btn btn-sm btn-outline-teal">
+                  <i class="bi bi-cart-plus me-1"></i>سفارش تأمین
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-success">
+        <i class="bi bi-shield-check fs-1 d-block mb-2"></i>
+        تمامی اقلام موجود در انبارها بالای نقطه سفارش قرار دارند.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- تب ۳: مازاد انبار -->
+    <div class="tab-pane fade" id="overStockPane" role="tabpanel">
+      {% if over_stock %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>کد کالا</th>
+              <th>نام کالا</th>
+              <th>موجودی جاری</th>
+              <th>سقف انبارداری مجاز</th>
+              <th>درصد مازاد</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in over_stock %}
+            {% set excess = item.current_balance - item.max_stock %}
+            {% set pct = (excess / item.max_stock * 100) if item.max_stock > 0 else 0 %}
+            <tr>
+              <td class="font-monospace text-secondary">{{ item.product.sku or '-' }}</td>
+              <td class="fw-bold text-light">{{ item.product.name }}</td>
+              <td class="font-monospace text-info fw-bold">{{ "{:,.2f}".format(item.current_balance) }} {{ item.product.uom }}</td>
+              <td class="font-monospace">{{ "{:,.2f}".format(item.max_stock) }} {{ item.product.uom }}</td>
+              <td class="font-monospace text-warning">+{{ "{:.1f}%".format(pct) }} ({{ "{:,.2f}".format(excess) }} مازاد)</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-secondary">
+        <i class="bi bi-box2 fs-1 d-block mb-2"></i>
+        هیچ کالایی فراتر از سقف انبارداری دپو نشده است.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- تب ۴: کالاهای راکد (Dead Stock) -->
+    <div class="tab-pane fade" id="deadStockPane" role="tabpanel">
+      {% if dead_stock %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>کد کالا</th>
+              <th>نام کالا</th>
+              <th>موجودی دپو شده</th>
+              <th>تاریخ آخرین تراکنش</th>
+              <th>مدت زمان رکود</th>
+              <th class="text-center">راهکار</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in dead_stock %}
+            <tr>
+              <td class="font-monospace text-secondary">{{ item.product.sku or '-' }}</td>
+              <td class="fw-bold text-light">{{ item.product.name }}</td>
+              <td class="font-monospace text-light">{{ "{:,.2f}".format(item.current_balance) }} {{ item.product.uom }}</td>
+              <td class="small font-monospace">{{ item.last_movement.strftime('%Y-%m-%d') if item.last_movement else 'فاقد هرگونه گردش' }}</td>
+              <td>
+                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">
+                  {{ item.days_since_last_tx or 'بیش از ۳۰' }} روز بدون حرکت
+                </span>
+              </td>
+              <td class="text-center">
+                <a href="/inventory/transaction" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-box-arrow-up me-1"></i>فروش / حواله
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-success">
+        <i class="bi bi-activity fs-1 d-block mb-2"></i>
+        کلیه کالاهای انبار فعال و دارای گردش در بازه اخیر هستند.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

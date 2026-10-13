@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}لاگ جامع حسابرسی و ردپای امنیتی | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-shield-lock-fill text-teal me-2"></i>لاگ جامع حسابرسی و ردپای امنیتی (Audit Trails)
+    </h3>
+    <p class="text-secondary small mb-0">ثبت دقیق کلیه اقدامات کاربران، زمان، آدرس IP و سابقه تغییرات اسناد در سامانه</p>
+  </div>
+</div>
+
+<!-- فیلترها -->
+<div class="glass-card p-3 mb-4">
+  <form method="get" action="/admin/audit-logs" class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small text-secondary">نوع اقدام (Action):</label>
+      <select name="action_filter" class="form-select bg-dark border-secondary text-light">
+        <option value="">همه اقدامات</option>
+        <option value="CREATE" {% if action_filter == 'CREATE' %}selected{% endif %}>ایجاد و ثبت (CREATE)</option>
+        <option value="APPROVE" {% if action_filter == 'APPROVE' %}selected{% endif %}>تأیید نهایی (APPROVE)</option>
+        <option value="REJECT" {% if action_filter == 'REJECT' %}selected{% endif %}>رد سند (REJECT)</option>
+        <option value="UPDATE" {% if action_filter == 'UPDATE' %}selected{% endif %}>ویرایش (UPDATE)</option>
+        <option value="DELETE" {% if action_filter == 'DELETE' %}selected{% endif %}>حذف (DELETE)</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small text-secondary">بخش / موجودیت (Entity):</label>
+      <select name="entity_filter" class="form-select bg-dark border-secondary text-light">
+        <option value="">همه بخش‌ها</option>
+        <option value="StockTransaction" {% if entity_filter == 'StockTransaction' %}selected{% endif %}>تراکنش و اسناد انبار</option>
+        <option value="PurchaseOrder" {% if entity_filter == 'PurchaseOrder' %}selected{% endif %}>سفارشات خرید</option>
+        <option value="WeighbridgeTicket" {% if entity_filter == 'WeighbridgeTicket' %}selected{% endif %}>قبوض باسکول</option>
+        <option value="CuttingOrder" {% if entity_filter == 'CuttingOrder' %}selected{% endif %}>دستورات برش</option>
+        <option value="BaggingOrder" {% if entity_filter == 'BaggingOrder' %}selected{% endif %}>کیسه‌گیری اوره</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-info w-100">
+        <i class="bi bi-funnel me-1"></i>فیلتر رویدادها
+      </button>
+      <a href="/admin/audit-logs" class="btn btn-outline-secondary">
+        <i class="bi bi-x-circle"></i>
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- جدول لاگ‌ها -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3">زمان رویداد</th>
+          <th>کاربر مسئول</th>
+          <th>نوع عملیات</th>
+          <th>موجودیت</th>
+          <th>شناسه رکورد</th>
+          <th>شرح اقدام و جزئیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if logs %}
+          {% for log in logs %}
+          <tr>
+            <td class="px-3 small font-monospace text-secondary">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '-' }}</td>
+            <td class="fw-semibold text-light">
+              <i class="bi bi-person me-1 text-teal"></i>{{ log.user_name or 'سیستم' }}
+            </td>
+            <td>
+              {% if log.action == 'CREATE' %}
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">ثبت جدید</span>
+              {% elif log.action == 'APPROVE' %}
+                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50">تأیید نهایی</span>
+              {% elif log.action == 'REJECT' %}
+                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">رد سند</span>
+              {% elif log.action == 'DELETE' %}
+                <span class="badge bg-danger">حذف</span>
+              {% else %}
+                <span class="badge bg-secondary bg-opacity-25">{{ log.action }}</span>
+              {% endif %}
+            </td>
+            <td><span class="badge bg-dark border border-secondary text-light font-monospace">{{ log.entity_name }}</span></td>
+            <td class="font-monospace text-teal small">#{{ log.entity_id or '-' }}</td>
+            <td class="small text-light">{{ log.details or '-' }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-shield-check fs-1 d-block mb-2"></i>
+              هیچ رویداد حسابرسی ثبت نشده است.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}ثبت سفارش خرید جدید (PO) | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10 col-xl-9">
+    <div class="glass-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+        <div>
+          <h4 class="fw-bold mb-1 text-light">
+            <i class="bi bi-cart-plus text-teal me-2"></i>ثبت سفارش خرید جدید (Purchase Order)
+          </h4>
+          <p class="text-secondary small mb-0">صدور سفارش رسمی خرید به نام تأمین‌کننده همراه با اقلام و شرایط تحویل</p>
+        </div>
+        <a href="/purchases" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-right me-1"></i>بازگشت به لیست
+        </a>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-glass-danger alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+        <div>{{ error }}</div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+      {% endif %}
+
+      <form action="/purchases" method="post" id="poForm">
+        <!-- سربرگ سفارش -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="po_number" class="form-label fw-bold">
+              شماره سفارش خرید (PO Number) <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control font-monospace" id="po_number" name="po_number" value="{{ generated_po_number }}" required>
+          </div>
+
+          <div class="col-md-5">
+            <label for="supplier_id" class="form-label fw-bold">
+              تأمین‌کننده / کارخانه تولیدی <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="supplier_id" name="supplier_id" required>
+              <option value="" selected disabled>انتخاب تأمین‌کننده...</option>
+              {% for s in suppliers %}
+              <option value="{{ s.id }}">{{ s.name }} {% if s.code %}({{ s.code }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="delivery_due_date" class="form-label">مهلت تحویل بار</label>
+            <input type="text" class="form-control" id="delivery_due_date" name="delivery_due_date" placeholder="مثلاً: ۱۴۰۳/۰۸/۲۰">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="notes" class="form-label">توضیحات و شرایط قرارداد خرید</label>
+          <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="شرایط پرداخت، توافقات تلورانس تناژ، باربری یا تحویل در کارخانه..."></textarea>
+        </div>
+
+        <!-- اقلام سفارش خرید -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">
+              <i class="bi bi-list-check text-info me-2"></i>اقلام سفارش خرید
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-info" id="addRowBtn">
+              <i class="bi bi-plus-lg me-1"></i>افزودن ردیف کالا
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-dark table-bordered mb-0 align-middle" id="itemsTable">
+              <thead style="background: rgba(255,255,255,0.05);">
+                <tr>
+                  <th style="width: 45%;">نام کالا</th>
+                  <th style="width: 25%;">مقدار / تناژ سفارش</th>
+                  <th style="width: 25%;">نرخ واحد توافقی (ریال)</th>
+                  <th style="width: 5%;" class="text-center">حذف</th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody">
+                <tr>
+                  <td>
+                    <select name="product_id" class="form-select product-select" required>
+                      <option value="" selected disabled>انتخاب کالا...</option>
+                      {% for p in products %}
+                      <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" step="0.001" min="0.001" name="quantity" class="form-control" required placeholder="مثلاً: 25.0">
+                  </td>
+                  <td>
+                    <input type="number" step="1" min="0" name="unit_price" class="form-control" value="0" placeholder="نرخ واحد">
+                  </td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-row" disabled>
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+          <a href="/purchases" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <button type="submit" class="btn btn-teal px-5 py-2">
+            <i class="bi bi-check2-circle me-1"></i>ثبت نهایی سفارش خرید
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const addRowBtn = document.getElementById('addRowBtn');
+    const itemsBody = document.getElementById('itemsBody');
+
+    addRowBtn.addEventListener('click', function() {
+        const firstRow = itemsBody.querySelector('tr');
+        const newRow = firstRow.cloneNode(true);
+        
+        // پاکسازی مقادیر کپی شده
+        newRow.querySelector('select').selectedIndex = 0;
+        newRow.querySelector('input[name="quantity"]').value = '';
+        newRow.querySelector('input[name="unit_price"]').value = '0';
+        
+        // فعال‌سازی دکمه حذف
+        const removeBtn = newRow.querySelector('.remove-row');
+        removeBtn.disabled = false;
+        removeBtn.addEventListener('click', function() {
+            if (itemsBody.querySelectorAll('tr').length > 1) {
+                newRow.remove();
+            }
+        });
+
+        itemsBody.appendChild(newRow);
+    });
+});
+</script>
+{% endblock %}

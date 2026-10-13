@@ -1,0 +1,630 @@
+{% extends "base.html" %}
+
+{% block title %}طرف‌های تجاری (تأمین‌کنندگان و مشتریان) | NexusPour ERP{% endblock %}
+
+{% block content %}
+<!-- هدر صفحه و دکمه‌های عملیاتی -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <span class="p-2 rounded-3 bg-teal bg-opacity-10 text-teal">
+                <i class="bi bi-people-fill"></i>
+            </span>
+            <span>طرف‌های تجاری (تأمین‌کنندگان و مشتریان)</span>
+        </h3>
+        <p class="text-secondary small mb-0">مدیریت اشخاص حقیقی و حقوقی، کارخانجات فولادی و پتروشیمی، خریداران، کد اقتصادی و سقف اعتبارات</p>
+    </div>
+    
+    <div class="d-flex gap-2 flex-wrap">
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>چاپ لیست
+        </button>
+        {% if is_admin %}
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+            <i class="bi bi-building-add me-1"></i>+ تأمین‌کننده جدید
+        </button>
+        <button type="button" class="btn btn-teal px-3" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            <i class="bi bi-person-plus-fill me-1"></i>+ مشتری جدید
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- پیام‌های سیستم -->
+{% if msg %}
+<div class="alert alert-success alert-dismissible fade show glass-card border-success border-opacity-50 text-light py-2 px-3 mb-4 d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+    <div>{{ msg }}</div>
+    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show glass-card border-danger border-opacity-50 text-light py-2 px-3 mb-4 d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+    <div>{{ error }}</div>
+    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- کارت‌های شاخص طرف‌های تجاری -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">تأمین‌کنندگان ثبت‌شده</div>
+                    <div class="stat-number text-success">{{ stats.total_suppliers }}</div>
+                    <div class="stat-hint"><i class="bi bi-building me-1 text-success"></i>کارخانجات و بنگاه‌های فروش</div>
+                </div>
+                <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="bi bi-building-up"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">مشتریان و خریداران</div>
+                    <div class="stat-number text-info">{{ stats.total_customers }}</div>
+                    <div class="stat-hint"><i class="bi bi-people me-1 text-info"></i>پروژه‌ها و پیمانکاران طرف‌حساب</div>
+                </div>
+                <div class="stat-icon-wrapper" style="background: rgba(14, 165, 233, 0.12); color: #38bdf8;">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">رسیدهای دارای تأمین‌کننده</div>
+                    <div class="stat-number text-teal">{{ stats.total_inbound_txs }}</div>
+                    <div class="stat-hint"><i class="bi bi-box-arrow-in-down me-1 text-teal"></i>تراکنش‌های خرید و ورود</div>
+                </div>
+                <div class="stat-icon-wrapper" style="background: rgba(0, 212, 200, 0.12); color: var(--accent-teal);">
+                    <i class="bi bi-receipt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">حواله‌های دارای مشتری</div>
+                    <div class="stat-number text-primary">{{ stats.total_outbound_txs }}</div>
+                    <div class="stat-hint"><i class="bi bi-box-arrow-up me-1 text-primary"></i>تراکنش‌های خروج و تحویل</div>
+                </div>
+                <div class="stat-icon-wrapper" style="background: rgba(99, 102, 241, 0.12); color: #818cf8;">
+                    <i class="bi bi-file-earmark-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نوار جستجو و تب‌های دسته‌بندی -->
+<div class="glass-card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <!-- تب‌ها -->
+        <ul class="nav nav-pills" id="partiesTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'suppliers' %}active{% endif %} px-4" id="suppliers-tab" data-bs-toggle="pill" data-bs-target="#suppliers-pane" type="button" role="tab">
+                    <i class="bi bi-building-up me-2"></i>تأمین‌کنندگان ({{ suppliers | length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'customers' %}active{% endif %} px-4" id="customers-tab" data-bs-toggle="pill" data-bs-target="#customers-pane" type="button" role="tab">
+                    <i class="bi bi-person-lines-fill me-2"></i>مشتریان و خریداران ({{ customers | length }})
+                </button>
+            </li>
+        </ul>
+
+        <!-- فیلتر جستجو -->
+        <form method="get" action="/master-data/parties" class="d-flex gap-2">
+            <input type="hidden" name="tab" id="tabInput" value="{{ active_tab }}">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-secondary border-opacity-25 text-secondary">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="search" class="form-control" placeholder="جستجو در نام، کد، رابط یا شناسه ملی..." value="{{ search }}" style="min-width: 260px;">
+            </div>
+            <button type="submit" class="btn btn-outline-info">
+                جستجو
+            </button>
+            {% if search %}
+            <a href="/master-data/parties?tab={{ active_tab }}" class="btn btn-outline-secondary" title="پاک کردن فیلتر">
+                <i class="bi bi-x-lg"></i>
+            </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- محتوای تب‌ها -->
+<div class="tab-content" id="partiesTabContent">
+    <!-- تب ۱: تأمین‌کنندگان -->
+    <div class="tab-pane fade {% if active_tab == 'suppliers' %}show active{% endif %}" id="suppliers-pane" role="tabpanel" aria-labelledby="suppliers-tab">
+        <div class="glass-card p-0 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle text-nowrap">
+                    <thead style="background: rgba(255, 255, 255, 0.05);">
+                        <tr>
+                            <th class="py-3 px-3">#</th>
+                            <th>کد تأمین‌کننده</th>
+                            <th>نام شرکت / تأمین‌کننده</th>
+                            <th>شخص رابط و تماس</th>
+                            <th>شناسه ملی / کد اقتصادی</th>
+                            <th class="text-center">تعداد رسیدها</th>
+                            <th>مجموع تناژ وارده</th>
+                            <th>ارزش کل خرید (ریال)</th>
+                            <th>وضعیت</th>
+                            <th class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if suppliers %}
+                            {% for item in suppliers %}
+                            {% set s = item.party %}
+                            <tr class="{% if not s.is_active %}opacity-50{% endif %}">
+                                <td class="px-3 text-secondary">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-25 text-light font-monospace px-2 py-1">
+                                        {{ s.code or ('SUP-' ~ s.id) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-light fs-6">{{ s.name }}</div>
+                                    {% if s.address %}
+                                    <small class="text-secondary d-block text-truncate" style="max-width: 250px;"><i class="bi bi-geo-alt me-1"></i>{{ s.address }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div><i class="bi bi-person text-secondary me-1"></i>{{ s.contact_person or '-' }}</div>
+                                    {% if s.phone %}
+                                    <small class="text-teal font-monospace"><i class="bi bi-telephone me-1"></i>{{ s.phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="font-monospace text-secondary">{{ s.national_id or '-' }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-teal bg-opacity-10 text-teal border border-teal border-opacity-25 px-2 py-1">
+                                        {{ item.tx_count }} سند
+                                    </span>
+                                </td>
+                                <td class="fw-bold font-monospace text-success">
+                                    {{ "{:,.2f}".format(item.total_qty) }}
+                                </td>
+                                <td class="fw-bold font-monospace text-warning">
+                                    {{ "{:,.0f}".format(item.total_value) }}
+                                </td>
+                                <td>
+                                    {% if s.is_active %}
+                                    <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">فعال</span>
+                                    {% else %}
+                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">غیرفعال</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if is_admin %}
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button class="btn btn-sm btn-outline-info" type="button" 
+                                            onclick='openEditSupplierModal({{ {
+                                                "id": s.id,
+                                                "name": s.name,
+                                                "code": s.code or "",
+                                                "contact_person": s.contact_person or "",
+                                                "phone": s.phone or "",
+                                                "email": s.email or "",
+                                                "address": s.address or "",
+                                                "national_id": s.national_id or ""
+                                            } | tojson }})' title="ویرایش اطلاعات">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <form action="/master-data/supplier/{{ s.id }}/toggle-status" method="post" class="m-0">
+                                            <button type="submit" class="btn btn-sm {% if s.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if s.is_active %}غیرفعال‌سازی{% else %}فعال‌سازی{% endif %}">
+                                                <i class="bi {% if s.is_active %}bi-slash-circle{% else %}bi-check-circle{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-secondary small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-building-dash fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                                    هیچ تأمین‌کننده‌ای یافت نشد.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- تب ۲: مشتریان و خریداران -->
+    <div class="tab-pane fade {% if active_tab == 'customers' %}show active{% endif %}" id="customers-pane" role="tabpanel" aria-labelledby="customers-tab">
+        <div class="glass-card p-0 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle text-nowrap">
+                    <thead style="background: rgba(255, 255, 255, 0.05);">
+                        <tr>
+                            <th class="py-3 px-3">#</th>
+                            <th>کد مشتری</th>
+                            <th>نام مشتری / کارفرما</th>
+                            <th>شخص رابط و تماس</th>
+                            <th>شناسه ملی / کد اقتصادی</th>
+                            <th>سقف اعتبار (ریال)</th>
+                            <th class="text-center">تعداد حواله‌ها</th>
+                            <th>مجموع تناژ صادره</th>
+                            <th>ارزش کل فروش (ریال)</th>
+                            <th>وضعیت</th>
+                            <th class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if customers %}
+                            {% for item in customers %}
+                            {% set c = item.party %}
+                            <tr class="{% if not c.is_active %}opacity-50{% endif %}">
+                                <td class="px-3 text-secondary">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-25 text-light font-monospace px-2 py-1">
+                                        {{ c.code or ('CUST-' ~ c.id) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-light fs-6">{{ c.name }}</div>
+                                    {% if c.address %}
+                                    <small class="text-secondary d-block text-truncate" style="max-width: 250px;"><i class="bi bi-geo-alt me-1"></i>{{ c.address }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div><i class="bi bi-person text-secondary me-1"></i>{{ c.contact_person or '-' }}</div>
+                                    {% if c.phone %}
+                                    <small class="text-teal font-monospace"><i class="bi bi-telephone me-1"></i>{{ c.phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="font-monospace text-secondary">{{ c.national_id or '-' }}</span>
+                                </td>
+                                <td>
+                                    {% if c.credit_limit and c.credit_limit > 0 %}
+                                    <span class="font-monospace text-info">{{ "{:,.0f}".format(c.credit_limit) }}</span>
+                                    {% else %}
+                                    <span class="text-secondary small">نامحدود / نقدی</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
+                                        {{ item.tx_count }} سند
+                                    </span>
+                                </td>
+                                <td class="fw-bold font-monospace text-danger">
+                                    {{ "{:,.2f}".format(item.total_qty) }}
+                                </td>
+                                <td class="fw-bold font-monospace text-warning">
+                                    {{ "{:,.0f}".format(item.total_value) }}
+                                </td>
+                                <td>
+                                    {% if c.is_active %}
+                                    <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">فعال</span>
+                                    {% else %}
+                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">غیرفعال</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if is_admin %}
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button class="btn btn-sm btn-outline-info" type="button" 
+                                            onclick='openEditCustomerModal({{ {
+                                                "id": c.id,
+                                                "name": c.name,
+                                                "code": c.code or "",
+                                                "contact_person": c.contact_person or "",
+                                                "phone": c.phone or "",
+                                                "email": c.email or "",
+                                                "address": c.address or "",
+                                                "national_id": c.national_id or "",
+                                                "credit_limit": c.credit_limit or 0
+                                            } | tojson }})' title="ویرایش اطلاعات">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <form action="/master-data/customer/{{ c.id }}/toggle-status" method="post" class="m-0">
+                                            <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if c.is_active %}غیرفعال‌سازی{% else %}فعال‌سازی{% endif %}">
+                                                <i class="bi {% if c.is_active %}bi-slash-circle{% else %}bi-check-circle{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-secondary small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="11" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-person-x fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                                    هیچ مشتری یا خریدار ثبت‌شده‌ای یافت نشد.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+{% if is_admin %}
+<!-- مودال ۱: تعریف تأمین‌کننده جدید -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form action="/master-data/supplier" method="post">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-light" id="addSupplierModalLabel">
+                <i class="bi bi-building-add text-success me-2"></i>تعریف تأمین‌کننده / کارخانه تولیدی جدید
+            </h5>
+            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">نام شرکت / کارخانه / تأمین‌کننده <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" required placeholder="مثلاً: شرکت سهامی ذوب‌آهن اصفهان">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">کد سیستمی تأمین‌کننده</label>
+                    <input type="text" class="form-control" name="code" placeholder="اختیاری (خودکار: SUP-xxx)">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شخص رابط / مدیر فروش</label>
+                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس رضایی">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شماره تلفن / نمابر</label>
+                    <input type="text" class="form-control" name="phone" placeholder="مثلاً: 031-33445566">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شناسه ملی / کد اقتصادی</label>
+                    <input type="text" class="form-control" name="national_id" placeholder="شناسه ۱۱ رقمی">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">پست الکترونیکی (ایمیل)</label>
+                    <input type="email" class="form-control" name="email" placeholder="sales@company.ir">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">آدرس کارخانه / دفتر مرکزی</label>
+                    <textarea class="form-control" name="address" rows="2" placeholder="آدرس کامل پستی..."></textarea>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-teal px-4">ثبت تأمین‌کننده</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- مودال ۲: ویرایش تأمین‌کننده -->
+<div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form id="editSupplierForm" method="post">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-light" id="editSupplierModalLabel">
+                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات تأمین‌کننده
+            </h5>
+            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">نام شرکت / کارخانه <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="edit_sup_name" name="name" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">کد سیستمی</label>
+                    <input type="text" class="form-control" id="edit_sup_code" name="code">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شخص رابط</label>
+                    <input type="text" class="form-control" id="edit_sup_contact" name="contact_person">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شماره تلفن</label>
+                    <input type="text" class="form-control" id="edit_sup_phone" name="phone">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شناسه ملی / کد اقتصادی</label>
+                    <input type="text" class="form-control" id="edit_sup_national_id" name="national_id">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">پست الکترونیکی</label>
+                    <input type="email" class="form-control" id="edit_sup_email" name="email">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">آدرس</label>
+                    <textarea class="form-control" id="edit_sup_address" name="address" rows="2"></textarea>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- مودال ۳: تعریف مشتری جدید -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form action="/master-data/customer" method="post">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-light" id="addCustomerModalLabel">
+                <i class="bi bi-person-plus-fill text-teal me-2"></i>تعریف مشتری / پیمانکار پروژه جدید
+            </h5>
+            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">نام شخص / نام شرکت خریدار <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" required placeholder="مثلاً: شرکت مهندسی و ساختمانی آرمان">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">کد مشتری</label>
+                    <input type="text" class="form-control" name="code" placeholder="اختیاری (خودکار: CUST-xxx)">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شخص تحویل‌گیرنده / رابط</label>
+                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس حسینی">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شماره تماس / همراه</label>
+                    <input type="text" class="form-control" name="phone" placeholder="مثلاً: 09121234567">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">شناسه ملی / کد ملی</label>
+                    <input type="text" class="form-control" name="national_id" placeholder="کد ۱۰ یا ۱۱ رقمی">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">سقف اعتبار مالی (ریال)</label>
+                    <input type="number" step="1000000" class="form-control" name="credit_limit" value="0" placeholder="0 = نامحدود">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">پست الکترونیکی</label>
+                    <input type="email" class="form-control" name="email" placeholder="client@domain.ir">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">آدرس کارگاه / دفتر خریدار</label>
+                    <textarea class="form-control" name="address" rows="2" placeholder="نشانی دقیق تحویل بار یا دفتر..."></textarea>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-teal px-4">ثبت مشتری</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- مودال ۴: ویرایش مشتری -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form id="editCustomerForm" method="post">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-light" id="editCustomerModalLabel">
+                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات مشتری
+            </h5>
+            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">نام شخص / نام شرکت <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="edit_cust_name" name="name" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">کد مشتری</label>
+                    <input type="text" class="form-control" id="edit_cust_code" name="code">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شخص رابط</label>
+                    <input type="text" class="form-control" id="edit_cust_contact" name="contact_person">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">شماره تماس</label>
+                    <input type="text" class="form-control" id="edit_cust_phone" name="phone">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">شناسه ملی / کد ملی</label>
+                    <input type="text" class="form-control" id="edit_cust_national_id" name="national_id">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">سقف اعتبار (ریال)</label>
+                    <input type="number" step="1000000" class="form-control" id="edit_cust_credit" name="credit_limit">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">پست الکترونیکی</label>
+                    <input type="email" class="form-control" id="edit_cust_email" name="email">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">آدرس</label>
+                    <textarea class="form-control" id="edit_cust_address" name="address" rows="2"></textarea>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openEditSupplierModal(sup) {
+    document.getElementById('editSupplierForm').action = '/master-data/supplier/' + sup.id + '/edit';
+    document.getElementById('edit_sup_name').value = sup.name || '';
+    document.getElementById('edit_sup_code').value = sup.code || '';
+    document.getElementById('edit_sup_contact').value = sup.contact_person || '';
+    document.getElementById('edit_sup_phone').value = sup.phone || '';
+    document.getElementById('edit_sup_email').value = sup.email || '';
+    document.getElementById('edit_sup_address').value = sup.address || '';
+    document.getElementById('edit_sup_national_id').value = sup.national_id || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
+    modal.show();
+}
+
+function openEditCustomerModal(cust) {
+    document.getElementById('editCustomerForm').action = '/master-data/customer/' + cust.id + '/edit';
+    document.getElementById('edit_cust_name').value = cust.name || '';
+    document.getElementById('edit_cust_code').value = cust.code || '';
+    document.getElementById('edit_cust_contact').value = cust.contact_person || '';
+    document.getElementById('edit_cust_phone').value = cust.phone || '';
+    document.getElementById('edit_cust_email').value = cust.email || '';
+    document.getElementById('edit_cust_address').value = cust.address || '';
+    document.getElementById('edit_cust_national_id').value = cust.national_id || '';
+    document.getElementById('edit_cust_credit').value = cust.credit_limit || 0;
+
+    const modal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+    modal.show();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const tabInput = document.getElementById('tabInput');
+    const supTab = document.getElementById('suppliers-tab');
+    const custTab = document.getElementById('customers-tab');
+
+    if (supTab && custTab && tabInput) {
+        supTab.addEventListener('shown.bs.tab', () => { tabInput.value = 'suppliers'; });
+        custTab.addEventListener('shown.bs.tab', () => { tabInput.value = 'customers'; });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -363,22 +363,38 @@
         </div>
       </div>
 
-      <!-- عملیات انبارداری -->
+      <!-- اطلاعات پایه و کاتالوگ کالاها -->
       <div class="mb-3">
-        <div class="sidebar-category">🔄 عملیات انبارداری</div>
+        <div class="sidebar-category">🏷️ تعاریف پایه و کاتالوگ</div>
         <div class="d-grid gap-1">
-          <a href="/inventory/transaction" class="sidebar-item"><i class="bi bi-box-arrow-in-down-right text-success me-2"></i>ثبت رسید / حواله انبار</a>
-          <a href="/inventory/transfer" class="sidebar-item"><i class="bi bi-arrow-left-right text-warning me-2"></i>انتقال بین انبارها</a>
-          <a href="/inventory/stocktaking" class="sidebar-item"><i class="bi bi-clipboard2-check text-primary me-2"></i>انبارگردانی و مغایرت‌گیری</a>
+          <a href="/master-data/products" class="sidebar-item"><i class="bi bi-box-seam text-info me-2"></i>کاتالوگ و مدیریت کالاها</a>
+          <a href="/master-data/parties" class="sidebar-item"><i class="bi bi-people text-teal me-2"></i>طرف‌های تجاری (تأمین‌کننده / مشتری)</a>
         </div>
       </div>
 
-      <!-- کاردکس و ارزش‌گذاری مالی -->
+      <!-- عملیات انبارداری و زنجیره تأمین -->
       <div class="mb-3">
-        <div class="sidebar-category">💰 کاردکس و مالی</div>
+        <div class="sidebar-category">🔄 عملیات انبارداری و زنجیره تأمین</div>
         <div class="d-grid gap-1">
-          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-receipt text-info me-2"></i>کاردکس مقداری کالاها</a>
+          <a href="/inventory/transaction" class="sidebar-item"><i class="bi bi-box-arrow-in-down-right text-success me-2"></i>ثبت رسید / حواله انبار</a>
+          <a href="/purchases" class="sidebar-item"><i class="bi bi-cart-check text-teal me-2"></i>سفارشات خرید و رسید کالا (PO)</a>
+          <a href="/weighbridge" class="sidebar-item"><i class="bi bi-truck text-warning me-2"></i>باسکول دیجیتال تریلی و قبض</a>
+          <a href="/cutting" class="sidebar-item"><i class="bi bi-scissors text-info me-2"></i>دستور برش و انبار ته‌شاخه آهن</a>
+          <a href="/bagging" class="sidebar-item"><i class="bi bi-box2 text-success me-2"></i>کیسه‌گیری فله به جامبوبگ اوره</a>
+          <a href="/inventory/transfer" class="sidebar-item"><i class="bi bi-arrow-left-right text-warning me-2"></i>انتقال بین انبارها</a>
+          <a href="/inventory/stocktaking" class="sidebar-item"><i class="bi bi-clipboard2-check text-primary me-2"></i>انبارگردانی و مغایرت‌گیری</a>
+          <a href="/inventory/returns/new" class="sidebar-item"><i class="bi bi-arrow-return-right text-danger me-2"></i>برگشت از خرید / برگشت از فروش</a>
+        </div>
+      </div>
+
+      <!-- کنترل موجودی، کاردکس و سامانه‌ها -->
+      <div class="mb-3">
+        <div class="sidebar-category">💰 کاردکس، هشدارها و سامانه‌ها</div>
+        <div class="d-grid gap-1">
+          <a href="/inventory/alerts" class="sidebar-item"><i class="bi bi-bell-fill text-warning me-2"></i>مرکز هشدارهای نقطه سفارش</a>
+          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-receipt text-info me-2"></i>کاردکس مقداری و دو واحدی</a>
           <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-cash-stack text-success me-2"></i>کاردکس ریالی و میانگین موزون</a>
+          <a href="/compliance" class="sidebar-item"><i class="bi bi-bank2 text-teal me-2"></i>سامانه جامع تجارت و انبارها</a>
         </div>
       </div>
 
@@ -388,17 +404,19 @@
         <div class="d-grid gap-1">
           <a href="/inventory/export/stock" class="sidebar-item"><i class="bi bi-file-earmark-excel text-success me-2"></i>خروجی اکسل موجودی انبار</a>
           <a href="/inventory/export/transactions" class="sidebar-item"><i class="bi bi-file-earmark-spreadsheet text-info me-2"></i>خروجی اکسل کلیه تراکنش‌ها</a>
+          <a href="/compliance/export/ntsw" class="sidebar-item"><i class="bi bi-file-earmark-arrow-down text-warning me-2"></i>خروجی ویژه سامانه جامع تجارت</a>
         </div>
       </div>
 
-      <!-- مدیریت سیستم -->
+      <!-- مدیریت سیستم و حسابرسی -->
       {% if user %}
       {% set is_admin_nav = user.roles | selectattr('name', 'equalto', 'Admin') | list | length > 0 %}
       {% if is_admin_nav %}
       <div class="mb-3">
-        <div class="sidebar-category">⚙️ مدیریت سیستم</div>
+        <div class="sidebar-category">⚙️ مدیریت سیستم و امنیت</div>
         <div class="d-grid gap-1">
           <a href="/admin/users" class="sidebar-item" style="color: #a78bfa !important;"><i class="bi bi-people me-2"></i>مدیریت کاربران و نقش‌ها</a>
+          <a href="/admin/audit-logs" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-shield-lock me-2"></i>لاگ جامع حسابرسی و امنیت</a>
         </div>
       </div>
       {% endif %}
@@ -443,18 +461,32 @@
             <a class="nav-link" href="/inventory/transaction"><i class="bi bi-plus-circle me-1"></i>ثبت تراکنش</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/inventory/transfer"><i class="bi bi-arrow-left-right me-1"></i>انتقال انبار</a>
+            <a class="nav-link" href="/purchases"><i class="bi bi-cart-check me-1"></i>سفارشات خرید</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/inventory/stocktaking"><i class="bi bi-clipboard2-check me-1"></i>انبارگردانی</a>
+            <a class="nav-link" href="/weighbridge"><i class="bi bi-truck me-1"></i>باسکول</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/inventory/balance"><i class="bi bi-bar-chart-line me-1"></i>موجودی</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/master-data/products"><i class="bi bi-box-seam me-1"></i>کاتالوگ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/master-data/parties"><i class="bi bi-people me-1"></i>طرف‌های تجاری</a>
           </li>
         </ul>
 
         {% if user %}
         <div class="d-flex align-items-center gap-2">
+          <!-- زنگوله هشدار نقطه سفارش -->
+          <a href="/inventory/alerts" class="btn btn-glass px-2 py-1 position-relative me-2" title="هشدارهای هوشمند موجودی و نقطه سفارش">
+            <i class="bi bi-bell fs-5 text-warning"></i>
+            <span id="navAlertBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+              0
+            </span>
+          </a>
+
           <div class="user-pill">
             <i class="bi bi-person-circle me-1"></i>
             <strong>{{ user.full_name or user.username }}</strong>
@@ -498,6 +530,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+      // ۱. تبدیل خودکار ارقام انگلیسی به فارسی
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
       let node;
       const skipTags = ['SCRIPT', 'STYLE', 'CODE', 'PRE', 'INPUT', 'TEXTAREA'];
@@ -506,6 +539,20 @@
         if (/[0-9]/.test(node.nodeValue)) {
           node.nodeValue = toPersianDigits(node.nodeValue);
         }
+      }
+
+      // ۲. استعلام زنده تعداد هشدارهای موجودی
+      const badge = document.getElementById('navAlertBadge');
+      if (badge) {
+        fetch('/inventory/alerts/badge')
+          .then(res => res.json())
+          .then(data => {
+            if (data.alert_count > 0) {
+              badge.textContent = toPersianDigits(data.alert_count);
+              badge.classList.remove('d-none');
+            }
+          })
+          .catch(() => {});
       }
     });
   </script>

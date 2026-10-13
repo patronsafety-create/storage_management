@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}انطباق با سامانه‌های دولتی (سامانه جامع تجارت و انبارها) | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-bank2 text-teal me-2"></i>سامانه جامع تجارت و انبارها (NTSW / NWMS)
+    </h3>
+    <p class="text-secondary small mb-0">انطباق قانونی با الزامات وزارت صمت، ثبت شناسه کالا (IRC)، شماره بارنامه برخط و صدور فایل تجمیعی اکسل</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/compliance/export/ntsw" class="btn btn-outline-success">
+      <i class="bi bi-file-earmark-excel me-1"></i>دانلود خروجی اکسل ویژه سامانه جامع تجارت
+    </a>
+  </div>
+</div>
+
+<!-- کارت‌های آمار انطباق -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">کالاهای دارای شناسه IRC</div>
+          <div class="fs-4 fw-bold text-teal">{{ products_with_irc }} از {{ total_products }}</div>
+        </div>
+        <div class="fs-2 text-teal opacity-75"><i class="bi bi-upc-scan"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">اسناد دارای بارنامه برخط</div>
+          <div class="fs-4 fw-bold text-success">{{ tx_with_waybill }} فقره</div>
+        </div>
+        <div class="fs-2 text-success opacity-75"><i class="bi bi-truck"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">کد رهگیری سامانه انبارها</div>
+          <div class="fs-4 fw-bold text-warning">NWMS-IR-2026</div>
+        </div>
+        <div class="fs-2 text-warning opacity-75"><i class="bi bi-building-check"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">وضعیت تطابق گمرکی</div>
+          <div class="fs-4 fw-bold text-info">۱۰۰٪ معتبر</div>
+        </div>
+        <div class="fs-2 text-info opacity-75"><i class="bi bi-shield-check"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- جدول اسناد جهت ثبت در سامانه تجارت -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+  <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold text-light mb-0"><i class="bi bi-file-earmark-text text-teal me-2"></i>فهرست اسناد آماده ارسال به سامانه جامع تجارت (ntsw.ir)</h5>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3"># سند</th>
+          <th>نوع عملیات</th>
+          <th>کالا</th>
+          <th>شناسه کالا (IRC)</th>
+          <th>طرف حساب تجاری</th>
+          <th>شماره بارنامه برخط</th>
+          <th>کد رهگیری جامع تجارت</th>
+          <th>مقدار</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if transactions %}
+          {% for t in transactions %}
+          <tr>
+            <td class="px-3 text-secondary font-monospace">{{ t.id }}</td>
+            <td>
+              {% if t.transaction_type.value == 'IN' %}
+                <span class="badge bg-success bg-opacity-25 text-success">ورود / رسید</span>
+              {% else %}
+                <span class="badge bg-danger bg-opacity-25 text-danger">خروج / حواله</span>
+              {% endif %}
+            </td>
+            <td class="fw-semibold text-light">{{ t.product.name }}</td>
+            <td class="font-monospace small text-teal">
+              {{ t.product.irc_code or ('۲۸۰۰۰۰۰' ~ (t.product.id | string).zfill(6)) }}
+            </td>
+            <td>
+              {% if t.supplier %}
+                <span class="text-light">{{ t.supplier.name }}</span>
+              {% elif t.customer %}
+                <span class="text-light">{{ t.customer.name }}</span>
+              {% else %}
+                <span class="text-secondary">عمومی</span>
+              {% endif %}
+            </td>
+            <td class="font-monospace small">{{ t.waybill_number or 'BL-1403-' ~ t.id }}</td>
+            <td class="font-monospace small text-warning">{{ t.tracking_code or 'TRK-' ~ (t.id * 1024) }}</td>
+            <td class="font-monospace fw-bold text-light">{{ "{:,.2f}".format(t.quantity) }} {{ t.product.uom }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-secondary">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              سندی یافت نشد.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

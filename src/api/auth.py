@@ -11,6 +11,7 @@ from src.infrastructure.security import (
     create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from src.domain_model.auth_models import User
+from src.core.dependencies import get_current_user, require_admin
 
 router = APIRouter(tags=["Authentication"])
 templates = Jinja2Templates(directory="templates")

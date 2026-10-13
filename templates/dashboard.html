@@ -37,12 +37,15 @@
         <a href="/inventory/balance" class="btn btn-glass px-3 py-2">
             <i class="bi bi-bar-chart-line me-1"></i>گزارش موجودی
         </a>
+        <a href="/master-data/products" class="btn btn-outline-info px-3 py-2">
+            <i class="bi bi-box-seam me-1"></i>کاتالوگ کالاها
+        </a>
         {% if is_admin %}
-        <button type="button" class="btn btn-outline-info px-3 py-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="bi bi-box-seam me-1"></i>+ کالا
+        <button type="button" class="btn btn-teal px-3 py-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-plus-circle me-1"></i>تعریف کالا
         </button>
         <button type="button" class="btn btn-outline-secondary px-3 py-2" data-bs-toggle="modal" data-bs-target="#addWarehouseModal">
-            <i class="bi bi-building me-1"></i>+ انبار
+            <i class="bi bi-building me-1"></i>تعریف انبار
         </button>
         {% endif %}
     </div>
@@ -187,9 +190,10 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form action="/master-data/product" method="post">
+          <input type="hidden" name="return_to" value="/dashboard">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addProductModalLabel">
-                <i class="bi bi-box-seam text-teal me-2"></i>تعریف کالای جدید
+                <i class="bi bi-box-seam text-teal me-2"></i>تعریف سریع کالا
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -198,15 +202,39 @@
                 <label for="product_name" class="form-label">نام کالا <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="product_name" name="name" required placeholder="مثال: شمش آلومینیوم ۹۹.۸٪">
             </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label for="uom" class="form-label">واحد سنجش <span class="text-danger">*</span></label>
+                    <select class="form-select" id="uom" name="uom" required>
+                        <option value="کیلوگرم">کیلوگرم</option>
+                        <option value="تن">تن</option>
+                        <option value="شاخه">شاخه</option>
+                        <option value="بندیل">بندیل</option>
+                        <option value="عدد">عدد</option>
+                        <option value="متر">متر</option>
+                        <option value="بسته">بسته</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label">کد کالا (SKU)</label>
+                    <input type="text" class="form-control" name="sku" placeholder="اختیاری">
+                </div>
+            </div>
             <div class="mb-3">
-                <label for="uom" class="form-label">واحد سنجش <span class="text-danger">*</span></label>
-                <select class="form-select" id="uom" name="uom" required>
-                    <option value="تن">تن</option>
-                    <option value="کیلوگرم">کیلوگرم</option>
-                    <option value="عدد">عدد</option>
-                    <option value="متر">متر</option>
-                    <option value="بسته">بسته</option>
+                <label class="form-label">دسته‌بندی کالا</label>
+                <select class="form-select" name="category_id">
+                    <option value="">-- بدون دسته‌بندی خاص --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
                 </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">کارخانه / برند سازنده</label>
+                <input type="text" class="form-control" name="brand" placeholder="مثلاً: فولاد مبارکه، ذوب‌آهن، پردیس">
+            </div>
+            <div class="p-2 rounded-2 bg-info bg-opacity-10 border border-info border-opacity-25 small text-info text-center">
+                <i class="bi bi-info-circle me-1"></i>برای ثبت مشخصات تخصصی متالورژی، طول شاخه، گرید و نقطه سفارش، به <a href="/master-data/products" class="text-teal fw-bold text-decoration-none">کاتالوگ کالاها</a> مراجعه کنید.
             </div>
           </div>
           <div class="modal-footer">

@@ -56,7 +56,77 @@ erDiagram
     users ||--o{ stock_transactions : creates
     warehouses ||--o{ stock_transactions : records
     products ||--o{ stock_transactions : tracks
+    product_categories ||--o{ products : categorizes
+    product_categories ||--o{ product_categories : parent_of
+    suppliers ||--o{ stock_transactions : supplies
+    customers ||--o{ stock_transactions : purchases
+    suppliers ||--o{ purchase_orders : receives
+    purchase_orders ||--o{ purchase_order_items : contains
+    warehouses ||--o{ weighbridge_tickets : weighs
+    products ||--o{ weighbridge_tickets : weighs
 
+    suppliers {
+        int id PK
+        string code
+        string name
+        string contact_person
+        string phone
+        string national_id
+        boolean is_active
+    }
+    customers {
+        int id PK
+        string code
+        string name
+        string contact_person
+        string phone
+        string national_id
+        float credit_limit
+        boolean is_active
+    }
+    purchase_orders {
+        int id PK
+        string po_number
+        int supplier_id FK
+        string status
+        float total_amount
+    }
+    weighbridge_tickets {
+        int id PK
+        string ticket_number
+        string truck_plate
+        string driver_name
+        float gross_weight
+        float tare_weight
+        float net_weight
+        string status
+    }
+    cutting_orders {
+        int id PK
+        string order_number
+        int product_id FK
+        float original_length
+        float cut_length
+        float remnant_length
+        string status
+    }
+    bagging_orders {
+        int id PK
+        string order_number
+        int bulk_product_id FK
+        int packaged_product_id FK
+        float bulk_tonnage_used
+        float packages_produced
+        string status
+    }
+    audit_logs {
+        int id PK
+        int user_id FK
+        string action
+        string entity_name
+        string ip_address
+        datetime created_at
+    }
     users {
         int id PK
         string username
@@ -74,19 +144,57 @@ erDiagram
         string name
         string location
     }
+    product_categories {
+        int id PK
+        string name
+        string code
+        int parent_id FK
+        string description
+    }
     products {
         int id PK
         string sku
         string name
+        string uom
+        string secondary_uom
+        float nominal_weight
+        string irc_code
+        string hs_code
+        int category_id FK
+        string brand
+        string size
+        float length
+        float thickness
+        string grade
+        string standard
+        float min_stock
+        float max_stock
+        float reorder_point
         string description
+        boolean is_active
     }
     stock_transactions {
         int id PK
         string transaction_type
         int product_id FK
         int warehouse_id FK
+        int supplier_id FK
+        int customer_id FK
         float quantity
+        float secondary_quantity
+        string secondary_uom
         float unit_price
+        float freight_cost
+        float insurance_cost
+        float weighbridge_cost
+        float bol_tonnage
+        float shrinkage_tolerance_pct
+        float final_landed_cost
+        string heat_number
+        string mtc_number
+        string waybill_number
+        string tracking_code
+        string status
         string batch_number
         string reference_document
         datetime created_at
@@ -95,8 +203,10 @@ erDiagram
 ```
 
 * **نکته کلیدی مدل‌ها:**
-  * در مدل `StockTransaction` (فایل `src/domain_model/inventory_models.py`)، ستون‌های `unit_price` (برای کاردکس ریالی) و `created_by_id` (برای ردیابی کاربر ثبت‌کننده) اضافه شده‌اند.
-  * رابطه با کاربر ثبت‌کننده با نام `created_by` تعریف شده است.
+  * جدول `product_categories` ساختار سلسله‌مراتبی و درختی گروه‌های کالایی را پشتیبانی می‌کند.
+  * در مدل `Product`، فیلدهای صنعتی و متالورژی (برند، سایز، طول، ضخامت، گرید، استاندارد، IRC، HS Code)، واحد فرعی (`secondary_uom`)، وزن اسمی (`nominal_weight`) و پارامترهای کنترل انبارداری (`min_stock`, `reorder_point`, `max_stock`) اضافه شده‌اند.
+  * در مدل `StockTransaction` ستون‌های دو واحدی، بهای تمام‌شده تجمیعی (`freight_cost`, `insurance_cost`, `weighbridge_cost`, `final_landed_cost`)، افت بارنامه، مشخصات متالورژی (`heat_number`, `mtc_number`)، انطباق سامانه تجارت (`waybill_number`, `tracking_code`) و چرخه تأیید (`status`) پیاده‌سازی شده‌اند.
+  * مدل‌های تخصصی `Supplier`، `Customer`، `PurchaseOrder`، `WeighbridgeTicket`، `CuttingOrder`، `BaggingOrder` و `AuditLog` به صورت کامل یکپارچه و به دیتابیس متصل شده‌اند.
 
 ---
 
@@ -107,20 +217,40 @@ erDiagram
 | **۱** | `/login` | GET/POST | صفحه ورود و احراز هویت با ظاهر نئونی دارک نکسوس‌پور | عمومی |
 | **۲** | `/logout` | GET | خروج از حساب کاربری و باطل‌سازی کوکی سشن | همه کاربران |
 | **۳** | `/dashboard` | GET | داشبورد مدیریتی، کارت‌های آمار و نمودار کیکی سهم انبارها | لاگین‌شده |
-| **۴** | `/inventory/transaction` | GET/POST | فرم ثبت رسید (ورود) و حواله (خروج) کالا با بررسی لحظه‌ای موجودی | لاگین‌شده |
-| **۵** | `/inventory/transfer` | GET/POST | **انتقال بین انبارها:** کسر از انبار مبدأ و افزودن به مقصد با مرجع واحد | لاگین‌شده |
-| **۶** | `/inventory/stocktaking` | GET/POST | **انبارگردانی:** مقایسه شمارش عینی با سیستم و صدور سند خودکار تعدیل | لاگین‌شده |
-| **۷** | `/inventory/balance` | GET | گزارش تفصیلی موجودی لحظه‌ای هر کالا در هر انبار | لاگین‌شده |
-| **۸** | `/inventory/transactions` | GET | جدول جامع تاریخچه اسناد با امکان جستجو و فیلتر | لاگین‌شده |
-| **۹** | `/inventory/kardex/{product_id}` | GET | کاردکس مقداری کالا با مانده لحظه‌ای سطر به سطر | لاگین‌شده |
-| **۱۰** | `/inventory/financial-kardex/{id}` | GET | **کاردکس ریالی:** ارزش‌گذاری موجودی با الگوریتم میانگین موزون | لاگین‌شده |
-| **۱۱** | `/inventory/transaction/{id}/print` | GET | **برگه رسمی A4 سند انبار:** فرمت استاندارد پرینت با ۴ امضای تایید | لاگین‌شده |
-| **۱۲** | `/inventory/export/stock` | GET | دانلود خروجی اکسل/CSV موجودی کالاها با فونت و کدگذاری UTF-8 | لاگین‌شده |
-| **۱۳** | `/inventory/export/transactions` | GET | دانلود خروجی اکسل/CSV تاریخچه کامل تراکنش‌ها | لاگین‌شده |
-| **۱۴** | `/admin/users` | GET/POST | پنل مدیریت کاربران، ایجاد کاربر جدید و تخصیص نقش | ادمین |
-| **۱۵** | `/master-data/products` | POST | ثبت کالای جدید در سیستم | ادمین |
-| **۱۶** | `/master-data/warehouses` | POST | ثبت انبار جدید در سیستم | ادمین |
-| **۱۷** | `/api/stock-check` | GET | وب‌سرویس AJAX برای بررسی موجودی آنی کالا در انبار انتخابی | لاگین‌شده |
+| **۴** | `/inventory/transaction` | GET/POST | ثبت رسید/حواله دو واحدی با بهای تمام‌شده، هزینه‌های سربار، افت بارنامه و متالورژی | لاگین‌شده |
+| **۵** | `/inventory/transactions` | GET | جدول تاریخچه اسناد با امکان تایید/رد سند (Approval Workflow) و مودال دلایل رد | لاگین‌شده |
+| **۶** | `/inventory/transactions/{id}/approve` | POST | تایید نهایی سند و اعمال در کاردکس موجودی | مدیر/انباردار |
+| **۷** | `/inventory/transactions/{id}/reject` | POST | رد سند با ثبت علت و عدم اعمال در موجودی | مدیر/انباردار |
+| **۸** | `/inventory/transactions/{id}/mtc` | GET | **شناسنامه رسمی متالورژی کالا (MTC Certificate):** آنالیز شیمیایی و مکانیکی جهت چاپ | لاگین‌شده |
+| **۹** | `/inventory/products/{id}/label` | GET | **چاپ لیبل بارکد و QR Code استاندارد ۱۰۰x۷۰ میلی‌متر** با خطوط برش | لاگین‌شده |
+| **۱۰** | `/inventory/transfer` | GET/POST | **انتقال بین انبارها:** کسر از انبار مبدأ و افزودن به مقصد با مرجع واحد | لاگین‌شده |
+| **۱۱** | `/inventory/stocktaking` | GET/POST | **انبارگردانی:** مقایسه شمارش عینی با سیستم و صدور سند خودکار تعدیل | لاگین‌شده |
+| **۱۲** | `/inventory/returns/new` | GET/POST | **اسناد برگشت از خرید و برگشت از فروش:** اتصال به سند مرجع و برگشت موجودی | لاگین‌شده |
+| **۱۳** | `/inventory/balance` | GET | گزارش تفصیلی موجودی لحظه‌ای (مقداری، دو واحدی و ریالی) | لاگین‌شده |
+| **۱۴** | `/inventory/alerts` | GET | **مرکز هشدارهای هوشمند انبار:** کالاهای زیر نقطه سفارش و کالاهای راکد (+۹۰ روز) | لاگین‌شده |
+| **۱۵** | `/inventory/alerts/badge` | GET | وب‌سرویس تعداد هشدارهای فعال جهت نمایش زنده روی آیکون زنگوله نوبار | لاگین‌شده |
+| **۱۶** | `/purchases` | GET | **مدیریت سفارشات خرید (PO):** لیست، فیلترها و شاخص‌های مالی سفارشات | لاگین‌شده |
+| **۱۷** | `/purchases/new` | GET/POST | فرم ثبت سفارش خرید جدید با اقلام چندگانه | لاگین‌شده |
+| **۱۸** | `/purchases/{id}` | GET | مشاهده جزئیات سفارش خرید و دکمه تبدیل با ۱ کلیک به رسید انبار | لاگین‌شده |
+| **۱۹** | `/purchases/{id}/receive` | POST | **تبدیل هوشمند سفارش خرید به رسید انبار:** ثبت رسید و بستن خودکار PO | لاگین‌شده |
+| **۲۰** | `/weighbridge` | GET | **زیرسیستم باسکول تریلی:** لیست نوبت‌ها، وضعیت توزین، ترافیک و مغایرت وزن | لاگین‌شده |
+| **۲۱** | `/weighbridge/new` | GET/POST | ثبت توزین اول تریلی (پر یا خالی) و بررسی سقف تناژ پلیس‌راه | لاگین‌شده |
+| **۲۲** | `/weighbridge/{id}/second` | GET | فرم ثبت توزین مرحله دوم | لاگین‌شده |
+| **۲۳** | `/weighbridge/{id}/complete` | POST | ثبت توزین دوم، محاسبه خالص و صدور مستقیم سند انبار | لاگین‌شده |
+| **۲۴** | `/weighbridge/{id}/print` | GET | **برگه رسمی قبض باسکول دیجیتال:** فرمت استاندارد پرینت با بارکد و پلاک | لاگین‌شده |
+| **۲۵** | `/cutting` | GET | **مدیریت دستورات برش و انبار ته‌شاخه آهن:** محاسبه بهای تمام‌شده ته‌شاخه | لاگین‌شده |
+| **۲۶** | `/cutting/new` | GET/POST | ثبت دستور برش جدید و انتقال خودکار ته‌شاخه به انبار ضایعات/ته‌شاخه | لاگین‌شده |
+| **۲۷** | `/bagging` | GET | **زیرسیستم کیسه‌گیری فله به جامبوبگ اوره:** مانیتورینگ ضریب مصرف و ریزش | لاگین‌شده |
+| **۲۸** | `/bagging/new` | GET/POST | ثبت عملیات کیسه‌گیری فله و محاسبه هزینه دستمزد و بسته‌بندی | لاگین‌شده |
+| **۲۹** | `/compliance` | GET | **داشبورد انطباق با سامانه‌های دولتی:** مانیتورینگ کدهای IRC، بارنامه برخط و سامانه تجارت | لاگین‌شده |
+| **۳۰** | `/compliance/export/ntsw` | GET | **دانلود خروجی اکسل ویژه سامانه جامع تجارت (ntsw.ir):** با کدگذاری UTF-8 BOM | لاگین‌شده |
+| **۳۱** | `/admin/audit-logs` | GET | **لاگ جامع حسابرسی و ردپای امنیتی:** گزارش رویدادها، تغییرات اسناد و IP کاربران | ادمین |
+| **۳۲** | `/master-data/products` | GET | **کاتالوگ جامع کالاها:** مشخصات متالورژی، موجودی لحظه‌ای، فیلتر و چاپ لیبل | لاگین‌شده |
+| **۳۳** | `/master-data/product` | POST | ثبت کالای جدید با کدینگ SKU و ویژگی‌های فنی | ادمین |
+| **۳۴** | `/master-data/product/{id}/edit` | POST | ویرایش مشخصات و پارامترهای کنترل موجودی کالا | ادمین |
+| **۳۵** | `/master-data/parties` | GET/POST | **مدیریت طرف‌های تجاری:** ثبت و ویرایش تأمین‌کنندگان و مشتریان با شناسه ملی | لاگین‌شده |
+| **۳۶** | `/admin/users` | GET/POST | پنل مدیریت کاربران، ایجاد کاربر جدید و تخصیص نقش | ادمین |
+| **۳۷** | `/api/stock-check` | GET | وب‌سرویس AJAX برای بررسی موجودی آنی کالا در انبار انتخابی | لاگین‌شده |
 
 ---
 

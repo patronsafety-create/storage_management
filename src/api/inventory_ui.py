@@ -2,17 +2,20 @@ import csv
 import io
 from urllib.parse import quote
 from typing import Optional
+from datetime import datetime
 
-from fastapi import APIRouter, Request, Depends, Form, Query
+from fastapi import APIRouter, Request, Depends, Form, Query, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 
 from src.core.dependencies import get_db, get_current_user
 from src.services.inventory_service import InventoryService
-from src.domain_model.inventory_models import Product, Warehouse, StockTransaction, TransactionType
+from src.services.audit_service import AuditService
+from src.domain_model.inventory_models import Product, Warehouse, StockTransaction, TransactionType, Supplier, Customer
 from src.domain_model.auth_models import User
+from src.domain_model.enums import DocumentStatus
 
 router = APIRouter(
     prefix="/inventory",
@@ -33,8 +36,11 @@ async def get_transaction_form(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    products = db.query(Product).order_by(Product.name).all()
+    products = db.query(Product).filter(Product.is_active == True).order_by(Product.name).all()
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
+    suppliers = db.query(Supplier).filter(Supplier.is_active == True).order_by(Supplier.name).all()
+    customers = db.query(Customer).filter(Customer.is_active == True).order_by(Customer.name).all()
+
     return templates.TemplateResponse(
         request=request,
         name="transaction_form.html",
@@ -42,6 +48,8 @@ async def get_transaction_form(
             "request": request,
             "products": products,
             "warehouses": warehouses,
+            "suppliers": suppliers,
+            "customers": customers,
             "user": current_user
         }
     )
@@ -55,8 +63,27 @@ async def process_transaction(
     warehouse_id: int = Form(...),
     quantity: float = Form(...),
     unit_price: Optional[float] = Form(0.0),
+    supplier_id: Optional[int] = Form(None),
+    customer_id: Optional[int] = Form(None),
     batch_number: Optional[str] = Form(None),
     reference_document: Optional[str] = Form(None),
+    doc_status: Optional[str] = Form("APPROVED"),
+    # ۲. موتور دو واحدی (Package 4)
+    secondary_quantity: Optional[float] = Form(None),
+    secondary_uom: Optional[str] = Form(None),
+    # ۶. بهای تمام شده و لجستیک (Package 6)
+    freight_cost: Optional[float] = Form(0.0),
+    insurance_cost: Optional[float] = Form(0.0),
+    weighbridge_cost: Optional[float] = Form(0.0),
+    bill_of_lading_qty: Optional[float] = Form(None),
+    # ۹. شجره‌نامه ذوب و متالورژی (Package 9)
+    heat_number: Optional[str] = Form(None),
+    mtc_number: Optional[str] = Form(None),
+    chemical_analysis: Optional[str] = Form(None),
+    mechanical_analysis: Optional[str] = Form(None),
+    # ۱۲. سامانه تجارت (Package 12)
+    waybill_number: Optional[str] = Form(None),
+    tracking_code: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -66,8 +93,10 @@ async def process_transaction(
             name="transaction_form.html",
             context={
                 "request": request,
-                "products": db.query(Product).order_by(Product.name).all(),
+                "products": db.query(Product).filter(Product.is_active == True).order_by(Product.name).all(),
                 "warehouses": db.query(Warehouse).order_by(Warehouse.name).all(),
+                "suppliers": db.query(Supplier).filter(Supplier.is_active == True).order_by(Supplier.name).all(),
+                "customers": db.query(Customer).filter(Customer.is_active == True).order_by(Customer.name).all(),
                 "error": msg,
                 "user": current_user
             },
@@ -84,26 +113,78 @@ async def process_transaction(
                 )
 
         tx_enum = TransactionType.IN if transaction_type == "IN" else TransactionType.OUT
+
+        # محاسبات دو واحدی دینامیک
+        weight_per_unit = (quantity / secondary_quantity) if (secondary_quantity and secondary_quantity > 0) else None
+        prod = db.query(Product).filter(Product.id == product_id).first()
+        std_w = prod.nominal_weight if (prod and prod.nominal_weight) else None
+        deviation_pct = None
+        if weight_per_unit and std_w and std_w > 0:
+            deviation_pct = round(((weight_per_unit - std_w) / std_w) * 100.0, 2)
+
+        # محاسبات بهای تمام‌شده و تلورانس بارنامه
+        shrink_qty = max(0.0, bill_of_lading_qty - quantity) if (bill_of_lading_qty and bill_of_lading_qty > quantity) else 0.0
+        shrink_pct = (shrink_qty / bill_of_lading_qty * 100.0) if (bill_of_lading_qty and bill_of_lading_qty > 0) else 0.0
+        penalty = (shrink_qty * (unit_price or 1000.0)) if shrink_pct > 0.3 else 0.0
+        total_landed = (quantity * (unit_price or 0.0)) + (freight_cost or 0.0) + (insurance_cost or 0.0) + (weighbridge_cost or 0.0)
+
+        # وضعیت سند
+        status_enum = DocumentStatus[doc_status] if (doc_status and doc_status in DocumentStatus.__members__) else DocumentStatus.APPROVED
+
         new_transaction = StockTransaction(
             transaction_type=tx_enum,
             product_id=product_id,
             warehouse_id=warehouse_id,
             quantity=quantity,
             unit_price=unit_price or 0.0,
+            supplier_id=supplier_id if tx_enum == TransactionType.IN and supplier_id and supplier_id > 0 else None,
+            customer_id=customer_id if tx_enum == TransactionType.OUT and customer_id and customer_id > 0 else None,
             batch_number=batch_number or None,
             reference_document=reference_document or None,
+            status=status_enum,
+            # دو واحدی
+            secondary_quantity=secondary_quantity,
+            secondary_uom=secondary_uom or (prod.secondary_uom if prod else None),
+            weight_per_unit=weight_per_unit,
+            standard_weight=std_w,
+            deviation_percent=deviation_pct,
+            # لجستیک و تلورانس
+            freight_cost=freight_cost or 0.0,
+            insurance_cost=insurance_cost or 0.0,
+            weighbridge_cost=weighbridge_cost or 0.0,
+            bill_of_lading_qty=bill_of_lading_qty,
+            shrinkage_qty=shrink_qty,
+            shrinkage_percent=round(shrink_pct, 2) if shrink_pct else None,
+            penalty_amount=penalty,
+            total_landed_cost=total_landed,
+            # متالورژی و ذوب
+            heat_number=heat_number or None,
+            mtc_number=mtc_number or None,
+            chemical_analysis=chemical_analysis or None,
+            mechanical_analysis=mechanical_analysis or None,
+            # سامانه جامع تجارت
+            waybill_number=waybill_number or None,
+            tracking_code=tracking_code or None,
             created_by_id=current_user.id
         )
         db.add(new_transaction)
         db.commit()
+
+        AuditService.log(
+            db, action="CREATE", entity_name="StockTransaction",
+            entity_id=str(new_transaction.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+            details=f"ثبت سند {tx_enum.value} به مقدار {quantity} {prod.uom if prod else ''} در {new_transaction.warehouse_id}"
+        )
+
         return RedirectResponse(url="/dashboard?msg=" + quote("تراکنش انبار با موفقیت ثبت شد"), status_code=303)
 
     except IntegrityError:
         db.rollback()
         return error_response("خطای یکپارچگی داده: مقدار یا نوع تراکنش نامعتبر است.")
-    except Exception:
+    except Exception as e:
         db.rollback()
-        return error_response("خطای سیستمی در ثبت تراکنش رخ داده است.")
+        return error_response(f"خطای سیستمی در ثبت تراکنش: {str(e)}")
+
 
 
 # ==========================================
@@ -139,7 +220,17 @@ async def list_transactions(
     product_id: Optional[int] = Query(None),
     page: int = Query(1, ge=1)
 ):
-    query = db.query(StockTransaction).order_by(StockTransaction.created_at.desc())
+    query = (
+        db.query(StockTransaction)
+        .options(
+            joinedload(StockTransaction.product),
+            joinedload(StockTransaction.warehouse),
+            joinedload(StockTransaction.supplier),
+            joinedload(StockTransaction.customer),
+            joinedload(StockTransaction.created_by)
+        )
+        .order_by(StockTransaction.created_at.desc())
+    )
 
     if tx_type in ("IN", "OUT"):
         query = query.filter(StockTransaction.transaction_type == TransactionType[tx_type])
@@ -530,4 +621,210 @@ async def export_transactions_csv(
         content=output.getvalue(),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=transactions_export.csv"}
+    )
+
+
+# ==========================================
+# ۱۰. گردش کار و تایید / رد اسناد (Package 0-C)
+# ==========================================
+@router.post("/transactions/{tx_id}/approve")
+async def approve_transaction(
+    tx_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """تایید نهایی سند و اعمال در کاردکس موجودی توسط مدیر انبار"""
+    tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="سند یافت نشد")
+    
+    tx.status = DocumentStatus.APPROVED
+    tx.approved_by_id = current_user.id
+    tx.approved_at = datetime.now()
+    db.commit()
+
+    AuditService.log(
+        db, action="APPROVE", entity_name="StockTransaction", entity_id=str(tx.id),
+        user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+        details=f"تأیید نهایی سند انبار #{tx.id} توسط سرپرست/مدیر انبار"
+    )
+    return RedirectResponse(url="/inventory/transactions?msg=" + quote(f"سند #{tx.id} با موفقیت تایید نهایی شد"), status_code=303)
+
+
+@router.post("/transactions/{tx_id}/reject")
+async def reject_transaction(
+    tx_id: int,
+    rejection_reason: str = Form("عدم تطابق فاکتور یا کسری بار"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """رد سند انبار با ثبت دلیل رسمی"""
+    tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="سند یافت نشد")
+    
+    tx.status = DocumentStatus.REJECTED
+    tx.rejection_reason = rejection_reason
+    db.commit()
+
+    AuditService.log(
+        db, action="REJECT", entity_name="StockTransaction", entity_id=str(tx.id),
+        user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+        details=f"رد سند #{tx.id} به علت: {rejection_reason}"
+    )
+    return RedirectResponse(url="/inventory/transactions?msg=" + quote(f"سند #{tx.id} رد شد"), status_code=303)
+
+
+@router.post("/transactions/{tx_id}/cancel")
+async def cancel_transaction(
+    tx_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """ابطال سند انبار"""
+    tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="سند یافت نشد")
+    
+    tx.status = DocumentStatus.CANCELLED
+    db.commit()
+
+    AuditService.log(
+        db, action="CANCEL", entity_name="StockTransaction", entity_id=str(tx.id),
+        user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+        details=f"ابطال رسمی سند انبار #{tx.id}"
+    )
+    return RedirectResponse(url="/inventory/transactions?msg=" + quote(f"سند #{tx.id} باطل گردید"), status_code=303)
+
+
+# ==========================================
+# ۱۱. اسناد برگشت از خرید / فروش (Package 3)
+# ==========================================
+@router.get("/returns/new", response_class=HTMLResponse)
+async def new_return_form(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """فرم ثبت سند برگشت از خرید و برگشت از فروش"""
+    candidates = (
+        db.query(StockTransaction)
+        .options(
+            joinedload(StockTransaction.product),
+            joinedload(StockTransaction.warehouse),
+            joinedload(StockTransaction.supplier),
+            joinedload(StockTransaction.customer)
+        )
+        .filter(StockTransaction.status == DocumentStatus.APPROVED)
+        .order_by(StockTransaction.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="return_form.html",
+        context={
+            "request": request,
+            "candidate_transactions": candidates,
+            "user": current_user
+        }
+    )
+
+
+@router.post("/returns")
+async def process_return_transaction(
+    request: Request,
+    parent_transaction_id: int = Form(...),
+    quantity: float = Form(...),
+    return_reason: str = Form(...),
+    notes: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """ثبت سند برگشتی و اعمال در کاردکس معکوس"""
+    parent = db.query(StockTransaction).filter(StockTransaction.id == parent_transaction_id).first()
+    if not parent:
+        raise HTTPException(status_code=404, detail="سند مرجع یافت نشد")
+
+    rev_type = TransactionType.OUT if parent.transaction_type == TransactionType.IN else TransactionType.IN
+
+    return_tx = StockTransaction(
+        transaction_type=rev_type,
+        product_id=parent.product_id,
+        warehouse_id=parent.warehouse_id,
+        quantity=quantity,
+        unit_price=parent.unit_price,
+        supplier_id=parent.supplier_id if rev_type == TransactionType.OUT else None,
+        customer_id=parent.customer_id if rev_type == TransactionType.IN else None,
+        reference_document=f"RET-REF#{parent.id}",
+        is_return=True,
+        return_reason=return_reason,
+        parent_transaction_id=parent.id,
+        status=DocumentStatus.APPROVED,
+        created_by_id=current_user.id
+    )
+    db.add(return_tx)
+    db.commit()
+
+    AuditService.log(
+        db, action="CREATE", entity_name="StockTransaction", entity_id=str(return_tx.id),
+        user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+        details=f"ثبت سند برگشتی #{return_tx.id} عطف به سند #{parent.id} به علت: {return_reason}"
+    )
+
+    return RedirectResponse(
+        url="/inventory/transactions?msg=" + quote(f"سند برگشتی #{return_tx.id} با موفقیت ثبت و کاردکس اصلاح شد"),
+        status_code=303
+    )
+
+
+# ==========================================
+# ۱۲. شناسنامه متالورژی MTC (Package 9)
+# ==========================================
+@router.get("/transactions/{tx_id}/mtc", response_class=HTMLResponse)
+async def view_mtc_certificate(
+    tx_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """چاپ رسمی شناسنامه کیفیت و متالورژی کالا"""
+    tx = (
+        db.query(StockTransaction)
+        .options(
+            joinedload(StockTransaction.product),
+            joinedload(StockTransaction.supplier),
+            joinedload(StockTransaction.customer),
+            joinedload(StockTransaction.warehouse)
+        )
+        .filter(StockTransaction.id == tx_id)
+        .first()
+    )
+    if not tx:
+        raise HTTPException(status_code=404, detail="سند یافت نشد")
+    return templates.TemplateResponse(
+        request=request,
+        name="mtc_certificate.html",
+        context={"request": request, "tx": tx, "user": current_user}
+    )
+
+
+# ==========================================
+# ۱۳. چاپ لیبل بارکد بندیل و پالت (Package 10)
+# ==========================================
+@router.get("/products/{product_id}/label", response_class=HTMLResponse)
+async def view_barcode_label(
+    product_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """چاپ برچسب بارکد استاندارد لیبل‌پرینتر"""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="کالا یافت نشد")
+    return templates.TemplateResponse(
+        request=request,
+        name="barcode_label.html",
+        context={"request": request, "product": product, "user": current_user}
     )

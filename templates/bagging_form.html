@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}ثبت دستور کیسه‌گیری اوره | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+    <div class="glass-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+        <div>
+          <h4 class="fw-bold mb-1 text-light">
+            <i class="bi bi-box2-fill text-teal me-2"></i>ثبت دستور کیسه‌گیری فله به جامبوبگ / کیسه
+          </h4>
+          <p class="text-secondary small mb-0">تبدیل اوره فله به محصولات بسته‌بندی‌شده و کسر/افزایش خودکار در کاردکس انبار</p>
+        </div>
+        <a href="/bagging" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-right me-1"></i>بازگشت
+        </a>
+      </div>
+
+      <form action="/bagging" method="post" id="bagForm">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="order_number" class="form-label fw-bold">شماره پارت کیسه‌گیری</label>
+            <input type="text" class="form-control font-monospace" id="order_number" name="order_number" value="{{ generated_bag_number }}" required>
+          </div>
+          <div class="col-md-6">
+            <label for="warehouse_id" class="form-label fw-bold">انبار محل عملیات بسته‌بندی <span class="text-danger">*</span></label>
+            <select class="form-select" id="warehouse_id" name="warehouse_id" required>
+              {% for w in warehouses %}
+              <option value="{{ w.id }}">{{ w.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="bulk_product_id" class="form-label fw-bold">محصول فله اولیه (ماده اولیه) <span class="text-danger">*</span></label>
+            <select class="form-select" id="bulk_product_id" name="bulk_product_id" required>
+              <option value="" selected disabled>انتخاب کالای فله...</option>
+              {% for p in products %}
+              <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="packaged_product_id" class="form-label fw-bold">محصول نهایی بسته‌بندی‌شده <span class="text-danger">*</span></label>
+            <select class="form-select" id="packaged_product_id" name="packaged_product_id" required>
+              <option value="" selected disabled>انتخاب کالای بسته‌بندی...</option>
+              {% for p in products %}
+              <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="package_type" class="form-label fw-bold">نوع بسته‌بندی</label>
+            <select class="form-select" id="package_type" name="package_type">
+              <option value="جامبوبگ ۱ تنی">جامبوبگ ۱ تنی (۴ بند)</option>
+              <option value="کیسه ۵۰ کیلویی">کیسه لمینت ۵۰ کیلویی</option>
+              <option value="جامبوبگ ۱.۵ تنی">جامبوبگ ۱.۵ تنی</option>
+              <option value="کیسه ۲۵ کیلویی">کیسه ۲۵ کیلویی</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="bulk_tonnage_used" class="form-label fw-bold">تناژ فله مصرفی (تن) <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" min="0.1" class="form-control font-monospace" id="bulk_tonnage_used" name="bulk_tonnage_used" placeholder="مثلاً: 50.0" required>
+          </div>
+
+          <div class="col-md-4">
+            <label for="packages_produced" class="form-label fw-bold">تعداد بسته‌های تولیدی <span class="text-danger">*</span></label>
+            <input type="number" step="1" min="1" class="form-control font-monospace text-success fw-bold" id="packages_produced" name="packages_produced" placeholder="مثلاً: 50" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="packaging_cost_per_ton" class="form-label">هزینه دستمزد و جامبوبگ/کیسه (ریال بر تن)</label>
+            <input type="number" step="1000" min="0" class="form-control font-monospace" id="packaging_cost_per_ton" name="packaging_cost_per_ton" value="0">
+          </div>
+          <div class="col-md-6">
+            <label for="waste_tonnage" class="form-label">ریزش و پرتی حین کیسه‌گیری (تن)</label>
+            <input type="number" step="0.001" min="0" class="form-control font-monospace" id="waste_tonnage" name="waste_tonnage" value="0.0">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="notes" class="form-label">توضیحات و عطف به سفارش خریدار / کشتی</label>
+          <input type="text" class="form-control" id="notes" name="notes" placeholder="شماره پارت صادراتی، مشخصات کانتینر یا خط دوخت...">
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+          <a href="/bagging" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <button type="submit" class="btn btn-teal px-5 py-2">
+            <i class="bi bi-check2-circle me-1"></i>ثبت و اجرای عملیات کیسه‌گیری
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const pkgType = document.getElementById('package_type');
+    const bulkInput = document.getElementById('bulk_tonnage_used');
+    const prodInput = document.getElementById('packages_produced');
+
+    function autoSuggest() {
+        const tonnage = parseFloat(bulkInput.value) || 0;
+        const type = pkgType.value;
+        if (tonnage > 0) {
+            if (type.includes('۱ تنی')) {
+                prodInput.value = Math.floor(tonnage);
+            } else if (type.includes('۵۰ کیلویی')) {
+                prodInput.value = Math.floor(tonnage * 20); // هر تن = ۲۰ کیسه ۵۰ کیلویی
+            } else if (type.includes('۲۵ کیلویی')) {
+                prodInput.value = Math.floor(tonnage * 40);
+            }
+        }
+    }
+
+    bulkInput.addEventListener('input', autoSuggest);
+    pkgType.addEventListener('change', autoSuggest);
+});
+</script>
+{% endblock %}

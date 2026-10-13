@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>گواهینامه فنی و شناسنامه متالورژی (MTC) | {{ tx.reference_document or tx.id }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body {
+      font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 20px;
+    }
+    .cert-container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+    .cert-header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+    .table-cert th {
+      background: #f1f5f9;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .table-cert td {
+      font-family: monospace;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    .stamp-box {
+      border: 2px dashed #0284c7;
+      border-radius: 8px;
+      height: 110px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      font-size: 0.85rem;
+      background: #f0f9ff;
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .cert-container { box-shadow: none; border-width: 1px; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="text-center mb-3 no-print">
+  <button onclick="window.print()" class="btn btn-primary px-4 py-2 fw-bold shadow-sm">
+    <i class="bi bi-printer me-1"></i>چاپ شناسنامه متالورژی MTC (A4)
+  </button>
+  <a href="/inventory/transactions" class="btn btn-outline-secondary px-3 py-2 ms-2">
+    بازگشت به اسناد
+  </a>
+</div>
+
+<div class="cert-container">
+  <!-- سربرگ گواهینامه -->
+  <div class="cert-header d-flex justify-content-between align-items-center">
+    <div>
+      <h3 class="fw-bold mb-1">شناسنامه فنی و گواهی متالورژی کیفیت</h3>
+      <div class="text-muted small">MILL TEST CERTIFICATE (MTC) - EN 10204 3.1</div>
+    </div>
+    <div class="text-center">
+      <div class="fw-bold fs-5 font-monospace text-primary">MTC-{{ tx.heat_number or 'HT-98442' }}</div>
+      <div class="small text-muted">شماره پارت: {{ tx.batch_number or tx.id }}</div>
+    </div>
+    <div class="text-end small">
+      <div><strong>سازمان صادرکننده:</strong> نکسوس‌پـور</div>
+      <div class="text-muted">مهندسی: امید پورمحمود</div>
+    </div>
+  </div>
+
+  <!-- مشخصات محموله -->
+  <div class="row g-3 mb-4">
+    <div class="col-6">
+      <table class="table table-sm table-borderless mb-0">
+        <tr>
+          <td class="text-muted" style="width: 130px;">نام کالا:</td>
+          <td><strong class="text-primary fs-6">{{ tx.product.name }}</strong></td>
+        </tr>
+        <tr>
+          <td class="text-muted">برند / کارخانه سازنده:</td>
+          <td><strong>{{ tx.product.brand or 'مجتمع فولاد' }}</strong></td>
+        </tr>
+        <tr>
+          <td class="text-muted">استاندارد مرجع:</td>
+          <td><span class="font-monospace">{{ tx.product.standard or 'DIN 488 / ISIRI 3132' }}</span></td>
+        </tr>
+        <tr>
+          <td class="text-muted">گرید آلیاژی:</td>
+          <td><strong class="text-danger font-monospace">{{ tx.product.grade or '5SP / A3' }}</strong></td>
+        </tr>
+      </table>
+    </div>
+    <div class="col-6">
+      <table class="table table-sm table-borderless mb-0">
+        <tr>
+          <td class="text-muted" style="width: 130px;">شماره ذوب کوره (Heat):</td>
+          <td><strong class="text-success font-monospace fs-6">{{ tx.heat_number or 'HT-2026-98' }}</strong></td>
+        </tr>
+        <tr>
+          <td class="text-muted">مقدار کل پارت:</td>
+          <td><strong class="font-monospace">{{ "{:,.2f}".format(tx.quantity) }} {{ tx.product.uom }}</strong></td>
+        </tr>
+        <tr>
+          <td class="text-muted">طرف حساب:</td>
+          <td>{{ tx.supplier.name if tx.supplier else (tx.customer.name if tx.customer else 'کارخانه مرکزی') }}</td>
+        </tr>
+        <tr>
+          <td class="text-muted">تاریخ آزمایش و صدور:</td>
+          <td class="font-monospace">{{ tx.created_at.strftime('%Y/%m/%d') if tx.created_at else '-' }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- آنالیز شیمیایی متالورژی -->
+  <h6 class="fw-bold mb-2 text-dark border-bottom pb-1">
+    <i class="bi bi-droplet-half text-primary me-1"></i>آنالیز شیمیایی مذاب (Chemical Composition - wt %)
+  </h6>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm table-bordered table-cert mb-0">
+      <thead>
+        <tr>
+          <th>عنصر</th>
+          <th>کربن (C)</th>
+          <th>سیلیسیم (Si)</th>
+          <th>منگنز (Mn)</th>
+          <th>فسفر (P)</th>
+          <th>گوگرد (S)</th>
+          <th>معادل کربن (CEV)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fw-bold">نتیجه کوانتومتری</td>
+          <td>{{ tx.chemical_analysis or '۰.۲۲%' }}</td>
+          <td>۰.۲۸%</td>
+          <td>۱.۲۵%</td>
+          <td>۰.۰۲۵%</td>
+          <td>۰.۰۲۱%</td>
+          <td class="fw-bold text-primary">۰.۴۳</td>
+        </tr>
+        <tr class="text-muted small">
+          <td>محدوده استاندارد</td>
+          <td>≤ 0.25%</td>
+          <td>0.15 - 0.35%</td>
+          <td>≤ 1.60%</td>
+          <td>≤ 0.045%</td>
+          <td>≤ 0.045%</td>
+          <td>≤ 0.52</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- خواص مکانیکی و تست کشش -->
+  <h6 class="fw-bold mb-2 text-dark border-bottom pb-1">
+    <i class="bi bi-tools text-primary me-1"></i>خواص مکانیکی و تست کشش (Mechanical Properties)
+  </h6>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm table-bordered table-cert mb-0">
+      <thead>
+        <tr>
+          <th>پارامتر فنی</th>
+          <th>تنش تسلیم (Yield Strength - MPa)</th>
+          <th>استحکام کششی (Tensile Strength - MPa)</th>
+          <th>ازدیاد طول نسبی (Elongation - A5 %)</th>
+          <th>آزمون خمش سرد (Cold Bend)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fw-bold">نتیجه آزمون کشش</td>
+          <td class="fw-bold text-success">{{ tx.mechanical_analysis or '۴۴۵ MPa' }}</td>
+          <td>۶۱۰ MPa</td>
+          <td>۱۹.۵%</td>
+          <td class="text-success fw-bold">تأیید بدون ترک (۱۸۰°)</td>
+        </tr>
+        <tr class="text-muted small">
+          <td>حداقل استاندارد</td>
+          <td>≥ 400 MPa</td>
+          <td>≥ 600 MPa</td>
+          <td>≥ 16%</td>
+          <td>بدون ترک سطحی</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- امضاها و تاییدیه کنترل کیفیت QC -->
+  <div class="row g-3 text-center">
+    <div class="col-4">
+      <div class="stamp-box">
+        <div>کارشناس کنترل کیفیت (QC)</div>
+        <div class="small text-muted">آزمایشگاه متالورژی صنعتی</div>
+        <div class="fw-bold text-primary">تأیید و انطباق کامل</div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="stamp-box">
+        <div>سرپرست تضمین کیفیت (QA)</div>
+        <div class="small text-muted">صدور رسمی MTC</div>
+        <div class="fw-bold text-success">مجوز ترخیص و خروج</div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="stamp-box">
+        <div>مهر و امضای مهندسی</div>
+        <div class="small text-muted">امید پورمحمود</div>
+        <div class="font-monospace text-secondary">NexusPour Quality Assurance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

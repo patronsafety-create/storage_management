@@ -6,7 +6,7 @@ from typing import Optional
 
 from src.core.dependencies import get_current_user
 from src.infrastructure.database import get_db
-from src.domain_model.inventory_models import StockTransaction
+from src.domain_model.inventory_models import StockTransaction, ProductCategory
 from src.domain_model.auth_models import User
 from src.services.inventory_service import InventoryService
 
@@ -35,6 +35,7 @@ async def dashboard(
 
     # داده‌های نمودار: موجودی لحظه‌ای کالاها
     stock_balances = InventoryService.calculate_stock_balances(db)
+    categories = db.query(ProductCategory).order_by(ProductCategory.name).all()
 
     return templates.TemplateResponse(
         request=request,
@@ -48,5 +49,6 @@ async def dashboard(
             "user": current_user,
             "is_admin": is_admin,
             "stock_balances": stock_balances,
+            "categories": categories,
         }
     )

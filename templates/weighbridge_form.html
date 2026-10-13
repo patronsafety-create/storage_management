@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}ثبت نوبت توزین اول باسکول | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10 col-xl-9">
+    <div class="glass-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+        <div>
+          <h4 class="fw-bold mb-1 text-light">
+            <i class="bi bi-truck-flatbed text-teal me-2"></i>ثبت مرحله اول توزین ناوگان (ورود به باسکول)
+          </h4>
+          <p class="text-secondary small mb-0">پذیرش تریلی/کامیون، ثبت مشخصات بارنامه و پلاک، و ثبت وزن مرحله اول</p>
+        </div>
+        <a href="/weighbridge" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-right me-1"></i>بازگشت
+        </a>
+      </div>
+
+      <form action="/weighbridge" method="post" id="weighForm">
+        <!-- سربرگ قبض -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="ticket_number" class="form-label fw-bold">شماره قبض باسکول</label>
+            <input type="text" class="form-control font-monospace" id="ticket_number" name="ticket_number" value="{{ generated_ticket_number }}" required>
+          </div>
+
+          <div class="col-md-4">
+            <label for="truck_plate" class="form-label fw-bold">
+              پلاک خودرو (ایران) <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control font-monospace" id="truck_plate" name="truck_plate" placeholder="مثلاً: ایران ۶۸ - ۳۴۵ ع ۱۲" required>
+            <div class="form-text text-secondary small">شماره پلاک انتظامی مندرج در کارت هوشمند یا بارنامه</div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="truck_type" class="form-label fw-bold">نوع ناوگان</label>
+            <select class="form-select" id="truck_type" name="truck_type">
+              <option value="تریلی کفی ۱۸ چرخ (بندیل و میلگرد)">تریلی کفی ۱۸ چرخ (بندیل و میلگرد)</option>
+              <option value="تریلی لبه‌دار / ترانزیت">تریلی لبه‌دار / ترانزیت چادری</option>
+              <option value="کمپرسی سنگین (فله و شمش)">کمپرسی سنگین (فله و شمش)</option>
+              <option value="کامیون جفت (۱۰ چرخ)">کامیون جفت (۱۰ چرخ - ۱۵ تن)</option>
+              <option value="کامیون تک (۶ چرخ)">کامیون تک (۶ چرخ - ۱۰ تن)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- راننده و ناوگان -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="driver_name" class="form-label fw-bold">نام و نام خانوادگی راننده <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="driver_name" name="driver_name" required placeholder="مثلاً: محمد صادقی">
+          </div>
+          <div class="col-md-6">
+            <label for="driver_phone" class="form-label">شماره تلفن همراه راننده</label>
+            <input type="text" class="form-control font-monospace" id="driver_phone" name="driver_phone" placeholder="مثلاً: 09121112233">
+          </div>
+        </div>
+
+        <!-- کالا، انبار و نوع توزین -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="weighing_mode" class="form-label fw-bold">نوع عملیات باسکول <span class="text-danger">*</span></label>
+            <select class="form-select" id="weighing_mode" name="weighing_mode" required>
+              <option value="INBOUND">📥 ورود بار به انبار (توزین ۱: پر / توزین ۲: خالی)</option>
+              <option value="OUTBOUND">📤 خروج بار از انبار (توزین ۱: خالی / توزین ۲: پر)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="product_id" class="form-label fw-bold">نوع محموله / کالا <span class="text-danger">*</span></label>
+            <select class="form-select" id="product_id" name="product_id" required>
+              <option value="" selected disabled>انتخاب کالا...</option>
+              {% for p in products %}
+              <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="warehouse_id" class="form-label fw-bold">انبار محل تخلیه / بارگیری <span class="text-danger">*</span></label>
+            <select class="form-select" id="warehouse_id" name="warehouse_id" required>
+              {% for w in warehouses %}
+              <option value="{{ w.id }}">{{ w.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- طرف‌های تجاری -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="supplier_id" class="form-label">تأمین‌کننده / کارخانه مبدأ بار</label>
+            <select class="form-select" id="supplier_id" name="supplier_id">
+              <option value="">-- بدون انتساب / مبدأ عمومی --</option>
+              {% for s in suppliers %}
+              <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="customer_id" class="form-label">مشتری / پروژه مقصد بار</label>
+            <select class="form-select" id="customer_id" name="customer_id">
+              <option value="">-- بدون انتساب / مقصد عمومی --</option>
+              {% for c in customers %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- اندیکاتور وزن و هشدار راهداری -->
+        <div class="p-4 rounded-3 mb-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+              <label for="initial_weight" class="form-label fw-bold fs-6 text-light">
+                <i class="bi bi-speedometer2 text-teal me-1"></i>وزن ثبت‌شده روی باسکول (کیلوگرم) <span class="text-danger">*</span>
+              </label>
+              <div class="input-group input-group-lg">
+                <input type="number" step="10" min="500" class="form-control font-monospace text-teal fw-bold fs-4"
+                       id="initial_weight" name="initial_weight" placeholder="مثلاً: 38500" required>
+                <span class="input-group-text bg-dark text-secondary border-secondary">کیلوگرم</span>
+              </div>
+              <div class="small text-secondary mt-1" id="tonDisplay">معادل: ۰.۰۰ تن</div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="max_allowed_weight" class="form-label small text-secondary">سقف وزن ناخالص مجاز پلیس‌راه (کیلوگرم)</label>
+              <input type="number" step="500" class="form-control font-monospace" id="max_allowed_weight" name="max_allowed_weight" value="40000">
+              <div id="overweightWarning" class="alert alert-danger py-2 px-3 small mt-2 d-none">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>هشدار: وزن کل بیش از سقف مجاز پلیس‌راه است (ریسک جریمه اضافه تناژ راهداری)!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="notes" class="form-label">یادداشت متصدی باسکول</label>
+          <input type="text" class="form-control" id="notes" name="notes" placeholder="شماره بارنامه کارخانه، شماره توزین مبدأ، وضعیت باربندی و چادر...">
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+          <a href="/weighbridge" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <button type="submit" class="btn btn-teal px-5 py-2">
+            <i class="bi bi-check2-circle me-1"></i>ثبت نوبت توزین اول
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const weightInput = document.getElementById('initial_weight');
+    const tonDisplay = document.getElementById('tonDisplay');
+    const maxWeightInput = document.getElementById('max_allowed_weight');
+    const warning = document.getElementById('overweightWarning');
+
+    function checkWeight() {
+        const val = parseFloat(weightInput.value) || 0;
+        const maxVal = parseFloat(maxWeightInput.value) || 40000;
+        tonDisplay.textContent = `معادل: ${(val / 1000).toLocaleString('fa-IR', {maximumFractionDigits: 3})} تن`;
+
+        if (val > maxVal) {
+            warning.classList.remove('d-none');
+        } else {
+            warning.classList.add('d-none');
+        }
+    }
+
+    weightInput.addEventListener('input', checkWeight);
+    maxWeightInput.addEventListener('input', checkWeight);
+});
+</script>
+{% endblock %}

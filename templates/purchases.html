@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}سفارشات خرید (Purchase Orders) | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-cart-check text-teal me-2"></i>مدیریت سفارشات خرید (Purchase Orders)
+    </h3>
+    <p class="text-secondary small mb-0">صدور و پیگیری سفارشات خرید از کارخانجات و تطبیق با رسیدهای واقعی انبار</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/purchases/new" class="btn btn-teal">
+      <i class="bi bi-plus-circle me-1"></i>ثبت سفارش خرید جدید
+    </a>
+  </div>
+</div>
+
+<!-- کارت‌های آمار و شاخص‌های کلیدی عملکرد (KPIs) -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">کل سفارشات ثبت‌شده</div>
+          <div class="fs-4 fw-bold text-light">{{ total_orders }}</div>
+        </div>
+        <div class="fs-2 text-teal opacity-75"><i class="bi bi-receipt-cutoff"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">در انتظار دریافت و بارگیری</div>
+          <div class="fs-4 fw-bold text-warning">{{ pending_receipt }}</div>
+        </div>
+        <div class="fs-2 text-warning opacity-75"><i class="bi bi-hourglass-split"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">سفارشات تکمیل‌شده</div>
+          <div class="fs-4 fw-bold text-success">{{ completed_orders }}</div>
+        </div>
+        <div class="fs-2 text-success opacity-75"><i class="bi bi-check2-circle"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">ارزش کل سفارشات (ریال)</div>
+          <div class="fs-5 fw-bold text-info">{{ "{:,.0f}".format(total_value) }}</div>
+        </div>
+        <div class="fs-2 text-info opacity-75"><i class="bi bi-cash-stack"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نوار فیلتر و جستجو -->
+<div class="glass-card p-3 mb-4">
+  <form method="get" action="/purchases" class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small text-secondary">فیلتر تأمین‌کننده / کارخانه:</label>
+      <select name="supplier_filter" class="form-select bg-dark border-secondary text-light">
+        <option value="">همه تأمین‌کنندگان</option>
+        {% for s in suppliers %}
+        <option value="{{ s.id }}" {% if supplier_filter == s.id %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small text-secondary">وضعیت سفارش:</label>
+      <select name="status_filter" class="form-select bg-dark border-secondary text-light">
+        <option value="">همه وضعیت‌ها</option>
+        <option value="CONFIRMED" {% if status_filter == 'CONFIRMED' %}selected{% endif %}>تأیید شده / در راه</option>
+        <option value="PARTIALLY_RECEIVED" {% if status_filter == 'PARTIALLY_RECEIVED' %}selected{% endif %}>دریافت ناقص / بخشی</option>
+        <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>تکمیل‌شده و مختومه</option>
+        <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>باطل‌شده</option>
+      </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-info w-100">
+        <i class="bi bi-funnel me-1"></i>اعمال فیلتر
+      </button>
+      <a href="/purchases" class="btn btn-outline-secondary">
+        <i class="bi bi-x-circle"></i>
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- جدول سفارشات خرید -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3">شماره سفارش (PO)</th>
+          <th>تاریخ ثبت</th>
+          <th>تأمین‌کننده / کارخانه</th>
+          <th>مهلت تحویل</th>
+          <th>تعداد اقلام</th>
+          <th>پیشرفت تحویل</th>
+          <th>وضعیت</th>
+          <th>ثبت‌کننده</th>
+          <th class="text-center">عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if orders %}
+          {% for o in orders %}
+          {% set total_qty = o.items | sum(attribute='quantity') %}
+          {% set rec_qty = o.items | sum(attribute='received_quantity') %}
+          {% set progress = (rec_qty / total_qty * 100) if total_qty > 0 else 0 %}
+          <tr>
+            <td class="px-3 fw-bold font-monospace text-teal">
+              <a href="/purchases/{{ o.id }}" class="text-decoration-none text-teal">
+                {{ o.po_number }}
+              </a>
+            </td>
+            <td class="small text-secondary">{{ o.created_at.strftime('%Y-%m-%d') if o.created_at else '-' }}</td>
+            <td class="fw-semibold text-light">
+              <i class="bi bi-building me-1 text-secondary"></i>{{ o.supplier.name if o.supplier else '-' }}
+            </td>
+            <td class="small">{{ o.delivery_due_date or 'تعیین نشده' }}</td>
+            <td><span class="badge bg-secondary bg-opacity-25">{{ o.items | length }} قلم کالا</span></td>
+            <td style="min-width: 140px;">
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height: 6px; background: rgba(255,255,255,0.1);">
+                  <div class="progress-bar {% if progress >= 100 %}bg-success{% elif progress > 0 %}bg-info{% else %}bg-secondary{% endif %}"
+                       style="width: {{ progress }}%"></div>
+                </div>
+                <span class="small font-monospace">{{ "{:.0f}%".format(progress) }}</span>
+              </div>
+            </td>
+            <td>
+              {% if o.status.value == 'COMPLETED' %}
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">تکمیل‌شده</span>
+              {% elif o.status.value == 'PARTIALLY_RECEIVED' %}
+                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50">دریافت بخشی</span>
+              {% elif o.status.value == 'CONFIRMED' %}
+                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50">تأیید شده / آماده</span>
+              {% elif o.status.value == 'CANCELLED' %}
+                <span class="badge bg-danger bg-opacity-25 text-danger">باطل‌شده</span>
+              {% else %}
+                <span class="badge bg-secondary bg-opacity-25">پیش‌نویس</span>
+              {% endif %}
+            </td>
+            <td class="small text-secondary">{{ o.created_by.full_name if o.created_by else 'کاربر' }}</td>
+            <td class="text-center">
+              <a href="/purchases/{{ o.id }}" class="btn btn-sm btn-outline-teal px-3" title="مشاهده و صدور رسید انبار">
+                <i class="bi bi-box-arrow-in-down me-1"></i>مشاهده و تحویل
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" class="text-center py-5 text-secondary">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              هیچ سفارش خریدی یافت نشد.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

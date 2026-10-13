@@ -106,6 +106,173 @@
                     </div>
                 </div>
 
+                <!-- طرف حساب تجاری (تأمین‌کننده در رسید / مشتری در حواله) -->
+                <div class="row g-3 mb-4" id="partyContainer">
+                    <div class="col-md-12 d-none" id="supplierBox">
+                        <label for="supplier_id" class="form-label fw-bold text-success">
+                            <i class="bi bi-building-up me-1"></i>تأمین‌کننده / کارخانه فروشنده (طرف حساب ورود)
+                        </label>
+                        <select class="form-select" id="supplier_id" name="supplier_id">
+                            <option value="">-- بدون انتساب / تأمین عمومی --</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.name }} {% if supplier.code %}({{ supplier.code }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-secondary small">انتساب رسید به کارخانه تولیدی یا تأمین‌کننده جهت ردیابی خرید و تسهیم بهای تمام‌شده</div>
+                    </div>
+
+                    <div class="col-md-12 d-none" id="customerBox">
+                        <label for="customer_id" class="form-label fw-bold text-info">
+                            <i class="bi bi-person-check-fill me-1"></i>مشتری / خریدار پروژه (طرف حساب خروج)
+                        </label>
+                        <select class="form-select" id="customer_id" name="customer_id">
+                            <option value="">-- بدون انتساب / حواله عمومی --</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }} {% if customer.code %}({{ customer.code }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-secondary small">انتساب حواله به خریدار یا کارگاه جهت ثبت در کاردکس مشتری و چاپ روی برگه رسمی خروج</div>
+                    </div>
+                </div>
+
+                <!-- پنل‌های تخصصی صنایع سنگین و متالورژی (آکاردئون پیشرفته) -->
+                <div class="accordion mb-4" id="industrialAccordion">
+                    <!-- ۱. موتور دو واحدی (Package 4) -->
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25">
+                        <h2 class="accordion-header" id="headingDualUnit">
+                            <button class="accordion-button collapsed bg-dark text-teal fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDualUnit">
+                                <i class="bi bi-diagram-3-fill me-2"></i>موتور دو واحدی دینامیک (شاخه / بندیل ⇄ کیلوگرم)
+                            </button>
+                        </h2>
+                        <div id="collapseDualUnit" class="accordion-collapse collapse" data-bs-parent="#industrialAccordion">
+                            <div class="accordion-body border-top border-secondary border-opacity-25">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="secondary_quantity" class="form-label">تعداد شاخه / بندیل / قالب / کیسه</label>
+                                        <input type="number" step="1" min="1" class="form-control" id="secondary_quantity" name="secondary_quantity" placeholder="مثلاً: 120">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="secondary_uom" class="form-label">واحد فرعی</label>
+                                        <select class="form-select" id="secondary_uom" name="secondary_uom">
+                                            <option value="شاخه">شاخه ۱۲ متری</option>
+                                            <option value="بندیل">بندیل کارخانه‌ای</option>
+                                            <option value="قالب">قالب شمش</option>
+                                            <option value="جامبوبگ">جامبوبگ ۱ تنی</option>
+                                            <option value="کیسه">کیسه ۵۰ کیلویی</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">میانگین وزن هر شاخه / بسته</label>
+                                        <div class="form-control bg-dark border-secondary text-info font-monospace" id="unitWeightCalc">--- کیلوگرم</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ۲. بهای تمام‌شده و تلورانس بارنامه (Package 6) -->
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25">
+                        <h2 class="accordion-header" id="headingLandedCost">
+                            <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLandedCost">
+                                <i class="bi bi-truck-front-fill me-2"></i>لجستیک، بهای تمام‌شده تجمیعی و تلورانس بارنامه
+                            </button>
+                        </h2>
+                        <div id="collapseLandedCost" class="accordion-collapse collapse" data-bs-parent="#industrialAccordion">
+                            <div class="accordion-body border-top border-secondary border-opacity-25">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="bill_of_lading_qty" class="form-label">وزن مبدأ طبق بارنامه</label>
+                                        <input type="number" step="0.001" class="form-control font-monospace" id="bill_of_lading_qty" name="bill_of_lading_qty" placeholder="وزن بارنامه کارخانه">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="freight_cost" class="form-label">کرایه حمل تریلی (ریال)</label>
+                                        <input type="number" step="1000" class="form-control font-monospace" id="freight_cost" name="freight_cost" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="insurance_cost" class="form-label">حق بیمه باربری (ریال)</label>
+                                        <input type="number" step="1000" class="form-control font-monospace" id="insurance_cost" name="insurance_cost" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="weighbridge_cost" class="form-label">حق باسکول (ریال)</label>
+                                        <input type="number" step="1000" class="form-control font-monospace" id="weighbridge_cost" name="weighbridge_cost" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ۳. شجره‌نامه ذوب و متالورژی MTC (Package 9) -->
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25">
+                        <h2 class="accordion-header" id="headingMtc">
+                            <button class="accordion-button collapsed bg-dark text-info fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMtc">
+                                <i class="bi bi-file-earmark-medical-fill me-2"></i>شجره‌نامه ذوب و شناسنامه متالورژی (Heat No & MTC)
+                            </button>
+                        </h2>
+                        <div id="collapseMtc" class="accordion-collapse collapse" data-bs-parent="#industrialAccordion">
+                            <div class="accordion-body border-top border-secondary border-opacity-25">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="heat_number" class="form-label">شماره ذوب کوره (Heat No)</label>
+                                        <input type="text" class="form-control font-monospace" id="heat_number" name="heat_number" placeholder="مثلاً: HT-98442">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="mtc_number" class="form-label">شماره گواهینامه آزمایشگاه (MTC)</label>
+                                        <input type="text" class="form-control font-monospace" id="mtc_number" name="mtc_number" placeholder="مثلاً: MTC-2026-X">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="chemical_analysis" class="form-label">کربن / آنالیز شیمیایی</label>
+                                        <input type="text" class="form-control" id="chemical_analysis" name="chemical_analysis" placeholder="مثلاً: C: 0.22% | Si: 0.28%">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="mechanical_analysis" class="form-label">استحکام کششی (MPa)</label>
+                                        <input type="text" class="form-control font-monospace" id="mechanical_analysis" name="mechanical_analysis" placeholder="مثلاً: 450 MPa">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ۴. سامانه جامع تجارت (Package 12) -->
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25">
+                        <h2 class="accordion-header" id="headingTrade">
+                            <button class="accordion-button collapsed bg-dark text-success fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTrade">
+                                <i class="bi bi-bank2 me-2"></i>سامانه جامع تجارت و بارنامه برخط
+                            </button>
+                        </h2>
+                        <div id="collapseTrade" class="accordion-collapse collapse" data-bs-parent="#industrialAccordion">
+                            <div class="accordion-body border-top border-secondary border-opacity-25">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="waybill_number" class="form-label">شماره بارنامه برخط تمبردار</label>
+                                        <input type="text" class="form-control font-monospace" id="waybill_number" name="waybill_number" placeholder="مثلاً: BL-1403-88991">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="tracking_code" class="form-label">کد رهگیری سامانه جامع تجارت (ntsw.ir)</label>
+                                        <input type="text" class="form-control font-monospace" id="tracking_code" name="tracking_code" placeholder="مثلاً: TRK-9844120">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- وضعیت سند و گردش کار (Package 0-C) -->
+                <div class="row g-3 mb-4 p-3 rounded glass-card border-secondary border-opacity-25">
+                    <div class="col-md-6">
+                        <label for="doc_status" class="form-label fw-bold">وضعیت اولیه سند</label>
+                        <select class="form-select" id="doc_status" name="doc_status">
+                            <option value="APPROVED" selected>🟢 تأیید قطعی و اعمال فوری در موجودی (APPROVED)</option>
+                            <option value="PENDING_APPROVAL">🟡 در انتظار تأیید سرپرست / مدیر انبار (PENDING)</option>
+                            <option value="DRAFT">⚪ پیش‌نویس موقت بدون اثر در کاردکس (DRAFT)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="text-secondary small mt-3">
+                            <i class="bi bi-info-circle me-1 text-info"></i>در صورت انتخاب پیش‌نویس، موجودی انبار کسر یا اضافه نخواهد شد تا زمانی که مدیر آن را تأیید نماید.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
                     <a href="/dashboard" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
                     <button type="submit" id="submitBtn" class="btn btn-teal px-5 py-2">
@@ -199,10 +366,49 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    const supplierBox = document.getElementById('supplierBox');
+    const customerBox = document.getElementById('customerBox');
+    const supplierSelect = document.getElementById('supplier_id');
+    const customerSelect = document.getElementById('customer_id');
+
+    function togglePartyBox() {
+        const type = txTypeSelect.value;
+        if (type === 'IN') {
+            supplierBox.classList.remove('d-none');
+            customerBox.classList.add('d-none');
+            if (customerSelect) customerSelect.value = '';
+        } else if (type === 'OUT') {
+            customerBox.classList.remove('d-none');
+            supplierBox.classList.add('d-none');
+            if (supplierSelect) supplierSelect.value = '';
+        } else {
+            supplierBox.classList.add('d-none');
+            customerBox.classList.add('d-none');
+        }
+    }
+
+    // محاسبه دینامیک وزن هر شاخه / بسته (Package 4)
+    const secQtyInput = document.getElementById('secondary_quantity');
+    const unitWeightCalc = document.getElementById('unitWeightCalc');
+
+    function calcUnitWeight() {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const secQty = parseFloat(secQtyInput ? secQtyInput.value : 0) || 0;
+        if (qty > 0 && secQty > 0) {
+            const w = (qty / secQty);
+            unitWeightCalc.textContent = `${w.toLocaleString('fa-IR', {maximumFractionDigits: 3})} کیلوگرم / واحد`;
+        } else if (unitWeightCalc) {
+            unitWeightCalc.textContent = '--- کیلوگرم';
+        }
+    }
+
+    if (secQtyInput) secQtyInput.addEventListener('input', calcUnitWeight);
+
     productSelect.addEventListener('change', () => { updateUom(); checkStock(); });
     warehouseSelect.addEventListener('change', checkStock);
-    txTypeSelect.addEventListener('change', validateQuantity);
-    qtyInput.addEventListener('input', validateQuantity);
+    txTypeSelect.addEventListener('change', () => { togglePartyBox(); validateQuantity(); });
+    qtyInput.addEventListener('input', () => { validateQuantity(); calcUnitWeight(); });
+    togglePartyBox();
 });
 </script>
 {% endblock %}

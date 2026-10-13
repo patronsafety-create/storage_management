@@ -97,7 +97,13 @@
         <table class="w-100 meta-table mb-3">
             <tr>
                 <td style="width: 25%;">انبار مربوطه: <strong>{{ tx.warehouse.name if tx.warehouse else '-' }}</strong></td>
-                <td style="width: 25%;">نوع عملیات: <strong>{{ 'وارده (خرید/ورود)' if tx.transaction_type.value == 'IN' else 'صادره (مصرف/خروج)' }}</strong></td>
+                <td style="width: 25%;">
+                    {% if tx.transaction_type.value == 'IN' %}
+                    تأمین‌کننده / فروشنده: <strong>{{ tx.supplier.name if tx.supplier else 'تأمین عمومی' }}</strong>
+                    {% else %}
+                    مشتری / تحویل‌گیرنده: <strong>{{ tx.customer.name if tx.customer else 'حواله عمومی' }}</strong>
+                    {% endif %}
+                </td>
                 <td style="width: 25%;">سند عطف / سفارش: <strong>{{ tx.reference_document or '---' }}</strong></td>
                 <td style="width: 25%;">کاربر ثبت‌کننده: <strong>{{ tx.created_by.full_name if tx.created_by else 'سیستم' }}</strong></td>
             </tr>

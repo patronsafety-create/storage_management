@@ -19,12 +19,38 @@ class WarehouseResponse(WarehouseBase):
     class Config:
         from_attributes = True
 
+# --- Category Schemas ---
+class ProductCategoryBase(BaseModel):
+    name: str = Field(..., max_length=100, description="نام دسته‌بندی کالا")
+    code: Optional[str] = Field(None, max_length=50, description="کد رده کالا")
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+
+class ProductCategoryCreate(ProductCategoryBase):
+    pass
+
+class ProductCategoryResponse(ProductCategoryBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
 # --- Product Schemas ---
 class ProductBase(BaseModel):
-    sku: str = Field(..., max_length=50, description="کدینگ خودکار یا دستی کالا")
     name: str = Field(..., max_length=200, description="نام کالا")
-    attributes: Dict[str, Any] = Field(default_factory=dict, description="ویژگی‌های داینامیک کالا")
-    reorder_point: int = Field(default=0, ge=0, description="نقطه سفارش")
+    uom: str = Field("عدد", max_length=50, description="واحد سنجش")
+    sku: Optional[str] = Field(None, max_length=50, description="کدینگ خودکار یا بارکد یکتا")
+    category_id: Optional[int] = None
+    brand: Optional[str] = None
+    size: Optional[str] = None
+    length: Optional[float] = None
+    thickness: Optional[float] = None
+    grade: Optional[str] = None
+    standard: Optional[str] = None
+    min_stock: Optional[float] = 0.0
+    max_stock: Optional[float] = 0.0
+    reorder_point: Optional[float] = 0.0
+    description: Optional[str] = None
     is_active: bool = True
 
 class ProductCreate(ProductBase):
@@ -32,8 +58,7 @@ class ProductCreate(ProductBase):
 
 class ProductResponse(ProductBase):
     id: int
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
