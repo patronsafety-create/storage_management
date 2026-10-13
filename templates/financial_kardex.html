@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}کاردکس ریالی و قیمت‌گذاری کالا: {{ product.name }} | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-1">
+            <i class="bi bi-cash-stack text-teal me-2"></i>کاردکس ریالی و ارزش‌گذاری موجودی: <span class="text-info">{{ product.name }}</span>
+        </h3>
+        <p class="text-secondary small mb-0">محاسبه قیمت تمام‌شده به روش میانگین موزون (Weighted Average) و ارزش ریالی لحظه‌ای</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/inventory/kardex/{{ product.id }}" class="btn btn-outline-info">
+            <i class="bi bi-receipt me-1"></i>کاردکس مقداری
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>چاپ کاردکس ریالی
+        </button>
+    </div>
+</div>
+
+<!-- کارت‌های خلاصه ارزش‌گذاری مالی -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number" style="color: var(--accent-teal);">{{ "{:,.2f}".format(total_qty) }} <span class="fs-6 fw-normal text-secondary">{{ product.uom }}</span></div>
+            <div class="stat-label">موجودی مقداری فعلی</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number" style="color: var(--accent-purple);">{{ "{:,.0f}".format(avg_unit_price) }} <span class="fs-6 fw-normal text-secondary">ریال</span></div>
+            <div class="stat-label">میانگین موزون نرخ هر واحد (فی)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number" style="color: var(--accent-green);">{{ "{:,.0f}".format(total_financial_value) }} <span class="fs-6 fw-normal text-secondary">ریال</span></div>
+            <div class="stat-label">ارزش ریالی کل موجودی در انبار</div>
+        </div>
+    </div>
+</div>
+
+<!-- فیلتر کالا و انبار -->
+<div class="glass-card p-3 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label small text-secondary">انتخاب کالای دیگر:</label>
+            <select class="form-select bg-dark border-secondary text-light" onchange="if(this.value) window.location.href='/inventory/financial-kardex/' + this.value;">
+                {% for p in all_products %}
+                <option value="{{ p.id }}" {% if p.id == product.id %}selected{% endif %}>{{ p.name }} ({{ p.uom }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small text-secondary">فیلتر انبار خاص:</label>
+            <select name="warehouse_id" class="form-select bg-dark border-secondary text-light" onchange="this.form.submit()">
+                <option value="">تمام انبارها (ارزش کل)</option>
+                {% for w in warehouses %}
+                <option value="{{ w.id }}" {% if selected_warehouse_id == w.id %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- جدول کاردکس ریالی -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle text-center">
+            <thead style="background: rgba(255, 255, 255, 0.05);">
+                <tr>
+                    <th rowspan="2" class="align-middle px-3">#</th>
+                    <th rowspan="2" class="align-middle">تاریخ</th>
+                    <th rowspan="2" class="align-middle">سند</th>
+                    <th colspan="3" class="border-bottom border-secondary text-success">وارده (خرید / ورود)</th>
+                    <th colspan="3" class="border-bottom border-secondary text-danger">صادره (مصرف / فروش)</th>
+                    <th colspan="3" class="border-bottom border-secondary text-info">مانده تجمعی (موجودی)</th>
+                </tr>
+                <tr style="font-size: 0.82rem;" class="text-secondary">
+                    <th>تعداد</th>
+                    <th>نرخ واحد</th>
+                    <th>مبلغ کل</th>
+                    <th>تعداد</th>
+                    <th>نرخ میانگین</th>
+                    <th>مبلغ کل</th>
+                    <th>تعداد</th>
+                    <th>نرخ میانگین</th>
+                    <th>ارزش ریالی مانده</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if entries %}
+                    {% for row in entries %}
+                    <tr>
+                        <td class="px-3 text-secondary">{{ loop.index }}</td>
+                        <td class="small">{{ row.tx.created_at.strftime('%Y-%m-%d') if row.tx.created_at else '-' }}</td>
+                        <td class="small font-monospace">{{ row.tx.reference_document or ('#' ~ row.tx.id) }}</td>
+                        
+                        <!-- وارده -->
+                        <td class="fw-bold font-monospace text-success">
+                            {{ "{:,.2f}".format(row.in_qty) if row.in_qty > 0 else '-' }}
+                        </td>
+                        <td class="small font-monospace">
+                            {{ "{:,.0f}".format(row.in_price) if row.in_qty > 0 and row.in_price > 0 else '-' }}
+                        </td>
+                        <td class="small font-monospace text-success">
+                            {{ "{:,.0f}".format(row.in_total) if row.in_qty > 0 else '-' }}
+                        </td>
+
+                        <!-- صادره -->
+                        <td class="fw-bold font-monospace text-danger">
+                            {{ "{:,.2f}".format(row.out_qty) if row.out_qty > 0 else '-' }}
+                        </td>
+                        <td class="small font-monospace">
+                            {{ "{:,.0f}".format(row.out_price) if row.out_qty > 0 else '-' }}
+                        </td>
+                        <td class="small font-monospace text-danger">
+                            {{ "{:,.0f}".format(row.out_total) if row.out_qty > 0 else '-' }}
+                        </td>
+
+                        <!-- مانده -->
+                        <td class="fw-bold font-monospace text-info">
+                            {{ "{:,.2f}".format(row.balance_qty) }}
+                        </td>
+                        <td class="small font-monospace text-light">
+                            {{ "{:,.0f}".format(row.balance_rate) }}
+                        </td>
+                        <td class="fw-bold font-monospace text-teal fs-6">
+                            {{ "{:,.0f}".format(row.balance_total) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="12" class="text-center py-5 text-secondary">
+                            <i class="bi bi-wallet2 fs-2 d-block mb-2"></i>
+                            هیچ رکوردی در کاردکس ریالی این کالا ثبت نشده است.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

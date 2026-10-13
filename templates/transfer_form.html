@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}انتقال بین انبارها | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="glass-card p-4 p-md-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+                <div>
+                    <h4 class="fw-bold mb-1 text-light">
+                        <i class="bi bi-arrow-left-right text-teal me-2"></i>انتقال کالا بین انبارها (Inter-Warehouse Transfer)
+                    </h4>
+                    <p class="text-secondary small mb-0">جابه‌جایی کالا از یک انبار به انبار دیگر با کسر و افزایش همزمان و ایمن</p>
+                </div>
+                <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-right me-1"></i>بازگشت
+                </a>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-glass-danger alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                <div>{{ error }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <form action="/inventory/transfer" method="post" id="transferForm">
+                <!-- انتخاب کالا -->
+                <div class="mb-4">
+                    <label for="product_id" class="form-label fw-bold">
+                        کالای مورد نظر جهت انتقال <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select form-select-lg" id="product_id" name="product_id" required>
+                        <option value="" selected disabled>انتخاب کالا...</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}" data-uom="{{ product.uom }}">{{ product.name }} ({{ product.uom }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- انبار مبدأ و انبار مقصد -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="from_warehouse_id" class="form-label fw-bold">
+                            <i class="bi bi-box-arrow-up text-danger me-1"></i>انبار مبدأ (فرستنده) <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="from_warehouse_id" name="from_warehouse_id" required>
+                            <option value="" selected disabled>انتخاب انبار مبدأ...</option>
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="to_warehouse_id" class="form-label fw-bold">
+                            <i class="bi bi-box-arrow-in-down text-success me-1"></i>انبار مقصد (گیرنده) <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="to_warehouse_id" name="to_warehouse_id" required>
+                            <option value="" selected disabled>انتخاب انبار مقصد...</option>
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- استعلام موجودی مبدأ -->
+                <div id="sourceStockBox" class="p-3 mb-4 rounded-3 d-none" style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--glass-border);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-info-circle-fill text-info"></i>
+                            <span class="small text-secondary">موجودی در انبار مبدأ:</span>
+                            <span id="sourceStockVal" class="fw-bold font-monospace fs-6 text-light">---</span>
+                        </div>
+                        <span id="sourceStockBadge" class="badge bg-secondary bg-opacity-25 text-light">در حال استعلام...</span>
+                    </div>
+                </div>
+
+                <!-- مقدار و شماره سند -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="quantity" id="qtyLabel" class="form-label fw-bold">
+                            مقدار / تعداد انتقال <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" step="0.001" min="0.001" class="form-control" id="quantity" name="quantity" required placeholder="مثال: 5">
+                        <div id="transferWarn" class="text-danger small mt-1 d-none">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>مقدار انتقال بیشتر از موجودی انبار مبدأ است!
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="reference_document" class="form-label">شماره سند / حواله انتقال (اختیاری)</label>
+                        <input type="text" class="form-control" id="reference_document" name="reference_document" placeholder="مثال: TRF-1403-01">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+                    <a href="/dashboard" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+                    <button type="submit" id="submitTransferBtn" class="btn btn-teal px-5 py-2">
+                        <i class="bi bi-check2-circle me-1"></i>ثبت انتقال بین انبارها
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const productSelect = document.getElementById('product_id');
+    const fromSelect = document.getElementById('from_warehouse_id');
+    const toSelect = document.getElementById('to_warehouse_id');
+    const qtyInput = document.getElementById('quantity');
+    const qtyLabel = document.getElementById('qtyLabel');
+    const stockBox = document.getElementById('sourceStockBox');
+    const stockVal = document.getElementById('sourceStockVal');
+    const stockBadge = document.getElementById('sourceStockBadge');
+    const warn = document.getElementById('transferWarn');
+    const submitBtn = document.getElementById('submitTransferBtn');
+
+    let currentSourceStock = null;
+    let uom = '';
+
+    function updateLabel() {
+        const opt = productSelect.options[productSelect.selectedIndex];
+        if (opt && opt.getAttribute('data-uom')) {
+            uom = opt.getAttribute('data-uom');
+            qtyLabel.innerHTML = `مقدار / تعداد انتقال (${uom}) <span class="text-danger">*</span>`;
+        }
+    }
+
+    async function checkSourceStock() {
+        const pId = productSelect.value;
+        const fromId = fromSelect.value;
+
+        if (!pId || !fromId) {
+            stockBox.classList.add('d-none');
+            currentSourceStock = null;
+            return;
+        }
+
+        stockBox.classList.remove('d-none');
+        stockBadge.className = 'badge bg-secondary bg-opacity-25 text-light';
+        stockBadge.textContent = 'در حال استعلام...';
+
+        try {
+            const resp = await fetch(`/api/stock/${pId}/${fromId}`);
+            if (resp.ok) {
+                const data = await resp.json();
+                currentSourceStock = data.current_stock;
+                const unit = data.uom || uom;
+                stockVal.textContent = `${currentSourceStock.toLocaleString('fa-IR')} ${unit}`;
+
+                if (currentSourceStock > 0) {
+                    stockBadge.className = 'badge bg-success bg-opacity-25 text-success border border-success border-opacity-50';
+                    stockBadge.textContent = 'موجودی کافی';
+                } else {
+                    stockBadge.className = 'badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50';
+                    stockBadge.textContent = 'فاقد موجودی';
+                }
+                validateQty();
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function validateQty() {
+        const val = parseFloat(qtyInput.value) || 0;
+        const sameWarehouse = fromSelect.value && toSelect.value && fromSelect.value === toSelect.value;
+
+        if (sameWarehouse) {
+            warn.textContent = "انبار مبدأ و مقصد نمی‌توانند یکسان باشند!";
+            warn.classList.remove('d-none');
+            submitBtn.disabled = true;
+            return;
+        }
+
+        if (currentSourceStock !== null && val > currentSourceStock) {
+            warn.textContent = "مقدار انتقال بیشتر از موجودی انبار مبدأ است!";
+            warn.classList.remove('d-none');
+            qtyInput.classList.add('border-danger');
+            submitBtn.disabled = true;
+        } else {
+            warn.classList.add('d-none');
+            qtyInput.classList.remove('border-danger');
+            submitBtn.disabled = false;
+        }
+    }
+
+    productSelect.addEventListener('change', () => { updateLabel(); checkSourceStock(); });
+    fromSelect.addEventListener('change', checkSourceStock);
+    toSelect.addEventListener('change', validateQty);
+    qtyInput.addEventListener('input', validateQty);
+});
+</script>
+{% endblock %}

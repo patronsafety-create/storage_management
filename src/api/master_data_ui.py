@@ -1,19 +1,22 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from urllib.parse import quote
 
-# فراخوانی قفل مخصوص ادمین از هسته مرکزی
-from src.core.dependencies import get_db, require_admin
+from src.core.dependencies import get_db, require_admin, get_current_user
 from src.domain_model.inventory_models import Product, Warehouse
+from src.domain_model.auth_models import User
 
-# 🌟 اعمال قفل مدیر: هیچ اپراتوری حتی با دانستن آدرس نمی‌تواند به این مسیرها درخواست بفرستد
 router = APIRouter(
-    prefix="/master-data", 
+    prefix="/master-data",
     tags=["Master Data"],
     dependencies=[Depends(require_admin)]
 )
+templates = Jinja2Templates(directory="templates")
+
 
 @router.post("/product")
 async def create_product(
@@ -22,13 +25,13 @@ async def create_product(
     db: Session = Depends(get_db)
 ):
     try:
-        new_product = Product(name=name.strip(), uom=uom.strip())
-        db.add(new_product)
+        db.add(Product(name=name.strip(), uom=uom.strip()))
         db.commit()
         return RedirectResponse(url="/dashboard?msg=" + quote("کالای جدید با موفقیت ثبت شد"), status_code=303)
     except IntegrityError:
         db.rollback()
         return RedirectResponse(url="/dashboard?error=" + quote("این کالا از قبل در سیستم وجود دارد"), status_code=303)
+
 
 @router.post("/warehouse")
 async def create_warehouse(
@@ -36,8 +39,7 @@ async def create_warehouse(
     db: Session = Depends(get_db)
 ):
     try:
-        new_warehouse = Warehouse(name=name.strip())
-        db.add(new_warehouse)
+        db.add(Warehouse(name=name.strip()))
         db.commit()
         return RedirectResponse(url="/dashboard?msg=" + quote("انبار جدید با موفقیت ثبت شد"), status_code=303)
     except IntegrityError:

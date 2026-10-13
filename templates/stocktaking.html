@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}انبارگردانی و مغایرت‌گیری | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-1">
+            <i class="bi bi-clipboard2-check-fill text-teal me-2"></i>انبارگردانی و تطبیق موجودی فیزیکی
+        </h3>
+        <p class="text-secondary small mb-0">شمارش فیزیکی اقلام، محاسبه خودکار کسری و اضافی و صدور اسناد مکانیزه تعدیل</p>
+    </div>
+    <a href="/dashboard" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right me-1"></i>بازگشت
+    </a>
+</div>
+
+{% if msg %}
+<div class="alert alert-glass-success alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+    <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+    <div>{{ msg }}</div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- انتخاب انبار جهت شمارش -->
+<div class="glass-card p-4 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">انتخاب انبار جهت انبارگردانی:</label>
+            <select name="warehouse_id" class="form-select bg-dark border-secondary text-light" onchange="this.form.submit()">
+                <option value="" disabled {% if not selected_warehouse %}selected{% endif %}>یک انبار را انتخاب کنید...</option>
+                {% for w in warehouses %}
+                <option value="{{ w.id }}" {% if selected_warehouse and selected_warehouse.id == w.id %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 text-md-end text-secondary small">
+            {% if selected_warehouse %}
+            انبار انتخابی: <span class="badge bg-info bg-opacity-25 text-info fs-6">{{ selected_warehouse.name }}</span>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% if selected_warehouse %}
+<form method="post" action="/inventory/stocktaking">
+    <input type="hidden" name="warehouse_id" value="{{ selected_warehouse.id }}">
+    
+    <div class="glass-card p-0 overflow-hidden mb-4">
+        <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-light">
+                <i class="bi bi-list-check text-teal me-2"></i>لیست کالاهای انبار و ثبت شمارش فیزیکی
+            </h5>
+            <span class="badge bg-secondary bg-opacity-25 text-secondary">تعداد اقلام: {{ items | length }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 align-middle">
+                <thead style="background: rgba(255, 255, 255, 0.05);">
+                    <tr>
+                        <th class="py-3 px-3">#</th>
+                        <th>نام کالا</th>
+                        <th>واحد</th>
+                        <th>موجودی سیستمی</th>
+                        <th style="width: 200px;">شمارش فیزیکی واقعی</th>
+                        <th>وضعیت مغایرت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="px-3 text-secondary">{{ loop.index }}</td>
+                        <td class="fw-semibold text-light">{{ item.product.name }}</td>
+                        <td><span class="badge bg-secondary bg-opacity-25">{{ item.product.uom }}</span></td>
+                        <td class="fw-bold font-monospace text-info">
+                            <span id="sys_{{ item.product.id }}">{{ "{:,.2f}".format(item.system_stock) }}</span>
+                        </td>
+                        <td>
+                            <input type="number" step="0.001" min="0" 
+                                   name="count_{{ item.product.id }}" 
+                                   value="{{ item.system_stock }}"
+                                   data-sys="{{ item.system_stock }}"
+                                   class="form-control form-control-sm count-input text-center font-monospace bg-dark border-secondary text-light" 
+                                   required>
+                        </td>
+                        <td>
+                            <span id="diff_badge_{{ item.product.id }}" class="badge bg-secondary bg-opacity-25 text-secondary">
+                                <i class="bi bi-check2 me-1"></i>منطبق (بدون مغایرت)
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center p-3 glass-card">
+        <div class="text-secondary small">
+            <i class="bi bi-info-circle text-info me-1"></i>
+            با تایید، سیستم برای کسری‌ها سند حواله خروج و برای اضافی‌ها سند رسید ورود تعدیل صادر می‌کند.
+        </div>
+        <button type="submit" class="btn btn-teal px-5 py-2">
+            <i class="bi bi-check2-all me-1"></i>تایید و صدور اسناد تعدیل انبارگردانی
+        </button>
+    </div>
+</form>
+{% else %}
+<div class="glass-card p-5 text-center text-secondary">
+    <i class="bi bi-building-gear fs-1 d-block mb-3 text-teal"></i>
+    <h5>لطفاً برای شروع عملیات انبارگردانی، یکی از انبارها را از منوی بالا انتخاب کنید.</h5>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const inputs = document.querySelectorAll('.count-input');
+
+    function checkDiff(input) {
+        const pId = input.name.replace('count_', '');
+        const sys = parseFloat(input.getAttribute('data-sys')) || 0;
+        const val = parseFloat(input.value) || 0;
+        const badge = document.getElementById('diff_badge_' + pId);
+        const diff = val - sys;
+
+        if (Math.abs(diff) < 0.0001) {
+            badge.className = 'badge bg-secondary bg-opacity-25 text-secondary';
+            badge.innerHTML = '<i class="bi bi-check2 me-1"></i>منطبق (بدون مغایرت)';
+        } else if (diff > 0) {
+            badge.className = 'badge bg-success bg-opacity-25 text-success border border-success border-opacity-50';
+            badge.innerHTML = `<i class="bi bi-plus-circle me-1"></i>اضافی: +${diff.toLocaleString('fa-IR')}`;
+        } else {
+            badge.className = 'badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50';
+            badge.innerHTML = `<i class="bi bi-dash-circle me-1"></i>کسری: ${diff.toLocaleString('fa-IR')}`;
+        }
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('input', () => checkDiff(input));
+    });
+});
+</script>
+{% endblock %}

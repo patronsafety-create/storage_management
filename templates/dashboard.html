@@ -1,168 +1,323 @@
 {% extends "base.html" %}
 
-{% block title %}داشبورد مرکزی | سیستم مدیریت انبار{% endblock %}
+{% block title %}داشبورد مدیریت انبار | Enterprise ERP{% endblock %}
 
 {% block content %}
 {% if msg %}
-<div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert">
-    <strong>موفقیت!</strong> {{ msg }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-{% endif %}
-{% if error %}
-<div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm" role="alert">
-    <strong>خطا!</strong> {{ error }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="alert alert-glass-success alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+    <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+    <div>{{ msg }}</div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
 
-<div class="row mt-4">
-    <div class="col-12 d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-secondary fw-bold mb-0">خلاصه وضعیت سیستم</h3>
-        
-        <!-- 🌟 استفاده مستقیم از متغیر ارسال شده از بک‌اند -->
+{% if error %}
+<div class="alert alert-glass-danger alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+    <div>{{ error }}</div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- Header & Quick Actions -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h3 class="fw-bold mb-1">
+            <i class="bi bi-speedometer2 text-teal me-2"></i>داشبورد و وضعیت لحظه‌ای انبار
+        </h3>
+        <p class="text-secondary small mb-0">نظارت بر جریان ورودی، خروجی و موجودی انبارها به صورت زنده</p>
+    </div>
+    
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="/inventory/transaction" class="btn btn-teal px-3 py-2">
+            <i class="bi bi-plus-circle me-1"></i>ثبت تراکنش جدید
+        </a>
+        <a href="/inventory/balance" class="btn btn-glass px-3 py-2">
+            <i class="bi bi-bar-chart-line me-1"></i>گزارش موجودی
+        </a>
         {% if is_admin %}
-        <div>
-            <button type="button" class="btn btn-outline-primary shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                + تعریف کالا
-            </button>
-            <button type="button" class="btn btn-outline-secondary shadow-sm" data-bs-toggle="modal" data-bs-target="#addWarehouseModal">
-                + تعریف انبار
-            </button>
-        </div>
-        {% else %}
-        <div>
-            <span class="badge bg-secondary px-3 py-2 fs-6 shadow-sm">دسترسی محدود (اپراتور)</span>
-        </div>
+        <button type="button" class="btn btn-outline-info px-3 py-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-box-seam me-1"></i>+ کالا
+        </button>
+        <button type="button" class="btn btn-outline-secondary px-3 py-2" data-bs-toggle="modal" data-bs-target="#addWarehouseModal">
+            <i class="bi bi-building me-1"></i>+ انبار
+        </button>
         {% endif %}
     </div>
-    
-    <div class="col-md-6 mb-3">
-        <div class="card text-white bg-primary shadow-sm h-100 border-0">
-            <div class="card-body">
-                <h5 class="card-title">تراکنش‌های انبار</h5>
-                <p class="card-text display-6 mt-3">{{ tx_count }} <span class="fs-6 fw-normal">سند</span></p>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-number">{{ tx_count }}</div>
+                    <div class="stat-label">اسناد تراکنش انبار</div>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(0, 212, 200, 0.1); color: var(--accent-teal);">
+                    <i class="bi bi-arrow-left-right fs-4"></i>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-6 mb-3">
-        <div class="card text-white bg-success shadow-sm h-100 border-0">
-            <div class="card-body">
-                <h5 class="card-title">ظرفیت عملیاتی</h5>
-                <p class="card-text display-6 mt-3">آماده <span class="fs-6 fw-normal">سرویس‌دهی</span></p>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-number" style="color: var(--accent-purple);">{{ stock_balances | length }}</div>
+                    <div class="stat-label">اقلام ثبت‌شده در انبار</div>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                    <i class="bi bi-boxes fs-4"></i>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="row mt-4 mb-5">
-    <div class="col-12 text-center">
-        <a href="/inventory/transaction" class="btn btn-primary btn-lg shadow px-5 fw-bold">
-            + ثبت رسید / حواله در انبار
-        </a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                <h5 class="fw-bold text-secondary">آخرین تراکنش‌های ثبت‌شده</h5>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-number" style="color: var(--accent-green);">فعال</div>
+                    <div class="stat-label">وضعیت پایگاه داده و سرویس</div>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                    <i class="bi bi-database-check fs-4"></i>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle text-center">
-                        <thead class="table-light">
-                            <tr>
-                                <th>کد سند</th>
-                                <th>نوع عملیات</th>
-                                <th>کالا</th>
-                                <th>انبار</th>
-                                <th>تعداد / مقدار</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for tx in recent_txs %}
-                            <tr>
-                                <td class="text-muted">#{{ tx.id }}</td>
-                                <td>
-                                    {% if tx.transaction_type.value == 'IN' %}
-                                        <span class="badge bg-success px-3 py-2">رسید (IN)</span>
-                                    {% else %}
-                                        <span class="badge bg-danger px-3 py-2">حواله (OUT)</span>
-                                    {% endif %}
-                                </td>
-                                <td class="fw-bold">{{ tx.product.name }}</td>
-                                <td>{{ tx.warehouse.name }}</td>
-                                <td class="fw-bold text-primary" dir="ltr">{{ tx.quantity }}</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">هیچ تراکنشی یافت نشد.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-number" style="color: var(--accent-amber);">{{ user.roles[0].name if user.roles else 'اپراتور' }}</div>
+                    <div class="stat-label">سطح دسترسی شما</div>
+                </div>
+                <div class="p-3 rounded-3" style="background: rgba(245, 158, 11, 0.1); color: var(--accent-amber);">
+                    <i class="bi bi-shield-lock fs-4"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Main Row: Donut Chart & Recent Transactions -->
+<div class="row g-4 mb-4">
+    <!-- نمودار کیکی/دونات موجودی -->
+    <div class="col-lg-5">
+        <div class="glass-card p-4 h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-light">
+                    <i class="bi bi-pie-chart-fill text-teal me-2"></i>نمودار کیکی موجودی کالاها
+                </h5>
+                <span class="badge bg-secondary bg-opacity-25 text-secondary small">تفکیک حجمی</span>
+            </div>
+            <p class="text-secondary small mb-3">سهم موجودی هر قلم کالا از کل موجودی ثبت‌شده در انبارها</p>
+            
+            <div class="flex-grow-1 d-flex align-items-center justify-content-center py-2" style="position: relative; min-height: 280px;">
+                <canvas id="stockDonutChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول آخرین تراکنش‌ها -->
+    <div class="col-lg-7">
+        <div class="glass-card p-0 overflow-hidden h-100 d-flex flex-column">
+            <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-light">
+                    <i class="bi bi-clock-history text-teal me-2"></i>آخرین تراکنش‌های ثبت‌شده
+                </h5>
+                <a href="/inventory/transactions" class="text-decoration-none small" style="color: var(--accent-teal);">
+                    مشاهده همه <i class="bi bi-arrow-left"></i>
+                </a>
+            </div>
+            <div class="table-responsive flex-grow-1">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead style="background: rgba(255, 255, 255, 0.04);">
+                        <tr>
+                            <th class="py-3 px-3">سند</th>
+                            <th>نوع</th>
+                            <th>کالا</th>
+                            <th>انبار</th>
+                            <th>مقدار</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_txs %}
+                            {% for tx in recent_txs %}
+                            <tr>
+                                <td class="px-3 text-secondary small">#{{ tx.id }}</td>
+                                <td>
+                                    {% if tx.transaction_type.value == 'IN' %}
+                                        <span class="badge bg-success bg-opacity-25 text-success">ورود</span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-25 text-danger">خروج</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-semibold text-light">{{ tx.product.name }}</td>
+                                <td class="text-secondary small">{{ tx.warehouse.name }}</td>
+                                <td class="fw-bold font-monospace {% if tx.transaction_type.value == 'IN' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "{:,.2f}".format(tx.quantity) }} <span class="small text-secondary">{{ tx.product.uom }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    هنوز هیچ تراکنشی ثبت نشده است.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
 {% if is_admin %}
-<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content border-0 shadow">
+<!-- مودال تعریف کالا -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
       <form action="/master-data/product" method="post">
-          <div class="modal-header bg-light">
-            <h5 class="modal-title fw-bold">تعریف کالای جدید</h5>
-            <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-light" id="addProductModalLabel">
+                <i class="bi bi-box-seam text-teal me-2"></i>تعریف کالای جدید
+            </h5>
+            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
             <div class="mb-3">
-                <label for="product_name" class="form-label fw-bold">نام کالا <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="product_name" name="name" required placeholder="مثلاً: میلگرد سایز ۱۴">
+                <label for="product_name" class="form-label">نام کالا <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="product_name" name="name" required placeholder="مثال: شمش آلومینیوم ۹۹.۸٪">
             </div>
             <div class="mb-3">
-                <label for="uom" class="form-label fw-bold">واحد سنجش <span class="text-danger">*</span></label>
+                <label for="uom" class="form-label">واحد سنجش <span class="text-danger">*</span></label>
                 <select class="form-select" id="uom" name="uom" required>
-                    <option value="عدد">عدد</option>
                     <option value="تن">تن</option>
                     <option value="کیلوگرم">کیلوگرم</option>
+                    <option value="عدد">عدد</option>
+                    <option value="متر">متر</option>
+                    <option value="بسته">بسته</option>
                 </select>
             </div>
           </div>
-          <div class="modal-footer bg-light border-0">
+          <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-primary px-4">ذخیره کالا</button>
+            <button type="submit" class="btn btn-teal px-4">ذخیره کالا</button>
           </div>
       </form>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="addWarehouseModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content border-0 shadow">
+<!-- مودال تعریف انبار -->
+<div class="modal fade" id="addWarehouseModal" tabindex="-1" aria-labelledby="addWarehouseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
       <form action="/master-data/warehouse" method="post">
-          <div class="modal-header bg-light">
-            <h5 class="modal-title fw-bold">تعریف انبار جدید</h5>
-            <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-light" id="addWarehouseModalLabel">
+                <i class="bi bi-building text-teal me-2"></i>تعریف انبار جدید
+            </h5>
+            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
             <div class="mb-3">
-                <label for="warehouse_name" class="form-label fw-bold">نام انبار <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="warehouse_name" name="name" required placeholder="مثلاً: انبار قطعات یدکی">
+                <label for="warehouse_name" class="form-label">نام و عنوان انبار <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="warehouse_name" name="name" required placeholder="مثال: انبار مرکزی مواد اولیه">
             </div>
           </div>
-          <div class="modal-footer bg-light border-0">
+          <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-primary px-4">ذخیره انبار</button>
+            <button type="submit" class="btn btn-teal px-4">ذخیره انبار</button>
           </div>
       </form>
     </div>
   </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // استخراج داده‌های موجودی از سرور
+    const stockData = [
+        {% for item in stock_balances %}
+        {
+            name: "{{ item.name }} ({{ item.warehouse }})",
+            balance: {{ item.current_balance }},
+            uom: "{{ item.uom }}"
+        },
+        {% endfor %}
+    ];
+
+    const ctx = document.getElementById('stockDonutChart').getContext('2d');
+
+    // فیلتر کردن کالاهایی که موجودی مثبت دارند
+    const positiveStock = stockData.filter(d => d.balance > 0);
+    
+    const labels = positiveStock.length > 0 ? positiveStock.map(d => d.name) : ["بدون موجودی"];
+    const dataValues = positiveStock.length > 0 ? positiveStock.map(d => d.balance) : [1];
+    const uomList = positiveStock.map(d => d.uom);
+
+    const modernPalette = [
+        '#00d4c8', '#8b5cf6', '#10b981', '#f59e0b', '#3b82f6',
+        '#ec4899', '#14b8a6', '#6366f1', '#eab308', '#06b6d4'
+    ];
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: positiveStock.length > 0 ? modernPalette.slice(0, labels.length) : ['#374151'],
+                borderColor: '#161b22',
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#9ca3af',
+                        font: { family: 'Vazirmatn', size: 12 },
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    rtl: true,
+                    titleFont: { family: 'Vazirmatn' },
+                    bodyFont: { family: 'Vazirmatn' },
+                    callbacks: {
+                        label: function(context) {
+                            if (positiveStock.length === 0) return "موجودی ثبت نشده";
+                            const val = context.parsed;
+                            const uom = uomList[context.dataIndex] || '';
+                            return ` موجودی: ${toPersianDigits(val.toLocaleString())} ${uom}`;
+                        }
+                    }
+                }
+            },
+            cutout: '65%',
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 900
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}مدیریت کاربران و دسترسی‌ها | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-people-fill text-teal me-2"></i>مدیریت کاربران و سطوح دسترسی
+    </h3>
+    <p class="text-secondary small mb-0">تعریف کاربران جدید، تخصیص نقش‌های سیستمی و مدیریت وضعیت فعال/غیرفعال</p>
+  </div>
+</div>
+
+{% if msg %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  <i class="bi bi-check-circle-fill me-2"></i>{{ msg }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- فرم ایجاد کاربر جدید -->
+  <div class="col-lg-4">
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3 text-info">
+        <i class="bi bi-person-plus-fill me-2"></i>تعریف کاربر جدید
+      </h5>
+      <form method="post" action="/admin/users">
+        <div class="mb-3">
+          <label class="form-label text-secondary small">نام و نام خانوادگی:</label>
+          <input type="text" name="full_name" class="form-control bg-dark border-secondary text-light" placeholder="مثال: علی رضایی" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-secondary small">نام کاربری (Username):</label>
+          <input type="text" name="username" class="form-control bg-dark border-secondary text-light" placeholder="مثال: alireza" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-secondary small">کلمه عبور:</label>
+          <input type="password" name="password" class="form-control bg-dark border-secondary text-light" placeholder="رمز عبور امن" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-secondary small">نقش سازمانی:</label>
+          <select name="role_id" class="form-select bg-dark border-secondary text-light" required>
+            <option value="">انتخاب نقش...</option>
+            {% for r in roles %}
+            <option value="{{ r.id }}">{{ r.name }} ({{ r.description }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2">
+          <i class="bi bi-check2-circle me-1"></i>ثبت کاربر
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- لیست کاربران فعلی -->
+  <div class="col-lg-8">
+    <div class="glass-card p-0 overflow-hidden">
+      <div class="p-3 border-bottom border-secondary border-opacity-25">
+        <h5 class="fw-bold mb-0 text-light">
+          <i class="bi bi-person-lines-fill me-2"></i>کاربران فعال سامانه
+        </h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead style="background: rgba(255, 255, 255, 0.05);">
+            <tr>
+              <th class="py-3 px-3">#</th>
+              <th>نام و نام خانوادگی</th>
+              <th>نام کاربری</th>
+              <th>نقش(ها)</th>
+              <th>وضعیت</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td class="px-3 text-secondary">{{ u.id }}</td>
+              <td class="fw-semibold text-light">{{ u.full_name or '---' }}</td>
+              <td><code>{{ u.username }}</code></td>
+              <td>
+                {% for r in u.roles %}
+                <span class="badge {% if r.name == 'Admin' %}bg-danger{% else %}bg-info{% endif %} bg-opacity-25 text-light border border-secondary border-opacity-50">
+                  {{ r.name }}
+                </span>
+                {% endfor %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                  <span class="badge bg-success bg-opacity-25 text-success">فعال</span>
+                {% else %}
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary">غیرفعال</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.username != 'admin' %}
+                <form method="post" action="/admin/users/{{ u.id }}/toggle" style="display:inline;">
+                  <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                    {% if u.is_active %}
+                    <i class="bi bi-slash-circle me-1"></i>غیرفعال‌سازی
+                    {% else %}
+                    <i class="bi bi-check-circle me-1"></i>فعال‌سازی
+                    {% endif %}
+                  </button>
+                </form>
+                {% else %}
+                <span class="text-secondary small">غیرقابل تغییر</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

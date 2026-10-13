@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}خطا {{ status_code }} | سیستم انبار{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-6 text-center">
+    <div class="glass-card p-5">
+      <div class="mb-4">
+        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 4rem;"></i>
+      </div>
+      <h1 class="display-5 fw-bold mb-3 text-danger">خطا {{ status_code }}</h1>
+      <p class="lead text-secondary mb-4">{{ detail }}</p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="/dashboard" class="btn btn-primary px-4 py-2">
+          <i class="bi bi-speedometer2 me-2"></i>بازگشت به داشبورد
+        </a>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 py-2">
+          <i class="bi bi-arrow-right me-2"></i>صفحه قبل
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

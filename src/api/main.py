@@ -1,70 +1,72 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
 
-# فراخوانی روترهای سیستم
-from src.api import auth
-from src.api import ui
-from src.api import inventory_ui
-from src.api import master_data_ui
+load_dotenv()
 
-# فراخوانی لایه‌های زیرساخت و دامنه
+from src.api import auth, ui, inventory_ui, master_data_ui, admin_ui, stock_api
 from src.infrastructure.database import engine, SessionLocal, Base
-from src.domain_model import inventory_models
-from src.domain_model import user_models
-from src.api.auth import get_password_hash
+from src.domain_model import inventory_models, auth_models
+from src.infrastructure.security import get_password_hash
 
-# ساخت جداول دیتابیس
+# ساخت تمام جداول دیتابیس
 Base.metadata.create_all(bind=engine)
+
+templates = Jinja2Templates(directory="templates")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    تزریق داده‌های پایه (Master Data) و حساب‌های کاربری (Seeding)
-    """
+    """تزریق داده‌های پایه (Seeding) هنگام راه‌اندازی برنامه"""
     db = SessionLocal()
     try:
-        # ۱. ساخت انبارهای پیش‌فرض
+        # ۱. انبارهای پیش‌فرض
         if not db.query(inventory_models.Warehouse).first():
             db.add_all([
                 inventory_models.Warehouse(name="انبار شماره یک"),
                 inventory_models.Warehouse(name="انبار شماره دو")
             ])
-            
-        # ۲. ساخت کالاهای پیش‌فرض
+
+        # ۲. کالاهای پیش‌فرض
         if not db.query(inventory_models.Product).first():
             db.add_all([
                 inventory_models.Product(name="شمش آهن", uom="تن"),
                 inventory_models.Product(name="اوره گرانول", uom="تن")
             ])
-            
-        # ۳. ساخت نقش‌های سیستمی (RBAC Roles)
-        if not db.query(user_models.Role).first():
-            admin_role = user_models.Role(name="Admin", description="مدیر کل سیستم")
-            operator_role = user_models.Role(name="Warehouse_Operator", description="اپراتور انبار")
-            db.add_all([admin_role, operator_role])
+
+        # ۳. نقش‌های سیستمی
+        if not db.query(auth_models.Role).first():
+            db.add_all([
+                auth_models.Role(name="Admin", description="مدیر کل سیستم"),
+                auth_models.Role(name="Warehouse_Operator", description="اپراتور انبار")
+            ])
             db.commit()
-            
-        # ۴. ساخت کاربر مدیر کل (Admin)
-        if not db.query(user_models.User).filter_by(username="admin").first():
-            admin_role = db.query(user_models.Role).filter_by(name="Admin").first()
-            admin_user = user_models.User(
+
+        # ۴. کاربر Admin
+        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+        if not db.query(auth_models.User).filter_by(username="admin").first():
+            admin_role = db.query(auth_models.Role).filter_by(name="Admin").first()
+            admin_user = auth_models.User(
                 username="admin",
-                hashed_password=get_password_hash("admin123"),
+                hashed_password=get_password_hash(admin_password),
                 full_name="مدیر کل سیستم",
                 is_active=True
             )
             admin_user.roles.append(admin_role)
             db.add(admin_user)
 
-        # ۵. 🌟 ساخت کاربر اپراتور انبار (Warehouse Operator)
-        if not db.query(user_models.User).filter_by(username="operator").first():
-            operator_role = db.query(user_models.Role).filter_by(name="Warehouse_Operator").first()
-            operator_user = user_models.User(
+        # ۵. کاربر Operator
+        operator_password = os.getenv("OPERATOR_PASSWORD", "operator123")
+        if not db.query(auth_models.User).filter_by(username="operator").first():
+            operator_role = db.query(auth_models.Role).filter_by(name="Warehouse_Operator").first()
+            operator_user = auth_models.User(
                 username="operator",
-                hashed_password=get_password_hash("operator123"),
+                hashed_password=get_password_hash(operator_password),
                 full_name="کارمند انبار (اپراتور)",
                 is_active=True
             )
@@ -76,19 +78,26 @@ async def lifespan(app: FastAPI):
         db.close()
     yield
 
+
 app = FastAPI(
     title="Storage ERP API",
     description="سیستم مدیریت انبار و احراز هویت",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan
 )
 
-# === سیستم هدایت هوشمند کاربران بدون دسترسی ===
+
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 401:
         return RedirectResponse(url="/login")
-    return HTMLResponse(content=f"<h3>خطای سیستمی: {exc.detail}</h3>", status_code=exc.status_code)
+    return templates.TemplateResponse(
+        request=request,
+        name="error.html",
+        context={"request": request, "status_code": exc.status_code, "detail": exc.detail},
+        status_code=exc.status_code
+    )
+
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -96,6 +105,9 @@ app.include_router(auth.router)
 app.include_router(ui.router)
 app.include_router(inventory_ui.router)
 app.include_router(master_data_ui.router)
+app.include_router(admin_ui.router)
+app.include_router(stock_api.router)
+
 
 @app.get("/", tags=["General"])
 def read_root():

@@ -1,22 +1,30 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+from dotenv import load_dotenv
 
-# استفاده از دیتابیس لوکال برای توسعه و تست سریع (Zero-Config)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./enterprise_erp.db"
+load_dotenv()
 
-# پارامتر check_same_thread مخصوص SQLite در محیط‌های چندنخی (FastAPI) است
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+# آدرس دیتابیس از فایل .env خوانده می‌شود
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://erp_user:super_secure_password_123@localhost:5432/storage_erp"
 )
 
-# کارخانه تولید نشست‌های دیتابیس (ACID Compliant)
+# تضمین استفاده از درایور psycopg2
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+engine = create_engine(DATABASE_URL)
+
+# کارخانه تولید نشست‌های دیتابیس
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# کلاس پایه برای ارث‌بری تمام مدل‌های دیتابیس
+# کلاس پایه یکتا برای ارث‌بری تمام مدل‌های دیتابیس
 Base = declarative_base()
 
-# سیستم تزریق وابستگی (Dependency Injection) برای کنترلرها
 def get_db():
+    """تزریق وابستگی برای مدیریت امن نشست‌های پایگاه‌داده"""
     db = SessionLocal()
     try:
         yield db

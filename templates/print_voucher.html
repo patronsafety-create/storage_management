@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>برگه رسمی سند انبار #{{ tx.id }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            font-feature-settings: "ss01" 1;
+            padding: 30px;
+        }
+        .voucher-box {
+            background: #ffffff;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 900px;
+            margin: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header-title {
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: #0f172a;
+        }
+        .meta-table td {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+        .items-table th {
+            background: #e2e8f0 !important;
+            color: #0f172a;
+            border: 1px solid #94a3b8;
+            padding: 8px;
+            font-weight: 700;
+        }
+        .items-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+        }
+        .signature-box {
+            border-top: 1px dashed #94a3b8;
+            margin-top: 40px;
+            padding-top: 20px;
+        }
+        .signature-col {
+            text-align: center;
+            font-size: 0.88rem;
+            font-weight: 600;
+            min-height: 80px;
+        }
+        @media print {
+            body { background: #ffffff; padding: 0; }
+            .voucher-box { border: 1px solid #000; box-shadow: none; max-width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print text-center mb-4">
+        <button onclick="window.print()" class="btn btn-primary px-4 py-2 fw-bold">
+            🖨️ چاپ سند رسمی (A4)
+        </button>
+        <button onclick="window.close()" class="btn btn-outline-secondary px-4 py-2 ms-2">
+            بستن پنجره
+        </button>
+    </div>
+
+    <div class="voucher-box">
+        <!-- سربرگ رسمی سند -->
+        <div class="row align-items-center pb-3 border-bottom border-2 border-secondary mb-3">
+            <div class="col-4">
+                <div class="small text-muted">سیستم جامع مدیریت انبار و زنجیره تامین</div>
+                <div class="fw-bold">Enterprise ERP Storage</div>
+            </div>
+            <div class="col-4 text-center">
+                <h4 class="header-title mb-0">
+                    {% if tx.transaction_type.value == 'IN' %}
+                    رسید ورود کالا به انبار (PO)
+                    {% else %}
+                    حواله خروج کالا از انبار (Issue)
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="col-4 text-start">
+                <div>شماره سند: <strong class="font-monospace">#{{ tx.id }}</strong></div>
+                <div class="small">تاریخ ثبت: {{ tx.created_at.strftime('%Y/%m/%d %H:%M') if tx.created_at else '-' }}</div>
+            </div>
+        </div>
+
+        <!-- اطلاعات انبار و ثبت‌کننده -->
+        <table class="w-100 meta-table mb-3">
+            <tr>
+                <td style="width: 25%;">انبار مربوطه: <strong>{{ tx.warehouse.name if tx.warehouse else '-' }}</strong></td>
+                <td style="width: 25%;">نوع عملیات: <strong>{{ 'وارده (خرید/ورود)' if tx.transaction_type.value == 'IN' else 'صادره (مصرف/خروج)' }}</strong></td>
+                <td style="width: 25%;">سند عطف / سفارش: <strong>{{ tx.reference_document or '---' }}</strong></td>
+                <td style="width: 25%;">کاربر ثبت‌کننده: <strong>{{ tx.created_by.full_name if tx.created_by else 'سیستم' }}</strong></td>
+            </tr>
+        </table>
+
+        <!-- جدول اقلام -->
+        <table class="table items-table text-center align-middle mb-4">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ردیف</th>
+                    <th>کد کالا</th>
+                    <th>شرح و مشخصات کالا</th>
+                    <th>واحد سنجش</th>
+                    <th>تعداد / مقدار</th>
+                    <th>شماره لات / پارت</th>
+                    <th>نرخ واحد (ریال)</th>
+                    <th>مبلغ کل (ریال)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>۱</td>
+                    <td>#{{ tx.product_id }}</td>
+                    <td class="fw-bold text-start ps-3">{{ tx.product.name if tx.product else '-' }}</td>
+                    <td>{{ tx.product.uom if tx.product else '-' }}</td>
+                    <td class="fw-bold fs-6 font-monospace">{{ "{:,.2f}".format(tx.quantity) }}</td>
+                    <td>{{ tx.batch_number or '---' }}</td>
+                    <td>{{ "{:,.0f}".format(tx.unit_price) if tx.unit_price and tx.unit_price > 0 else '---' }}</td>
+                    <td class="fw-bold">{{ "{:,.0f}".format(tx.quantity * tx.unit_price) if tx.unit_price and tx.unit_price > 0 else '---' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- بخش توضیحات -->
+        <div class="p-2 bg-light border rounded small mb-4">
+            <strong>توضیحات / یادداشت سند:</strong>
+            اقلام فوق بر اساس ضوابط کنترل کیفیت و استانداردهای انبارداری تحویل و ثبت سیستم گردید.
+        </div>
+
+        <!-- امضاها -->
+        <div class="row signature-box">
+            <div class="col-3 signature-col">
+                تحویل‌دهنده (تأمین‌کننده / راننده)
+                <div class="mt-4 text-muted small">امضاء و اثر انگشت</div>
+            </div>
+            <div class="col-3 signature-col">
+                انباردار مسئول
+                <div class="mt-4 text-muted small">امضاء و تاریخ</div>
+            </div>
+            <div class="col-3 signature-col">
+                کنترل کیفیت (QC)
+                <div class="mt-4 text-muted small">تأییدیه فنی</div>
+            </div>
+            <div class="col-3 signature-col">
+                مدیر انبار و تدارکات
+                <div class="mt-4 text-muted small">مهر و امضاء نهایی</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

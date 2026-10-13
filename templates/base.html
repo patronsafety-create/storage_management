@@ -1,66 +1,433 @@
 <!doctype html>
-<html lang="fa" dir="rtl">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}سیستم مدیریت انبار | Enterprise ERP{% endblock %}</title>
-    
-    <!-- فراخوانی نسخه RTL بوت‌استرپ -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css">
-    <!-- تزریق فونت استاندارد وزیرمتن -->
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
-    
-    <style>
-        body { 
-            background-color: #f8f9fa; 
-            font-family: 'Vazirmatn', Tahoma, sans-serif !important; 
-        }
-        .navbar-brand { font-weight: 700; font-size: 1.25rem; }
-        .card { border-radius: 10px; border: none; }
-        .form-label { font-weight: 500; }
-    </style>
-  </head>
-  <body>
-    
-    <!-- نوار ناوبری اصلی سیستم (Navbar) -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-      <div class="container-fluid">
-        <a class="navbar-brand text-info" href="/dashboard">Storage Management</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="/dashboard">داشبورد مرکزی</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-warning fw-bold" href="/inventory/balance">📊 گزارش موجودی کالا</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/inventory/transaction">ثبت رسید / حواله (PO)</a>
-            </li>
-          </ul>
-          
-          <!-- نمایش اطلاعات کاربر و دکمه خروج امن در صورت وجود نشست معتبر -->
-          {% if user %}
-          <div class="d-flex align-items-center bg-secondary bg-opacity-25 rounded-pill px-3 py-1 border border-secondary shadow-sm">
-              <span class="text-light me-3 fw-bold fs-6">👤 {{ user.full_name }}</span>
-              <a href="/logout" class="btn btn-sm btn-danger fw-bold rounded-pill px-3 shadow-sm ms-3">خروج از حساب</a>
-          </div>
-          {% endif %}
-          
+<html lang="fa" dir="rtl" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}سیستم مدیریت انبار | Enterprise ERP{% endblock %}</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent-teal: #00d4c8;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(135deg, #0d1117 0%, #0f172a 50%, #0d1117 100%);
+      min-height: 100vh;
+      font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+      color: var(--text-primary);
+      font-feature-settings: "ss01" 1 !important;
+      -webkit-font-feature-settings: "ss01" 1 !important;
+      -moz-font-feature-settings: "ss01" 1 !important;
+    }
+
+    /* اعمال قلم و ارقام فارسی روی تمامی المان‌ها و فرم‌ها */
+    input, select, textarea, button, table, .badge, .stat-number, .modal {
+      font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+      font-feature-settings: "ss01" 1 !important;
+      -webkit-font-feature-settings: "ss01" 1 !important;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      background: rgba(13, 17, 23, 0.85) !important;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 0.75rem 0;
+    }
+    .navbar-brand {
+      font-weight: 900;
+      font-size: 1.2rem;
+      background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-link {
+      color: var(--text-secondary) !important;
+      font-weight: 500;
+      transition: color 0.2s;
+      border-radius: 8px;
+      padding: 0.4rem 0.85rem !important;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--accent-teal) !important;
+      background: rgba(0, 212, 200, 0.08);
+    }
+
+    /* ===== GLASS CARD ===== */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      transition: border-color 0.3s, transform 0.2s;
+    }
+    .glass-card:hover { border-color: rgba(0, 212, 200, 0.2); }
+
+    /* ===== STAT CARDS ===== */
+    .stat-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--accent-teal); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
+    }
+    .stat-number { font-size: 2.2rem; font-weight: 900; color: var(--accent-teal); }
+    .stat-label { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* ===== TABLES ===== */
+    .dark-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+    .dark-table thead tr {
+      background: rgba(0, 212, 200, 0.06);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .dark-table th {
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.9rem 1rem;
+      border: none;
+    }
+    .dark-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+    .dark-table tbody tr { transition: background 0.15s; }
+    .dark-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .dark-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ===== BADGES ===== */
+    .badge-in  { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 20px; padding: 0.3em 0.9em; font-size: 0.78rem; font-weight: 600; }
+    .badge-out { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3);  border-radius: 20px; padding: 0.3em 0.9em; font-size: 0.78rem; font-weight: 600; }
+    .badge-role { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; padding: 0.3em 0.9em; font-size: 0.75rem; font-weight: 600; }
+    .badge-warehouse { background: rgba(0,212,200,0.1); color: var(--accent-teal); border: 1px solid rgba(0,212,200,0.25); border-radius: 20px; padding: 0.3em 0.9em; font-size: 0.78rem; }
+
+    /* ===== BUTTONS ===== */
+    .btn-teal {
+      background: linear-gradient(135deg, var(--accent-teal), #0097a7);
+      color: #0d1117;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-teal:hover { opacity: 0.9; transform: translateY(-1px); color: #0d1117; }
+    .btn-glass {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+    .btn-glass:hover { border-color: var(--accent-teal); color: var(--accent-teal); }
+
+    /* ===== FORMS ===== */
+    .form-control, .form-select {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid var(--glass-border) !important;
+      color: var(--text-primary) !important;
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent-teal) !important;
+      box-shadow: 0 0 0 3px rgba(0, 212, 200, 0.1) !important;
+    }
+    .form-control::placeholder { color: var(--text-secondary) !important; }
+    .form-label { color: var(--text-secondary); font-weight: 500; font-size: 0.88rem; margin-bottom: 0.4rem; }
+    .form-select option { background: #161b22; }
+
+    /* ===== ALERTS ===== */
+    .alert-glass-success {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: #6ee7b7;
+      border-radius: 12px;
+    }
+    .alert-glass-danger {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      border-radius: 12px;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-content {
+      background: #161b22 !important;
+      border: 1px solid var(--glass-border) !important;
+      border-radius: 16px !important;
+    }
+    .modal-header { border-bottom: 1px solid var(--glass-border) !important; }
+    .modal-footer { border-top: 1px solid var(--glass-border) !important; }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-teal); }
+
+    /* ===== USER PILL ===== */
+    .user-pill {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 0.35rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .user-pill strong { color: var(--text-primary); }
+    .btn-logout {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #ef4444;
+      border-radius: 50px;
+      padding: 0.3rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.3); color: #ef4444; }
+
+    /* ===== PAGE TITLE ===== */
+    .page-title span { color: var(--accent-teal); }
+
+    /* ===== MICRO-ANIMATIONS & TRANSITIONS ===== */
+    @keyframes pageEnter {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    .app-content-fade {
+      animation: pageEnter 0.25s ease-out;
+    }
+
+    .modal {
+      z-index: 1060 !important;
+    }
+    .modal-backdrop {
+      z-index: 1050 !important;
+    }
+
+    .btn, .glass-card, .stat-card, .table tr {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn:hover {
+      transform: translateY(-1.5px);
+    }
+    .btn:active {
+      transform: translateY(0px) scale(0.98);
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 0.65rem 0.9rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--accent-teal);
+      transform: translateX(-4px);
+    }
+    .sidebar-category {
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: 0.5rem 0.6rem 0.2rem 0.6rem;
+      font-weight: 700;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- منوی کشویی سایدبار (Offcanvas Sidebar) -->
+  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarDrawer" aria-labelledby="sidebarDrawerLabel" style="background: rgba(13, 17, 23, 0.98) !important; backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); width: 320px;">
+    <div class="offcanvas-header border-bottom border-secondary border-opacity-25 py-3">
+      <div class="d-flex align-items-center gap-2">
+        <div class="p-2 rounded-3" style="background: rgba(0, 212, 200, 0.15); color: var(--accent-teal);">
+          <i class="bi bi-boxes fs-4"></i>
+        </div>
+        <div>
+          <h6 class="offcanvas-title fw-bold text-light mb-0" id="sidebarDrawerLabel">سامانه مدیریت انبار</h6>
+          <span class="text-secondary small font-monospace">Enterprise ERP Storage</span>
         </div>
       </div>
-    </nav>
-    
-    <!-- محتوای متغیر صفحات (داشبورد و غیره در اینجا تزریق می‌شوند) -->
-    <div class="container">
-        {% block content %}{% endblock %}
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    <div class="offcanvas-body p-3">
+      <!-- پیشخوان و آمار -->
+      <div class="mb-3">
+        <div class="sidebar-category">📊 پیشخوان و وضعیت</div>
+        <div class="d-grid gap-1">
+          <a href="/dashboard" class="sidebar-item"><i class="bi bi-speedometer2 text-info me-2"></i>داشبورد و نمودار کیکی</a>
+          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-bar-chart-line text-teal me-2"></i>گزارش موجودی لحظه‌ای</a>
+          <a href="/inventory/transactions" class="sidebar-item"><i class="bi bi-clock-history text-secondary me-2"></i>لیست و جستجوی تراکنش‌ها</a>
+        </div>
+      </div>
 
-    <!-- اسکریپت‌های ضروری -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+      <!-- عملیات انبارداری -->
+      <div class="mb-3">
+        <div class="sidebar-category">🔄 عملیات انبارداری</div>
+        <div class="d-grid gap-1">
+          <a href="/inventory/transaction" class="sidebar-item"><i class="bi bi-box-arrow-in-down-right text-success me-2"></i>ثبت رسید / حواله انبار</a>
+          <a href="/inventory/transfer" class="sidebar-item"><i class="bi bi-arrow-left-right text-warning me-2"></i>انتقال بین انبارها</a>
+          <a href="/inventory/stocktaking" class="sidebar-item"><i class="bi bi-clipboard2-check text-primary me-2"></i>انبارگردانی و مغایرت‌گیری</a>
+        </div>
+      </div>
+
+      <!-- کاردکس و ارزش‌گذاری مالی -->
+      <div class="mb-3">
+        <div class="sidebar-category">💰 کاردکس و مالی</div>
+        <div class="d-grid gap-1">
+          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-receipt text-info me-2"></i>کاردکس مقداری کالاها</a>
+          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-cash-stack text-success me-2"></i>کاردکس ریالی و میانگین موزون</a>
+        </div>
+      </div>
+
+      <!-- خروجی اکسل -->
+      <div class="mb-3">
+        <div class="sidebar-category">📥 خروجی اکسل و گزارش‌ها</div>
+        <div class="d-grid gap-1">
+          <a href="/inventory/export/stock" class="sidebar-item"><i class="bi bi-file-earmark-excel text-success me-2"></i>خروجی اکسل موجودی انبار</a>
+          <a href="/inventory/export/transactions" class="sidebar-item"><i class="bi bi-file-earmark-spreadsheet text-info me-2"></i>خروجی اکسل کلیه تراکنش‌ها</a>
+        </div>
+      </div>
+
+      <!-- مدیریت سیستم -->
+      {% if user %}
+      {% set is_admin_nav = user.roles | selectattr('name', 'equalto', 'Admin') | list | length > 0 %}
+      {% if is_admin_nav %}
+      <div class="mb-3">
+        <div class="sidebar-category">⚙️ مدیریت سیستم</div>
+        <div class="d-grid gap-1">
+          <a href="/admin/users" class="sidebar-item" style="color: #a78bfa !important;"><i class="bi bi-people me-2"></i>مدیریت کاربران و نقش‌ها</a>
+        </div>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid px-4">
+      <div class="d-flex align-items-center">
+        <!-- دکمه منوی کشویی سایدبار -->
+        <button class="btn btn-glass me-3 px-3 py-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarDrawer" aria-controls="sidebarDrawer" title="منوی کشویی دسترسی سریع">
+          <i class="bi bi-list fs-5 align-middle"></i>
+          <span class="d-none d-sm-inline ms-1 fw-bold small">منوی سیستم</span>
+        </button>
+        <a class="navbar-brand mb-0" href="/dashboard">
+          <i class="bi bi-boxes"></i> StorageERP
+        </a>
+      </div>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2 me-1"></i>داشبورد</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/inventory/transaction"><i class="bi bi-plus-circle me-1"></i>ثبت تراکنش</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/inventory/transfer"><i class="bi bi-arrow-left-right me-1"></i>انتقال انبار</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/inventory/stocktaking"><i class="bi bi-clipboard2-check me-1"></i>انبارگردانی</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/inventory/balance"><i class="bi bi-bar-chart-line me-1"></i>موجودی</a>
+          </li>
+        </ul>
+
+        {% if user %}
+        <div class="d-flex align-items-center gap-2">
+          <div class="user-pill">
+            <i class="bi bi-person-circle me-1"></i>
+            <strong>{{ user.full_name or user.username }}</strong>
+          </div>
+          <a href="/logout" class="btn-logout text-decoration-none">
+            <i class="bi bi-box-arrow-right me-1"></i>خروج
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 py-4 app-content-fade">
+    {% block content %}{% endblock %}
+  </div>
+
+  {% block modals %}{% endblock %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toPersianDigits(text) {
+      if (!text) return text;
+      const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+      return text.toString().replace(/[0-9]/g, function (d) {
+        return farsiDigits[d];
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+      let node;
+      const skipTags = ['SCRIPT', 'STYLE', 'CODE', 'PRE', 'INPUT', 'TEXTAREA'];
+      while (node = walker.nextNode()) {
+        if (node.parentElement && skipTags.includes(node.parentElement.tagName)) continue;
+        if (/[0-9]/.test(node.nodeValue)) {
+          node.nodeValue = toPersianDigits(node.nodeValue);
+        }
+      }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
 </html>

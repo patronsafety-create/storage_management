@@ -1,63 +1,42 @@
-import uuid
-from datetime import datetime
-from typing import List
-from sqlalchemy import String, Boolean, ForeignKey, DateTime, text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+"""
+مدل‌های احراز هویت و مدیریت دسترسی (RBAC)
+این فایل تنها منبع حقیقت (Single Source of Truth) برای جداول users و roles است.
+"""
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Table
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
-class Base(DeclarativeBase):
-    pass
+from src.infrastructure.database import Base
 
-# ---------------------------------------------------------
-# جدول‌های واسط (Association Tables) برای روابط چند-به-چند
-# ---------------------------------------------------------
+# جدول واسط چند-به-چند بین کاربران و نقش‌ها
+user_roles = Table(
+    "user_roles",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
+)
 
-class UserRole(Base):
-    __tablename__ = "user_roles"
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    role_id: Mapped[str] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
-
-class RolePermission(Base):
-    __tablename__ = "role_permissions"
-    role_id: Mapped[str] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
-    permission_id: Mapped[str] = mapped_column(ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
-
-
-# ---------------------------------------------------------
-# موجودیت‌های اصلی امنیت و مدیریت دسترسی
-# ---------------------------------------------------------
-
-class User(Base):
-    """موجودیت کاربران سیستم"""
-    __tablename__ = "users"
-    
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
-
-    # ارتباط با نقش‌ها
-    roles: Mapped[List["Role"]] = relationship(secondary="user_roles", back_populates="users")
 
 class Role(Base):
-    """موجودیت نقش‌های سازمانی (مانند: مدیر عامل، سرپرست انبار)"""
+    """جدول نقش‌های سیستمی (Admin, Warehouse_Operator, ...)"""
     __tablename__ = "roles"
-    
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    name: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False) # کلید سیستمی: warehouse_manager
-    title: Mapped[str] = mapped_column(String(100), nullable=False) # عنوان نمایشی: سرپرست انبار
 
-    # ارتباط با کاربران و مجوزها
-    users: Mapped[List["User"]] = relationship(secondary="user_roles", back_populates="roles")
-    permissions: Mapped[List["Permission"]] = relationship(secondary="role_permissions", back_populates="roles")
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=True)
 
-class Permission(Base):
-    """موجودیت مجوزهای ریزدانه (مانند: خواندن سفارش، تایید رسید)"""
-    __tablename__ = "permissions"
-    
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    name: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False) # کلید سیستمی: order:read
-    description: Mapped[str] = mapped_column(String(255), nullable=True)
+    users = relationship("User", secondary=user_roles, back_populates="roles")
 
-    # ارتباط با نقش‌ها
-    roles: Mapped[List["Role"]] = relationship(secondary="role_permissions", back_populates="permissions")
+
+class User(Base):
+    """جدول کاربران سیستم"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    roles = relationship("Role", secondary=user_roles, back_populates="users")

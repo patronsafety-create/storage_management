@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}گزارش تراکنش‌های انبار | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-clock-history text-teal me-2"></i>تاریخچه تراکنش‌های انبار
+    </h3>
+    <p class="text-secondary small mb-0">مشاهده، فیلتر و پیگیری تمامی ورودی‌ها و خروجی‌های کالاها</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/inventory/export/transactions" class="btn btn-outline-success">
+      <i class="bi bi-file-earmark-excel me-1"></i>خروجی اکسل
+    </a>
+    <a href="/inventory/transaction" class="btn btn-teal">
+      <i class="bi bi-plus-circle me-1"></i>ثبت تراکنش جدید
+    </a>
+  </div>
+</div>
+
+<!-- فیلترها -->
+<div class="glass-card p-3 mb-4">
+  <form method="get" action="/inventory/transactions" class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small text-secondary">فیلتر بر اساس کالا:</label>
+      <select name="product_id" class="form-select bg-dark border-secondary text-light">
+        <option value="">همه کالاها</option>
+        {% for p in products %}
+        <option value="{{ p.id }}" {% if filter_product == p.id %}selected{% endif %}>{{ p.name }} ({{ p.uom }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small text-secondary">نوع تراکنش:</label>
+      <select name="tx_type" class="form-select bg-dark border-secondary text-light">
+        <option value="">همه انواع</option>
+        <option value="IN" {% if filter_type == 'IN' %}selected{% endif %}>ورود به انبار (IN)</option>
+        <option value="OUT" {% if filter_type == 'OUT' %}selected{% endif %}>خروج از انبار (OUT)</option>
+      </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-info w-100">
+        <i class="bi bi-filter me-1"></i>اعمال فیلتر
+      </button>
+      <a href="/inventory/transactions" class="btn btn-outline-secondary">
+        <i class="bi bi-x-circle"></i>
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- جدول تراکنش‌ها -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3">#</th>
+          <th>زمان ثبت</th>
+          <th>نوع</th>
+          <th>کالا</th>
+          <th>انبار</th>
+          <th>مقدار</th>
+          <th>شماره بچ / پارت</th>
+          <th>سند عطف</th>
+          <th>ثبت‌کننده</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if transactions %}
+          {% for t in transactions %}
+          <tr>
+            <td class="px-3 text-secondary">{{ t.id }}</td>
+            <td class="small">{{ t.created_at.strftime('%Y-%m-%d %H:%M') if t.created_at else '-' }}</td>
+            <td>
+              {% if t.transaction_type.value == 'IN' %}
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
+                  <i class="bi bi-box-arrow-in-down me-1"></i>ورود (IN)
+                </span>
+              {% else %}
+                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">
+                  <i class="bi bi-box-arrow-up me-1"></i>خروج (OUT)
+                </span>
+              {% endif %}
+            </td>
+            <td class="fw-semibold text-light">{{ t.product.name if t.product else '-' }}</td>
+            <td>{{ t.warehouse.name if t.warehouse else '-' }}</td>
+            <td class="fw-bold font-monospace {% if t.transaction_type.value == 'IN' %}text-success{% else %}text-danger{% endif %}">
+              {{ "{:,.2f}".format(t.quantity) }} {{ t.product.uom if t.product else '' }}
+            </td>
+            <td><span class="badge bg-secondary bg-opacity-25">{{ t.batch_number or '---' }}</span></td>
+            <td class="small text-secondary">{{ t.reference_document or '---' }}</td>
+            <td class="small text-info">{{ t.created_by.full_name if t.created_by else (t.created_by.username if t.created_by else 'سیستم') }}</td>
+            <td>
+              <div class="d-flex gap-1 justify-content-center">
+                <a href="/inventory/transaction/{{ t.id }}/print" target="_blank" class="btn btn-sm btn-outline-warning" title="چاپ برگه رسمی سند">
+                  <i class="bi bi-printer"></i>
+                </a>
+                {% if t.product_id %}
+                <a href="/inventory/kardex/{{ t.product_id }}" class="btn btn-sm btn-outline-light" title="کاردکس کالا">
+                  <i class="bi bi-receipt"></i>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="10" class="text-center py-5 text-secondary">
+              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+              هیچ تراکنشی یافت نشد.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- صفحه‌بندی -->
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation" class="d-flex justify-content-center">
+  <ul class="pagination pagination-sm">
+    {% for p in range(1, total_pages + 1) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link bg-dark border-secondary text-light" href="?page={{ p }}{% if filter_type %}&tx_type={{ filter_type }}{% endif %}{% if filter_product %}&product_id={{ filter_product }}{% endif %}">
+        {{ p }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -13,9 +13,11 @@ class InventoryService:
         """محاسبه مانده لحظه‌ای کالاها به تفکیک هر انبار"""
         balance_query = (
             db.query(
+                Product.id.label("product_id"),
                 Product.name.label("product_name"),
                 Product.uom.label("uom"),
-                Warehouse.name.label("warehouse_name"), # 🌟 اضافه شدن نام انبار به خروجی
+                Warehouse.id.label("warehouse_id"),
+                Warehouse.name.label("warehouse_name"),
                 func.coalesce(
                     func.sum(case((StockTransaction.transaction_type == TransactionType.IN, StockTransaction.quantity), else_=0)), 0
                 ).label('total_in'),
@@ -24,16 +26,18 @@ class InventoryService:
                 ).label('total_out')
             )
             .outerjoin(StockTransaction, Product.id == StockTransaction.product_id)
-            .outerjoin(Warehouse, StockTransaction.warehouse_id == Warehouse.id) # 🌟 اتصال به جدول انبارها
-            .group_by(Product.id, Product.name, Product.uom, Warehouse.id, Warehouse.name) # 🌟 گروه‌بندی بر اساس کالا و انبار
+            .outerjoin(Warehouse, StockTransaction.warehouse_id == Warehouse.id)
+            .group_by(Product.id, Product.name, Product.uom, Warehouse.id, Warehouse.name)
             .all()
         )
 
         stock_balances = []
         for row in balance_query:
             stock_balances.append({
+                "product_id": row.product_id,
                 "name": row.product_name,
                 "uom": row.uom,
+                "warehouse_id": row.warehouse_id,
                 "warehouse": row.warehouse_name or "بدون گردش در انبار",
                 "total_in": row.total_in,
                 "total_out": row.total_out,

@@ -4,19 +4,21 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from src.core.dependencies import get_db, get_current_user
-
+from src.core.dependencies import get_current_user
+from src.infrastructure.database import get_db
 from src.domain_model.inventory_models import StockTransaction
-from src.domain_model.user_models import User
+from src.domain_model.auth_models import User
+from src.services.inventory_service import InventoryService
 
 router = APIRouter(tags=["UI"], dependencies=[Depends(get_current_user)])
 templates = Jinja2Templates(directory="templates")
 
+
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
-    request: Request, 
-    msg: Optional[str] = None,    
-    error: Optional[str] = None,  
+    request: Request,
+    msg: Optional[str] = None,
+    error: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -29,19 +31,22 @@ async def dashboard(
         .all()
     )
 
-    # 🌟 بررسی نقش در لایه سرور به جای HTML
     is_admin = any(role.name == "Admin" for role in current_user.roles)
 
+    # داده‌های نمودار: موجودی لحظه‌ای کالاها
+    stock_balances = InventoryService.calculate_stock_balances(db)
+
     return templates.TemplateResponse(
-        request=request, 
-        name="dashboard.html", 
+        request=request,
+        name="dashboard.html",
         context={
-            "request": request, 
+            "request": request,
             "tx_count": transaction_count,
             "recent_txs": recent_transactions,
-            "msg": msg,      
+            "msg": msg,
             "error": error,
             "user": current_user,
-            "is_admin": is_admin  # ارسال مستقیم نتیجه به قالب
+            "is_admin": is_admin,
+            "stock_balances": stock_balances,
         }
     )

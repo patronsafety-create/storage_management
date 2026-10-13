@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}کاردکس کالا: {{ product.name }} | Enterprise ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-receipt text-teal me-2"></i>کاردکس ریالی و مقداری کالا: <span class="text-info">{{ product.name }}</span>
+    </h3>
+    <p class="text-secondary small mb-0">واحد سنجش: <span class="badge bg-secondary">{{ product.uom }}</span> | کد کالا: #{{ product.id }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/inventory/transactions" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-right me-1"></i>بازگشت به لیست تراکنش‌ها
+    </a>
+  </div>
+</div>
+
+<!-- تغییر کالا یا انبار -->
+<div class="glass-card p-3 mb-4">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label small text-secondary">انتخاب کالا دیگر:</label>
+      <select class="form-select bg-dark border-secondary text-light" onchange="if(this.value) window.location.href='/inventory/kardex/' + this.value;">
+        {% for p in all_products %}
+        <option value="{{ p.id }}" {% if p.id == product.id %}selected{% endif %}>{{ p.name }} ({{ p.uom }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small text-secondary">فیلتر انبار خاص:</label>
+      <select name="warehouse_id" class="form-select bg-dark border-secondary text-light" onchange="this.form.submit()">
+        <option value="">تمام انبارها (موجودی کل)</option>
+        {% for w in warehouses %}
+        <option value="{{ w.id }}" {% if selected_warehouse_id == w.id %}selected{% endif %}>{{ w.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+</div>
+
+<!-- جدول کاردکس -->
+<div class="glass-card p-0 overflow-hidden mb-4">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3">#</th>
+          <th>تاریخ و زمان</th>
+          <th>نوع عملیات</th>
+          <th>انبار</th>
+          <th>سند عطف</th>
+          <th>شماره پارت</th>
+          <th class="text-success">وارده (IN)</th>
+          <th class="text-danger">صادره (OUT)</th>
+          <th class="text-info">مانده موجودی</th>
+          <th>کاربر</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if kardex_entries %}
+          {% for entry in kardex_entries %}
+          {% set tx = entry.tx %}
+          <tr>
+            <td class="px-3 text-secondary">{{ loop.index }}</td>
+            <td class="small">{{ tx.created_at.strftime('%Y-%m-%d %H:%M') if tx.created_at else '-' }}</td>
+            <td>
+              {% if tx.transaction_type.value == 'IN' %}
+                <span class="badge bg-success bg-opacity-25 text-success">ورود</span>
+              {% else %}
+                <span class="badge bg-danger bg-opacity-25 text-danger">خروج</span>
+              {% endif %}
+            </td>
+            <td>{{ tx.warehouse.name if tx.warehouse else '-' }}</td>
+            <td class="small">{{ tx.reference_document or '---' }}</td>
+            <td class="small"><span class="badge bg-secondary bg-opacity-25">{{ tx.batch_number or '---' }}</span></td>
+            <td class="fw-bold font-monospace text-success">
+              {% if tx.transaction_type.value == 'IN' %}
+                +{{ "{:,.2f}".format(tx.quantity) }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td class="fw-bold font-monospace text-danger">
+              {% if tx.transaction_type.value == 'OUT' %}
+                -{{ "{:,.2f}".format(tx.quantity) }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td class="fw-bold font-monospace text-info fs-6">
+              {{ "{:,.2f}".format(entry.running_balance) }} {{ product.uom }}
+            </td>
+            <td class="small text-secondary">{{ tx.created_by.full_name if tx.created_by else 'سیستم' }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="10" class="text-center py-5 text-secondary">
+              <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+              هیچ رکوردی در کاردکس این کالا ثبت نشده است.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
