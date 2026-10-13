@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}راهنمای جامع کاربری و شناسنامه فنی — نکسوس‌پور ERP{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-12 col-md-8">
+        <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <span class="text-teal"><i class="bi bi-book-half"></i></span>
+            <span>راهنمای جامع کاربری و کاتالوگ فنی سامانه نکسوس‌پور</span>
+        </h2>
+        <p class="text-secondary mb-0 small">
+            مستندات گام‌به‌گام کار با کلیه منوها، باسکول تریلی ۶۰ تن، برش آهن‌آلات، کیسه‌گیری اوره و MTC — طراحی: <strong>امید پورمحمود</strong>
+        </p>
+    </div>
+    <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-teal px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
+            <span>دانلود دفترچه راهنما (فایل رسمی PDF)</span>
+        </a>
+    </div>
+</div>
+
+<!-- کارت معرفی سند و هویت بصری -->
+<div class="glass-card p-4 mb-4 border-info border-opacity-25" style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(12, 74, 110, 0.4) 100%);">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="brand-logo-box" style="width: 56px; height: 56px; font-size: 1.8rem;">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-light mb-1">NexusPour Enterprise ERP v2.4</h4>
+                <div class="text-secondary small">
+                    <span class="text-info"><i class="bi bi-shield-check me-1"></i>سیستم عامل انبارداری و زنجیره تأمین</span> • 
+                    توسعه‌یافته بر پایه استانداردهای متالورژی ISIRI و سامانه جامع تجارت NTSW
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-2">۱۰ صفحه راهنمای رسمی</span>
+            <span class="badge bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25 px-3 py-2">کیفیت برداری (Vector)</span>
+            <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25 px-3 py-2">دارای واترمارک اصالت</span>
+        </div>
+    </div>
+</div>
+
+<!-- ناوبری تب‌های سرفصل‌ها -->
+<div class="row g-4">
+    <!-- ستون منوی دسترسی سریع به فصول -->
+    <div class="col-12 col-lg-3">
+        <div class="glass-card p-3 sticky-top" style="top: 85px;">
+            <div class="text-secondary fw-bold small text-uppercase mb-3 px-2">فهرست سرفصل‌های دفترچه</div>
+            <div class="nav flex-column nav-pills gap-1" id="guideTabs" role="tablist">
+                <button class="nav-link active text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-overview">
+                    <i class="bi bi-info-circle me-2 text-info"></i>معرفی و مزیت‌های سیستم
+                </button>
+                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-dashboard">
+                    <i class="bi bi-speedometer2 me-2 text-warning"></i>داشبورد و هوش تجاری
+                </button>
+                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-master">
+                    <i class="bi bi-box-seam me-2 text-success"></i>کاتالوگ و طرف‌های تجاری
+                </button>
+                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-weighbridge">
+                    <i class="bi bi-truck me-2 text-warning"></i>باسکول تریلی و سفارش خرید
+                </button>
+                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-cutting-bagging">
+                    <i class="bi bi-scissors me-2 text-teal"></i>برش آهن و کیسه‌گیری اوره
+                </button>
+                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-inventory">
+                    <i class="bi bi-arrow-left-right me-2 text-primary"></i>عملیات انبار و کاردکس
+                </button>
+                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-compliance">
+                    <i class="bi bi-bank2 me-2 text-danger"></i>سرتیفیکیت MTC و سامانه صمت
+                </button>
+            </div>
+            <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
+                <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info w-100 btn-sm">
+                    <i class="bi bi-download me-1"></i>دانلود مستقیم نسخه PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ستون محتوای توضیحات -->
+    <div class="col-12 col-lg-9">
+        <div class="tab-content">
+            <!-- تب ۱: معرفی -->
+            <div class="tab-pane fade show active" id="ch-overview">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-teal mb-3"><i class="bi bi-stars me-2"></i>معماری و مزیت‌های منحصربه‌فرد نکسوس‌پور</h4>
+                    <p class="text-light leading-relaxed">
+                        سامانه یکپارچه <strong>نکسوس‌پور (NexusPour ERP)</strong> به منظور برطرف کردن نارسایی‌های سامانه‌های عمومی انبارداری در صنایع سنگین، بنگاه‌های مقاطع فولادی و پتروشیمی توسط <strong>امید پورمحمود</strong> مهندسی شده است.
+                    </p>
+                    <div class="row g-3 mt-2">
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 rounded-3" style="background: rgba(0, 212, 200, 0.05); border: 1px solid rgba(0, 212, 200, 0.2);">
+                                <h6 class="fw-bold text-teal mb-2"><i class="bi bi-check2-circle me-1"></i>انبارداری دو واحدی همزمان</h6>
+                                <p class="text-secondary small mb-0">ردگیری دقیق تناژ (کیلوگرم/تن) و تعداد (شاخه/بندیل/قالب/جامبوبگ) به همراه کنترل خودکار وزن اسمی و درصد تلرانس استاندارد.</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 rounded-3" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2);">
+                                <h6 class="fw-bold text-primary mb-2"><i class="bi bi-calculator me-1"></i>بهای تمام‌شده ورودی (Landed Cost)</h6>
+                                <p class="text-secondary small mb-0">محاسبه و تسهیم مستقیم کرایه بارنامه، بیمه بار، هزینه توزین باسکول و جریمه کسر بار فراتر از افت مجاز در نرخ میانگین کاردکس.</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 rounded-3" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+                                <h6 class="fw-bold text-warning mb-2"><i class="bi bi-truck me-1"></i>اتوماسیون باسکول تریلی ۶۰ تن</h6>
+                                <p class="text-secondary small mb-0">توزین اول (پر) و توزین دوم (خالی)، محاسبه اتوماتیک وزن خالص، پلاک ملی و آلارم اضافه تناژ قانونی ۴۰ تن.</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+                                <h6 class="fw-bold text-danger mb-2"><i class="bi bi-shield-shaded me-1"></i>شناسنامه MTC و سامانه جامع تجارت</h6>
+                                <p class="text-secondary small mb-0">صدور سرتیفیکیت رسمی متالورژی (آنالیز شیمیایی و تست مکانیکی) و استخراج خروجی اکسل منطبق با فرمت سامانه جامع تجارت NTSW.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۲: داشبورد -->
+            <div class="tab-pane fade" id="ch-dashboard">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-warning mb-3"><i class="bi bi-speedometer2 me-2"></i>منوی داشبورد و پیشخوان هوش تجاری (/dashboard)</h4>
+                    <p class="text-light">
+                        داشبورد سامانه اتاق مانیتورینگ بلادرنگ انبار است که در هر لحظه وضعیت موجودی، ورودی‌ها، خروجی‌ها و توزیع کالاها بین سوله‌ها و محوطه‌ها را نمایش می‌دهد.
+                    </p>
+                    <ul class="text-secondary small">
+                        <li class="mb-2"><strong class="text-light">کارت‌های آماری چهارگانه:</strong> نمایش لحظه‌ای تعداد کل کالاهای فعال، سرجمع تناژ موجودی انبار، تعداد کل رسیدهای ورودی و حواله‌های خروجی.</li>
+                        <li class="mb-2"><strong class="text-light">نمودار پای دونات:</strong> تفکیک بصری موجودی بین انبار شماره یک (محوطه سنگین و شمش) و انبار شماره دو (سوله مسقف و شیمیایی).</li>
+                        <li class="mb-2"><strong class="text-light">مرکز هشدارهای نقطه سفارش:</strong> اتصال به زنگوله اعلان بالای صفحه برای اطلاع‌رسانی خودکار کسری موجودی اقلام استراتژیک.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- تب ۳: تعاریف پایه -->
+            <div class="tab-pane fade" id="ch-master">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-success mb-3"><i class="bi bi-box-seam me-2"></i>کاتالوگ کالاها و طرف‌های تجاری</h4>
+                    <h6 class="fw-bold text-teal mt-3">۱. کاتالوگ تخصصی کالاها (/master-data/products)</h6>
+                    <p class="text-secondary small">
+                        تعریف ویژگی‌های فنی و متالورژی مقاطع فولادی شامل: شناسه یکتا (SKU)، سایز، طول شاخه، ضخامت، گرید آلیاژی (مانند ST37, ST52, 5SP)، استاندارد (ISIRI 3132)، کد گمرکی HS و شناسه IRC صمت.
+                    </p>
+
+                    <h6 class="fw-bold text-teal mt-3">۲. طرف‌های تجاری (/master-data/parties)</h6>
+                    <p class="text-secondary small">
+                        ثبت و مدیریت تأمین‌کنندگان و مشتریان با اعتبارسنجی‌های سخت‌گیرانه:
+                    </p>
+                    <ul class="text-secondary small">
+                        <li><strong>اعتبارسنجی موبایل ۱۱ رقمی:</strong> بررسی شروع با ۰۹ و اصلاح خودکار کاراکترها.</li>
+                        <li><strong>الگوریتم رقم کنترل کد ملی:</strong> اعتبارسنجی ۱۰ رقمی اشخاص حقیقی و ۱۱ رقمی شناسه ملی شرکت‌ها.</li>
+                        <li><strong>تفکیک حذف قطعی از بایگانی:</strong> امکان حذف قطعی برای رکوردهای بدون تراکنش، و غیرفعال‌سازی ایمن برای رکوردهای دارای سوابق مالی با فیلتر هوشمند وضعیت.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- تب ۴: باسکول -->
+            <div class="tab-pane fade" id="ch-weighbridge">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-warning mb-3"><i class="bi bi-truck me-2"></i>اتوماسیون باسکول تریلی ۶۰ تن (/weighbridge)</h4>
+                    <p class="text-light">
+                        توزین مکانیزه ناوگان حمل و نقل با قابلیت‌های صنعتی:
+                    </p>
+                    <div class="p-3 rounded-3 mb-3" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <div class="fw-bold text-warning mb-1">مراحل عملیاتی باسکول:</div>
+                        <ol class="text-secondary small mb-0">
+                            <li><strong>توزین اول (ناخالص):</strong> ورود تریلی با بار، ثبت پلاک ملی، راننده، شماره بارنامه و وزن ناخالص.</li>
+                            <li><strong>تخلیه بار در محوطه انبار.</strong></li>
+                            <li><strong>توزین دوم (تار/خالی):</strong> بازگشت تریلی به باسکول، ثبت وزن خالی و محاسبه خودکار وزن خالص به کیلوگرم و تن.</li>
+                            <li><strong>چاپ قبض رسمی با بارکد</strong> و امکان ارسال وزن خالص مستقیماً به سند رسید انبار.</li>
+                        </ol>
+                    </div>
+                    <p class="text-secondary small">
+                        ⚠️ <strong>کنترل اضافه تناژ:</strong> در صورتی که وزن ناخالص تریلی از ۴۰,۰۰۰ کیلوگرم (۴۰ تن) فراتر رود، آلارم هشدار اضافه تناژ روی قبض ثبت می‌گردد.
+                    </p>
+                </div>
+            </div>
+
+            <!-- تب ۵: برش و کیسه‌گیری -->
+            <div class="tab-pane fade" id="ch-cutting-bagging">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-teal mb-3"><i class="bi bi-scissors me-2"></i>ماژول‌های تخصصی برش آهن‌آلات و کیسه‌گیری اوره</h4>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <h6 class="fw-bold text-info">✂️ دستور برش و انبار ته‌شاخه (/cutting)</h6>
+                            <p class="text-secondary small">
+                                تحویل سفارش‌های خرد میلگرد و تیرآهن بدون از بین رفتن شاخه‌های باقیمانده. سیستم طول ته‌شاخه را محاسبه کرده و به صورت خودکار به «انبار ته‌شاخه‌ها» واریز می‌کند تا به عنوان سرمایه جاری در سفارش‌های بعدی مصرف گردد.
+                            </p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <h6 class="fw-bold text-success">🌾 کیسه‌گیری فله به جامبوبگ (/bagging)</h6>
+                            <p class="text-secondary small">
+                                تبدیل محموله‌های فله اوره به جامبوبگ‌های ۱ تنی؛ محاسبه اتوماتیک درصد افت غبار و پرتی (Dust Loss)، تسهیم هزینه کیسه و اجرت در هر تن، و بروزرسانی بهای تمام‌شده بسته نهایی در کاردکس.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۶: انبارداری و کاردکس -->
+            <div class="tab-pane fade" id="ch-inventory">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-primary mb-3"><i class="bi bi-arrow-left-right me-2"></i>عملیات انبارداری، انتقال و کاردکس ریالی</h4>
+                    <ul class="text-secondary small">
+                        <li class="mb-2"><strong class="text-light">ثبت رسید و حواله دو واحدی:</strong> ثبت همزمان تناژ و تعداد شاخه، محاسبه کرایه حمل و افت بار.</li>
+                        <li class="mb-2"><strong class="text-light">انتقال بین انبارها (/inventory/transfer):</strong> صدور سند دوطرفه جابجایی کالا بین سوله‌ها بدون تغییر ارزش میانگین ریالی.</li>
+                        <li class="mb-2"><strong class="text-light">انبارگردانی و مغایرت‌گیری (/inventory/stocktaking):</strong> ثبت شمارش عینی انبار، تطبیق با سیستم و صدور خودکار اسناد تعدیل کسری و اضافی.</li>
+                        <li class="mb-2"><strong class="text-light">کاردکس میانگین موزون متحرک (/inventory/balance):</strong> ارزیابی ریالی خروج و مانده انبار بر اساس استاندارد شماره ۸ حسابداری ایران.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- تب ۷: MTC و سامانه صمت -->
+            <div class="tab-pane fade" id="ch-compliance">
+                <div class="glass-card p-4 mb-4">
+                    <h4 class="fw-bold text-danger mb-3"><i class="bi bi-bank2 me-2"></i>شناسنامه MTC، سامانه جامع صمت و امنیت</h4>
+                    <p class="text-secondary small">
+                        📜 <strong>شناسنامه کیفیت MTC:</strong> چاپ سرتیفیکیت رسمی متالورژی شامل شماره ذوب (Heat No)، آنالیز شیمیایی و خواص مکانیکی تسلیم و کشش.<br>
+                        🏛️ <strong>سامانه جامع تجارت NTSW:</strong> خروجی مستقیم اکسل با کدهای رهگیری صمت و شناسه انبار.<br>
+                        🔒 <strong>لاگ حسابرسی و امنیت (/admin/audit-logs):</strong> ثبت تمامی اقدامات کاربران با زمان، آدرس IP و شناسه سند جهت ردپای قطعی امنیتی.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

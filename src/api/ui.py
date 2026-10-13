@@ -52,3 +52,21 @@ async def dashboard(
             "categories": categories,
         }
     )
+
+
+@router.get("/guide", response_class=HTMLResponse)
+async def user_guide(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """کاتالوگ فنی و راهنمای جامع کاربری سامانه نکسوس‌پور"""
+    is_admin = any(role.name == "Admin" for role in current_user.roles)
+    return templates.TemplateResponse(
+        request=request,
+        name="user_guide.html",
+        context={
+            "request": request,
+            "user": current_user,
+            "is_admin": is_admin
+        }
+    )

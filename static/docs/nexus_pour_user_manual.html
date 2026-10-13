@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>راهنمای جامع و شناسنامه فنی سامانه نکسوس‌پور (NexusPour ERP)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 16mm 14mm 16mm 14mm;
+      @bottom-left {
+        content: "صفحه " counter(page);
+        font-family: 'Vazirmatn', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+      @bottom-right {
+        content: "سامانه یکپارچه نکسوس‌پور — اثر و مالکیت: امید پورمحمود";
+        font-family: 'Vazirmatn', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      color: #1e293b;
+      font-size: 9.8pt;
+      line-height: 1.65;
+    }
+
+    .page {
+      page-break-after: always;
+      position: relative;
+      min-height: 260mm;
+      padding-bottom: 5mm;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* واترمارک اختصاصی در تمام صفحات */
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-32deg);
+      font-size: 42pt;
+      font-weight: 900;
+      color: rgba(14, 165, 233, 0.045);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+      text-align: center;
+      line-height: 1.3;
+      letter-spacing: 2px;
+    }
+
+    .content-layer {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* سربرگ صفحات محتوا */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 7px;
+      margin-bottom: 16px;
+      border-bottom: 1.5px solid #0284c7;
+    }
+    .page-header-title {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .page-header-meta {
+      font-size: 8pt;
+      color: #64748b;
+      direction: ltr;
+      font-weight: 500;
+    }
+
+    /* پابرگ پایین هر صفحه */
+    .page-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8pt;
+      color: #64748b;
+    }
+
+    /* ===== صفحه جلد لوکس ===== */
+    .cover-container {
+      height: 265mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 2px solid #0284c7;
+      border-radius: 12px;
+      padding: 30px;
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0c4a6e 100%);
+      color: #ffffff;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-decor-circle {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+      top: -60px;
+      left: -60px;
+      pointer-events: none;
+    }
+
+    .cover-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 15px;
+    }
+
+    .cover-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cover-logo-svg {
+      width: 58px;
+      height: 58px;
+      filter: drop-shadow(0 4px 10px rgba(14, 165, 233, 0.5));
+    }
+
+    .cover-brand-text {
+      font-size: 22pt;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-badge-ver {
+      background: rgba(14, 165, 233, 0.2);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      font-size: 8.5pt;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-center {
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .cover-title-main {
+      font-size: 28pt;
+      font-weight: 900;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .cover-subtitle {
+      font-size: 13.5pt;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+
+    .cover-tagline-box {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 30px;
+      padding: 8px 24px;
+      font-size: 10.5pt;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .cover-features-pills {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 25px;
+    }
+
+    .cover-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 8.5pt;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .cover-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .cover-author-box {
+      text-align: right;
+    }
+
+    .cover-author-label {
+      font-size: 8pt;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-author-name {
+      font-size: 14pt;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-top: 2px;
+    }
+
+    .cover-author-role {
+      font-size: 8.5pt;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    .cover-meta-box {
+      text-align: left;
+      font-size: 8pt;
+      color: #94a3b8;
+      direction: ltr;
+    }
+
+    /* عناوین و استایل متن */
+    h1, h2, h3, h4 {
+      margin-top: 0;
+      color: #0f172a;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: 16pt;
+      border-right: 4px solid #0284c7;
+      padding-right: 10px;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    h2 {
+      font-size: 12.5pt;
+      border-right: 3px solid #0891b2;
+      padding-right: 8px;
+      margin-top: 14px;
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      color: #0369a1;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    /* کارت‌ها و کادرها */
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+
+    .card-accent {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-right: 4px solid #0284c7;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+
+    .card-dark {
+      background: #0f172a;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+
+    /* جدول‌های سازمانی */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px 0;
+      font-size: 8.5pt;
+      break-inside: avoid;
+    }
+
+    table.data-table th {
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 700;
+      padding: 6px 8px;
+      text-align: right;
+      border: 1px solid #1e293b;
+    }
+
+    table.data-table td {
+      padding: 5px 8px;
+      border: 1px solid #cbd5e1;
+      vertical-align: middle;
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    /* نشان‌ها (Badges) */
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-primary { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .badge-danger  { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-dark    { background: #1e293b; color: #f8fafc; }
+
+    /* ستون‌بندی دوطرفه */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    /* دیاگرام فرآیند */
+    .flow-step {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      position: relative;
+    }
+    .flow-step-num {
+      width: 22px;
+      height: 22px;
+      background: #0284c7;
+      color: #ffffff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8.5pt;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .flow-step-title {
+      font-weight: 700;
+      font-size: 8.5pt;
+      color: #0f172a;
+    }
+    .flow-step-desc {
+      font-size: 7.5pt;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* پلاک خودرو و مشخصات فنی */
+    .iran-plate-preview {
+      display: inline-flex;
+      align-items: center;
+      background: #facc15;
+      color: #000000;
+      border: 2px solid #000000;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-weight: 900;
+      font-size: 9pt;
+      letter-spacing: 1px;
+    }
+
+    ul.check-list {
+      list-style: none;
+      padding-right: 0;
+      margin: 6px 0;
+    }
+    ul.check-list li {
+      position: relative;
+      padding-right: 18px;
+      margin-bottom: 5px;
+      font-size: 9pt;
+    }
+    ul.check-list li::before {
+      content: "✓";
+      position: absolute;
+      right: 0;
+      color: #059669;
+      font-weight: 900;
+    }
+
+    .text-center { text-align: center; }
+    .text-teal { color: #0097a7; }
+    .text-muted { color: #64748b; }
+    .fw-bold { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۱: جلد رسمی کاتالوگ و شناسنامه سند -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="cover-container">
+      <div class="cover-decor-circle"></div>
+
+      <!-- هدر جلد -->
+      <div class="cover-top">
+        <div class="cover-logo-wrap">
+          <!-- لوگوی وکتور رسمی نکسوس‌پور -->
+          <svg class="cover-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="24" fill="url(#coverLogoGrad)" />
+            <path d="M50 20L78 36V68L50 84L22 68V36L50 20Z" stroke="#38bdf8" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M50 20V52M78 36L50 52M22 36L50 52" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="50" cy="52" r="6" fill="#00d4c8"/>
+            <path d="M35 72L50 80L65 72" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="coverLogoGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0284c7"/>
+                <stop offset="1" stop-color="#4f46e5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div>
+            <div class="cover-brand-text">NEXUSPOUR ERP</div>
+            <div style="font-size: 8.5pt; color: #94a3b8;">سامانه جامع مدیریت هوشمند انبار و لجستیک</div>
+          </div>
+        </div>
+        <div class="cover-badge-ver">ENTERPRISE EDITION v2.4</div>
+      </div>
+
+      <!-- مرکز جلد: عناوین اصلی -->
+      <div class="cover-center">
+        <div class="cover-title-main">
+          راهنمای جامع کاربری و شناسنامه فنی<br>
+          سامانه یکپارچه انبارداری نکسوس‌پور
+        </div>
+        <div class="cover-subtitle">
+          آموزش گام‌به‌گام کلیه منوها، عملیات انبارداری صنایع سنگین و آهن‌آلات،<br>
+          اتوماسیون باسکول تریلی ۶۰ تن، کنترل کیفی متالورژی (MTC) و سامانه جامع تجارت
+        </div>
+        <div class="cover-tagline-box">
+          ✨ راهکار اختصاصی انبارش و کنترل موجودی مقاطع فولادی، شمش، اوره و بازرگانی
+        </div>
+
+        <div class="cover-features-pills">
+          <span class="cover-pill">📦 انبارداری دو واحدی (تن و شاخه/بندیل)</span>
+          <span class="cover-pill">🚛 باسکول دیجیتال و پلاک‌خوان هوشمند</span>
+          <span class="cover-pill">📜 صدور سرتیفیکیت رسمی متالورژی MTC</span>
+          <span class="cover-pill">✂️ دستور برش و ته‌شاخه آهن‌آلات</span>
+          <span class="cover-pill">🌾 کیسه‌گیری جامبوبگ پتروشیمی اوره</span>
+          <span class="cover-pill">🏛️ انطباق ۱۰۰٪ با سامانه جامع تجارت NTSW</span>
+          <span class="cover-pill">📊 کاردکس ریالی میانگین موزون و بهای تمام‌شده</span>
+        </div>
+      </div>
+
+      <!-- فوتر جلد: مشخصات مؤلف و تاریخ -->
+      <div class="cover-bottom">
+        <div class="cover-author-box">
+          <div class="cover-author-label">طراح، مهندس و مؤلف نرم‌افزار</div>
+          <div class="cover-author-name">امید پورمحمود (Omid Pourmahmoud)</div>
+          <div class="cover-author-role">مدیر و مشاور ارشد سیستم‌های جامع انبارداری و فناوری اطلاعات</div>
+        </div>
+        <div class="cover-meta-box">
+          <div>تاریخ تدوین: مهر ۱۴۰۵ / اکتبر ۲۰۲۶</div>
+          <div>زیرساخت: FastAPI • PostgreSQL • Docker</div>
+          <div>وضعیت انتشار: رسمی و محرمانه سازمانی</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۲: معماری سیستم، مزیت‌های رقابتی و فهرست تفصیلی مطالب -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>🏛️</span>
+          <span>سامانه نکسوس‌پور — معرفی معماری، پشته فناوری و فهرست مطالب</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 0 • OVERVIEW & ARCHITECTURE</div>
+      </div>
+
+      <h1>۱. معرفی سامانه و فلسفه طراحی نکسوس‌پور</h1>
+      <p>
+        سامانه یکپارچه <strong>نکسوس‌پور (NexusPour ERP)</strong> توسط <strong>امید پورمحمود</strong> به عنوان یک ERP نسل جدید برای پاسخگویی به چالش‌های بنیادین مدیریت انبارهای صنعتی سنگین، بنگاه‌های آهن‌آلات، صنایع فولاد، و مجتمع‌های پتروشیمی طراحی و پیاده‌سازی شده است. اکثر نرم‌افزارهای حسابداری و انبارداری بازار، در مواجهه با فرآیندهای دو واحدی (کیلوگرم/شاخه یا تن/جامبوبگ)، افت بار، باسکول، و الزامات شناسنامه متالورژی دچار محدودیت ساختاری هستند؛ نکسوس‌پور این گپ بزرگ را به طور کامل پوشش داده است.
+      </p>
+
+      <div class="grid-2">
+        <div class="card-accent">
+          <h3>⚡ مزیت‌های منحصربه‌فرد نکسوس‌پور</h3>
+          <ul class="check-list">
+            <li><strong>مدیریت همزمان دو واحد شمارش:</strong> ردگیری همزمان وزن به تن/کیلوگرم و تعداد شاخه/قالب با وزن اسمی و درصد انحراف استاندارد.</li>
+            <li><strong>محاسبه بهای تمام‌شده نهایی (Landed Cost):</strong> تسهیم خودکار هزینه‌های کرایه بارنامه، بیمه حمل، قبض باسکول و جریمه کسر بار.</li>
+            <li><strong>اتوماسیون باسکول تریلی ۶۰ تن:</strong> ثبت توزین اول (پر) و توزین دوم (خالی) با محاسبه خالص اتوماتیک و کنترل اضافه تناژ قانونی.</li>
+            <li><strong>شناسنامه متالورژی و سرتیفیکیت MTC:</strong> ثبت آنالیز شیمیایی (C, Si, Mn, P, S) و خواص مکانیکی با کد ذوب (Heat No).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🛠️ پشته فناوری و زیرساخت فنی (Tech Stack)</h3>
+          <table class="data-table" style="margin: 0;">
+            <tr>
+              <th style="width: 35%;">لایه سامانه</th>
+              <th>فناوری و استانداردهای به‌کاررفته</th>
+            </tr>
+            <tr>
+              <td><strong>بک‌اند (Backend)</strong></td>
+              <td>Python 3.11+ • FastAPI (Asynchronous High-Speed)</td>
+            </tr>
+            <tr>
+              <td><strong>دیتابیس (Database)</strong></td>
+              <td>PostgreSQL Enterprise با ORM قدرتمند SQLAlchemy</td>
+            </tr>
+            <tr>
+              <td><strong>امنیت و احراز هویت</strong></td>
+              <td>OAuth2 Password Bearer • JWT Token • Argon2/BCrypt</td>
+            </tr>
+            <tr>
+              <td><strong>رابط کاربری (UI)</strong></td>
+              <td>HTML5 • CSS Glassmorphism • Bootstrap 5 • Chart.js</td>
+            </tr>
+            <tr>
+              <td><strong>استقرار (DevOps)</strong></td>
+              <td>Docker Containers • Nginx Reverse Proxy • Systemd</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <h2>فهرست تفصیلی سرفصل‌های دفترچه راهنما</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 8%;">فصل</th>
+            <th style="width: 32%;">عنوان بخش</th>
+            <th>محتوا و منوهای پوشش داده‌شده</th>
+            <th style="width: 10%; text-align: center;">صفحه</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center fw-bold">فصل ۱</td>
+            <td><strong>داشبورد و هوش تجاری (BI)</strong></td>
+            <td>پیشخوان آماری، نمودار کیکی توزیع انبارها، نرخ گردش موجودی و هشدارهای بلادرنگ</td>
+            <td class="text-center">صفحه ۳</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">فصل ۲</td>
+            <td><strong>اطلاعات پایه و طرف‌های تجاری</strong></td>
+            <td>کاتالوگ کالاها، متالورژی، اعتبارسنجی کد ملی، فیلتر وضعیت و حذف قطعی امن</td>
+            <td class="text-center">صفحه ۴</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">فصل ۳</td>
+            <td><strong>زنجیره تأمین و باسکول تریلی</strong></td>
+            <td>سفارشات خرید (PO)، قبض باسکول دیجیتال ۶۰ تن، توزین دو مرحله‌ای و پلاک ملی</td>
+            <td class="text-center">صفحه ۵</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">فصل ۴</td>
+            <td><strong>تولید، برشکاری و کیسه‌گیری</strong></td>
+            <td>دستور برش و انبار ته‌شاخه آهن‌آلات، کیسه‌گیری جامبوبگ اوره و افت غبار</td>
+            <td class="text-center">صفحه ۶</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">فصل ۵</td>
+            <td><strong>عملیات انبارداری و کاردکس</strong></td>
+            <td>ثبت رسید و حواله، کرایه حمل، انتقال بین انبارها، انبارگردانی و مغایرت‌گیری</td>
+            <td class="text-center">صفحه ۷</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">فصل ۶</td>
+            <td><strong>سرتیفیکیت MTC، سامانه جامع و امنیت</strong></td>
+            <td>گواهی متالورژی، گزارش NTSW اکسل، مدیریت سطوح دسترسی و لاگ حسابرسی</td>
+            <td class="text-center">صفحه ۸</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>دیاگرام جریان فرآیندی کالا در نکسوس‌پور (Supply Chain Workflow)</h2>
+      <div class="grid-3" style="margin-top: 6px;">
+        <div class="flow-step">
+          <div class="flow-step-num">۱</div>
+          <div class="flow-step-title">ورود تریلی و توزین اول</div>
+          <div class="flow-step-desc">ثبت پلاک، بارنامه، و وزن پر تریلی در باسکول ۶۰ تن</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">۲</div>
+          <div class="flow-step-title">تخلیه و توزین دوم</div>
+          <div class="flow-step-desc">توزین تار (خالی) و محاسبه خودکار وزن خالص محموله</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">۳</div>
+          <div class="flow-step-title">کنترل کیفی و صدور رسید</div>
+          <div class="flow-step-desc">تطبیق سرتیفیکیت MTC، ثبت رسید انبار و قیمت تمام‌شده</div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="flow-step">
+          <div class="flow-step-num">۴</div>
+          <div class="flow-step-title">فرآوری و انبارش</div>
+          <div class="flow-step-desc">برشکاری تیرآهن/میلگرد یا کیسه‌گیری جامبوبگ اوره</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">۵</div>
+          <div class="flow-step-title">خروج و حواله مشتری</div>
+          <div class="flow-step-desc">کنترل اعتبار مالی، باسکول خروج و بارنامه آنلاین</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">۶</div>
+          <div class="flow-step-title">گزارش و سامانه جامع</div>
+          <div class="flow-step-desc">بروزرسانی کاردکس میانگین موزون و خروجی اکسل صمت</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۳: فصل اول — داشبورد مدیریتی و هوش تجاری -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>📊</span>
+          <span>فصل اول: داشبورد تحلیلی، شاخص‌های کلیدی و نمودارهای بصری</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 1 • DASHBOARD & ANALYTICS</div>
+      </div>
+
+      <h1>منوی داشبورد (/dashboard)</h1>
+      <p>
+        صفحه داشبورد نکسوس‌پور به عنوان اتاق مانیتورینگ هوشمند مدیران و سرپرستان انبار عمل می‌کند. این صفحه با تجمیع لحظه‌ای داده‌های ورودی و خروجی، امکان تصمیم‌گیری سریع و بدون فوت وقت را فراهم می‌سازد.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>کارت‌های آماری چهارگانه (KPI Cards)</h3>
+          <ul class="check-list">
+            <li><strong>تعداد کل اقلام (SKU):</strong> مجموع تنوع کالاهای ثبت‌شده فعال در سامانه.</li>
+            <li><strong>مجموع موجودی انبارها:</strong> سرجمع وزنی و تعدادی کل موجودی پای کار در تمامی سوله‌ها و محوطه‌ها.</li>
+            <li><strong>تراکنش‌های ورودی (رسیدها):</strong> آمار محموله‌های تخلیه شده به تفکیک تأمین‌کنندگان.</li>
+            <li><strong>تراکنش‌های خروجی (حواله‌ها):</strong> آمار بارهای تحویل‌شده به تفکیک خریداران و پروژه‌ها.</li>
+          </ul>
+        </div>
+        <div class="card-accent">
+          <h3>نمودار پای دونات تفکیک انبارها</h3>
+          <p style="font-size: 8.5pt;">
+            در سمت چپ داشبورد، یک نمودار بصری هوشمند از حجم موجودی کالاهای موجود در هر انبار قرار دارد:
+          </p>
+          <div style="font-size: 8pt; background: #ffffff; padding: 6px; border-radius: 6px; border: 1px solid #bae6fd;">
+            🔵 <strong>انبار شماره یک (محوطه سنگین و شمش):</strong> شمش فولادی، بیلت، مقاطع طویل، اسلب.<br>
+            🟢 <strong>انبار شماره دو (سوله مسقف و شیمیایی):</strong> کیسه‌ها و جامبوبگ‌های اوره، پالت‌ها و قطعات حساس.
+          </div>
+        </div>
+      </div>
+
+      <h2>جدول آخرین تراکنش‌های انبار (Recent Transactions Table)</h2>
+      <p>
+        در بخش پایینی داشبورد، جدولی زنده از ۱۰ سند آخر صادر شده در سامانه با جزئیات کامل نمایش می‌یابد:
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>کد سند</th>
+            <th>نوع تراکنش</th>
+            <th>نام کالا و سایز</th>
+            <th>انبار</th>
+            <th>مقدار اولیه (تن/ک)</th>
+            <th>واحد فرعی (شاخه/بگ)</th>
+            <th>طرف تجاری</th>
+            <th>ثبت‌کننده</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-dark">TX-00104</span></td>
+            <td><span class="badge badge-success">ورود (رسید خرید)</span></td>
+            <td>شمش فولادی ۱۵۰×۱۵۰ (5SP)</td>
+            <td>انبار شماره یک</td>
+            <td>۲۵.۴۰ تن</td>
+            <td>۱۳ قالب</td>
+            <td>فولاد خوزستان</td>
+            <td>امید پورمحمود</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-dark">TX-00105</span></td>
+            <td><span class="badge badge-danger">خروج (حواله فروش)</span></td>
+            <td>میلگرد آجدار ۱۶ (A3)</td>
+            <td>انبار شماره یک</td>
+            <td>۱۲.۳۵ تن</td>
+            <td>۶۵۰ شاخه</td>
+            <td>پروژه برج سپهر</td>
+            <td>اپراتور انبار</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-dark">TX-00106</span></td>
+            <td><span class="badge badge-primary">انتقال داخلی</span></td>
+            <td>اوره گرانول صادراتی</td>
+            <td>سوله به محوطه</td>
+            <td>۱۰.۰۰ تن</td>
+            <td>۱۰ جامبوبگ</td>
+            <td>انتقال بین‌واحدی</td>
+            <td>امید پورمحمود</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>سامانه هشدارهای نقطه سفارش و کسری موجودی (/inventory/alerts)</h2>
+      <div class="card-dark">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 800; color: #38bdf8;">🔔 مرکز هوشمند اعلام خطر کسری کالا (Reorder Alert System)</span>
+          <span class="badge badge-warning">اتصال به آیکون زنگوله نوار بالا</span>
+        </div>
+        <p style="font-size: 8.5pt; color: #cbd5e1; margin: 0;">
+          سامانه نکسوس‌پور به صورت پیوسته موجودی لحظه‌ای را با دو متغیر <strong>حداقل موجودی (Min Stock)</strong> و <strong>نقطه سفارش (Reorder Point)</strong> که برای هر کالا تعریف شده مقایسه می‌کند. در صورت کاهش موجودی به زیر نقطه امن، عدد اعلان به رنگ قرمز روی زنگوله داشبورد فعال شده و در صفحه اختصاصی هشدارها، مقدار کسری و دکمه صدور پیش‌نویس خرید فعال می‌گردد.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۴: فصل دوم — تعاریف پایه، کاتالوگ کالاها و طرف‌های تجاری -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>🏷️</span>
+          <span>فصل دوم: مدیریت کاتالوگ کالاها و طرف‌های تجاری (تأمین‌کنندگان و مشتریان)</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 2 • MASTER DATA & PARTNERS</div>
+      </div>
+
+      <h1>۱. کاتالوگ جامع کالاها (/master-data/products)</h1>
+      <p>
+        در صنایع سنگین و پتروشیمی، ثبت ساده نام کالا کافی نیست. فرم کاتالوگ کالای نکسوس‌پور دارای فیلدهای فنی تخصصی منطبق با استانداردهای ملی و بین‌المللی است:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>فیلدهای استاندارد و متالورژی کالا</h3>
+          <ul class="check-list">
+            <li><strong>کد کالا (SKU):</strong> شناسه یکتا (مثال: <code>BLT-150-5SP-KSC</code>).</li>
+            <li><strong>واحد اصلی و فرعی:</strong> تن و قالب / کیلوگرم و شاخه / تن و جامبوبگ.</li>
+            <li><strong>وزن اسمی واحد فرعی:</strong> وزن هر شاخه یا قالب جهت تشخیص مغایرت.</li>
+            <li><strong>گرید آلیاژی و استاندارد:</strong> ST37, ST52, 5SP, ISIRI 3132, ASTM A615.</li>
+            <li><strong>ابعاد هندسی:</strong> سایز (قطر/ابعاد)، طول شاخه به متر، ضخامت به میلیمتر.</li>
+          </ul>
+        </div>
+        <div class="card-accent">
+          <h3>شناسه‌های بازرگانی و سامانه جامع تجارت</h3>
+          <ul class="check-list">
+            <li><strong>کد بین‌المللی HS Code:</strong> جهت امور گمرکی و بازرگانی خارجی.</li>
+            <li><strong>کد رهگیری IRC / کاتالوگ صمت:</strong> کد ۱۳ رقمی جهت اتصال به سامانه جامع انبارها.</li>
+            <li><strong>تعریف پارامترهای آستانه:</strong> حداقل، حداکثر موجودی و نقطه سفارش خرید.</li>
+            <li><strong>کارخانه و برند سازنده:</strong> ذوب‌آهن، فولاد خوزستان، فولاد مبارکه و...</li>
+          </ul>
+        </div>
+      </div>
+
+      <h1>۲. مدیریت طرف‌های تجاری (/master-data/parties)</h1>
+      <p>
+        این بخش برای تفکیک، اعتبارسنجی و رصد عملکرد مالی و تجاری <strong>تأمین‌کنندگان</strong> و <strong>مشتریان</strong> ایجاد شده است.
+      </p>
+
+      <div class="card">
+        <h3>موتور اعتبارسنجی هوشمند داده‌ها (Smart Validation Engine)</h3>
+        <p style="font-size: 8.5pt;">
+          جهت جلوگیری از ورود داده‌های اشتباه توسط کاربران، الگوریتم‌های زیر در هنگام ثبت مشتری و تأمین‌کننده به صورت بلادرنگ اعمال می‌گردد:
+        </p>
+        <div class="grid-2" style="margin-top: 6px;">
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 8pt;">
+            <strong>📱 شماره همراه ۱۱ رقمی ایران:</strong><br>
+            اجبار به آغاز با <code>09</code>، حذف فضاها و خط‌تیره، تبدیل خودکار اعداد فارسی به انگلیسی.
+          </div>
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 8pt;">
+            <strong>🆔 کد ملی با رقم کنترل و الگوریتم مدول ۱۱:</strong><br>
+            اعتبارسنجی ریاضی ۱۰ رقمی اشخاص حقیقی و ۱۱ رقمی شناسه ملی اشخاص حقوقی.
+          </div>
+        </div>
+      </div>
+
+      <h2>تفاوت حذف قطعی (Hard Delete) در برابر بایگانی و غیرفعال‌سازی (Soft Delete)</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">نوع عملیات</th>
+            <th style="width: 15%;">آیکون</th>
+            <th>شرایط مجاز و رفتار سیستم نکسوس‌پور</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>غیرفعال‌سازی (بایگانی)</strong></td>
+            <td class="text-center"><span class="badge badge-warning">👁️ خط‌خورده</span></td>
+            <td>
+              برای طرف‌های حسابی که در گذشته سند یا فاکتور داشته‌اند اما دیگر با آن‌ها همکاری نمی‌شود. ردیف آن‌ها کم‌رنگ شده و از فرم‌های صدور سند حذف می‌شوند اما سوابق مالی‌شان حفظ می‌گردد.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>حذف قطعی از دیتابیس</strong></td>
+            <td class="text-center"><span class="badge badge-danger">🗑️ سطل قرمز</span></td>
+            <td>
+              <strong>تنها زمانی مجاز است که رکورد هیچ تراکنشی نداشته باشد.</strong> اگر طرف تجاری دارای سند انبار یا قبض باسکول باشد، سیستم جهت جلوگیری از مخدوش شدن دفاتر مالی، حذف را با پیام هشدار رد می‌کند.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>فیلتر وضعیت نمایش</strong></td>
+            <td class="text-center"><span class="badge badge-primary">🔽 انتخابی</span></td>
+            <td>
+              در نوار جستجو، کاربر می‌تواند با انتخاب گزینه <strong>«فقط فعال‌ها»</strong> تمامی رکوردهای غیرفعال و کم‌رنگ را از دید خارج کرده تا محیط کاری تمیز و خلوت بماند.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۵: فصل سوم — زنجیره تأمین، سفارشات خرید و باسکول تریلی -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>🚛</span>
+          <span>فصل سوم: سفارشات خرید کالا و اتوماسیون باسکول دیجیتال تریلی ۶۰ تن</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 3 • PURCHASING & WEIGHBRIDGE</div>
+      </div>
+
+      <h1>۱. سفارشات خرید و پیگیری تحویل اقلام (/purchases)</h1>
+      <p>
+        فرآیند زنجیره تأمین با صدور سفارش خرید (Purchase Order) آغاز می‌شود. در این بخش، شماره سفارش یکتا (مثال: <code>PO-1405-001</code>)، تأمین‌کننده، مهلت تحویل، اقلام درخواستی با فی واحد و جمع کل ثبت می‌گردد. هنگام ورود محموله، با ۱ کلیک رسید انبار تطبیقی بر اساس اقلام تحویل‌شده صادر می‌شود.
+      </p>
+
+      <h1>۲. اتوماسیون کامل باسکول ۶۰ تن تریلی (/weighbridge)</h1>
+      <p>
+        باسکول مهم‌ترین گلوگاه فیزیکی و مالی در صنایع سنگین است. ماژول باسکول نکسوس‌پور با امکانات صنعتی زیر تجهیز شده است:
+      </p>
+
+      <div class="grid-2">
+        <div class="card-accent">
+          <h3>فرآیند دو مرحله‌ای توزین ناوگان</h3>
+          <ol style="margin: 0; padding-right: 18px; font-size: 8.5pt;">
+            <li><strong>توزین اول (وزن ناخالص / پر):</strong> ثبت تریلی در ورودی انبار شامل پلاک، راننده، شماره بارنامه و وزن ناخالص به کیلوگرم.</li>
+            <li><strong>تخلیه بار در محوطه:</strong> بازرسی، نمونه‌برداری و تخلیه کالا در انبار مربوطه.</li>
+            <li><strong>توزین دوم (وزن تار / خالی):</strong> بازگشت تریلی خالی به باسکول، ثبت وزن خالی و <strong>محاسبه بلادرنگ وزن خالص (Net Weight)</strong>.</li>
+            <li><strong>صدور رسید اتوماتیک:</strong> ارسال داده‌های خالص مستقیماً به سند رسید انبار بدون نیاز به تایپ مجدد.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>تشخیص هوشمند اضافه تناژ قانونی</h3>
+          <p style="font-size: 8.5pt;">
+            طبق قوانین راهداری و حمل و نقل جاده‌ای ایران، حداکثر وزن مجاز ناخالص برای تریلی‌های کفی ۱۸ چرخ <strong>۴۰,۰۰۰ کیلوگرم (۴۰ تن)</strong> است.
+          </p>
+          <div style="background: #fef2f2; border: 1px solid #f87171; border-radius: 6px; padding: 8px; font-size: 8pt; color: #991b1b;">
+            ⚠️ <strong>آلارم خودکار اضافه تناژ:</strong> چنانچه وزن ناخالص ثبت‌شده از ۴۰ تن فراتر رود، نشان خطر قرمز با برچسب <strong>«هشدار اضافه تناژ جاده‌ای»</strong> روی قبض فعال شده و جریمه احتمالی یا نیاز به بازتوزین اعلام می‌گردد.
+          </div>
+        </div>
+      </div>
+
+      <h2>اجزای قبض چاپی استاندارد باسکول با پلاک ملی ایران</h2>
+      <div class="card-dark" style="padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 8px;">
+          <div style="font-weight: 800; font-size: 11pt; color: #38bdf8;">قبض رسمی توزین دیجیتال باسکول نکسوس‌پور</div>
+          <div class="iran-plate-preview">
+            <span>ایران</span> <span>۴۴</span> | <span>۷۲۸</span> <span>ع</span> <span>۱۲</span>
+          </div>
+        </div>
+        <table class="data-table" style="background: #1e293b; color: #f8fafc; margin: 0;">
+          <tr>
+            <td style="width: 25%; color: #94a3b8;">شماره قبض:</td>
+            <td class="fw-bold">WB-20261013-001</td>
+            <td style="width: 25%; color: #94a3b8;">نام راننده و تماس:</td>
+            <td>علیرضا رضایی (09121112233)</td>
+          </tr>
+          <tr>
+            <td style="color: #94a3b8;">وزن پر (ناخالص):</td>
+            <td class="fw-bold" style="color: #38bdf8;">۳۸,۴۵۰ کیلوگرم</td>
+            <td style="color: #94a3b8;">وزن خالی (تار):</td>
+            <td class="fw-bold" style="color: #f59e0b;">۱۴,۲۰۰ کیلوگرم</td>
+          </tr>
+          <tr>
+            <td style="color: #94a3b8;">وزن خالص کالا:</td>
+            <td class="fw-bold" style="color: #10b981; font-size: 10pt;">۲۴,۲۵۰ کیلوگرم (۲۴.۲۵ تن)</td>
+            <td style="color: #94a3b8;">وضعیت مجوز:</td>
+            <td><span class="badge badge-success">مجاز (بدون اضافه تناژ)</span></td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۶: فصل چهارم — فرآیندهای تولیدی، برشکاری و کیسه‌گیری -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>⚙️</span>
+          <span>فصل چهارم: ماژول‌های تخصصی برشکاری آهن‌آلات و کیسه‌گیری اوره</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 4 • STEEL CUTTING & CHEMICAL BAGGING</div>
+      </div>
+
+      <h1>۱. مدیریت دستور برش و انبار ته‌شاخه آهن‌آلات (/cutting)</h1>
+      <p>
+        در بازرگانی و انبارهای آهن، میلگردها و تیرآهن‌ها با طول استاندارد ۱۲ متری وارد انبار می‌شوند. اما مشتریان معمولاً متراژهای خاصی (مثلاً قطعات ۴ متری یا ۲ متری) سفارش می‌دهند. در سیستم‌های متفرقه، ته‌شاخه‌های باقیمانده گم شده یا به عنوان ضایعات دور ریخته می‌شوند. نکسوس‌پور این جریان را کاملاً مدیریت می‌کند:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>محاسبه هوشمند ته‌شاخه و پرتی برش</h3>
+          <ul class="check-list">
+            <li><strong>طول اولیه شاخه:</strong> پیش‌فرض ۱۲ متر (قابل تنظیم).</li>
+            <li><strong>طول قطعه برشی درخواستی:</strong> مثلاً ۴.۵ متر.</li>
+            <li><strong>محاسبه خودکار ته‌شاخه:</strong> با ۱ برش ۴.۵ متری، ته‌شاخه به طول ۷.۵ متر باقی می‌ماند.</li>
+            <li><strong>تخمین وزن ته‌شاخه:</strong> محاسبه خودکار وزن بر اساس جدول وزنی متر-طول میلگرد/تیرآهن.</li>
+          </ul>
+        </div>
+        <div class="card-accent">
+          <h3>اتصال به انبار ته‌شاخه‌ها و بازیافت سرمایه</h3>
+          <p style="font-size: 8.5pt;">
+            هنگام تایید دستور برش:
+          </p>
+          <ul class="check-list">
+            <li>۱ شاخه کامل ۱۲ متری از انبار اصلی کسر می‌شود.</li>
+            <li>قطعات برش‌خورده به نام مشتری صادر می‌گردد.</li>
+            <li><strong>ته‌شاخه با طول و وزن دقیق به صورت اتوماتیک به «انبار ته‌شاخه‌ها» واریز می‌گردد</strong> تا در سفارش‌های خرد بعدی به فروش برسد.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h1>۲. فرآیند کیسه‌گیری فله به جامبوبگ پتروشیمی اوره (/bagging)</h1>
+      <p>
+        کود شیمیایی اوره معمولاً از پتروشیمی‌ها (مانند پتروشیمی پردیس، شیراز یا کرمانشاه) به صورت <strong>فله مایع یا گرانول (Bulk)</strong> با تناژ بالا خریداری می‌شود. جهت صادرات یا توزیع داخلی، محموله فله در انبار به <strong>جامبوبگ‌های ۱ تنی یا کیسه‌های ۵۰ کیلویی</strong> تبدیل می‌گردد.
+      </p>
+
+      <div class="card">
+        <h3>موتور حسابداری تبدیل و بهای تمام‌شده کیسه‌گیری نکسوس‌پور</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>پارامتر فرآیند</th>
+              <th>فرمول / عملکرد در سیستم</th>
+              <th>نمونه واقعی در یک محموله ۱۰۰ تنی</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>تناژ فله مصرفی</strong></td>
+              <td>کسر از موجودی انبار کالای فله اوره</td>
+              <td>۱۰۰.۰۰ تن اوره فله</td>
+            </tr>
+            <tr>
+              <td><strong>تعداد بسته‌های تولیدی</strong></td>
+              <td>ورود به انبار کالای بسته‌بندی</td>
+              <td>۹۸ عدد جامبوبگ ۱ تنی</td>
+            </tr>
+            <tr>
+              <td><strong>افت غبار و پرتی (Dust Loss)</strong></td>
+              <td>محاسبه خودکار: فله مصرفی منهای بسته‌ها</td>
+              <td>۲.۰۰ تن (۲٪ افت مجاز استاندارد)</td>
+            </tr>
+            <tr>
+              <td><strong>هزینه کیسه‌گیری به ازای هر تن</strong></td>
+              <td>تسهیم اجرت کارگری، کیسه و نخ دوخت</td>
+              <td>هر تن ۴۵۰,۰۰۰ ریال</td>
+            </tr>
+            <tr>
+              <td><strong>قیمت تمام‌شده بسته نهایی</strong></td>
+              <td>بهای فله + هزینه بسته‌بندی سرشکن‌شده</td>
+              <td>افزایش دقیق بهای تمام‌شده کاردکس</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۷: فصل پنجم — عملیات انبارداری، انتقال، انبارگردانی و کاردکس -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>📦</span>
+          <span>فصل پنجم: ثبت رسید/حواله، کرایه حمل، انتقال، انبارگردانی و کاردکس ریالی</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 5 • WAREHOUSE OPERATIONS & STOCK CARDEX</div>
+      </div>
+
+      <h1>۱. ثبت رسید و حواله انبار با بهای تمام‌شده (/inventory/transaction)</h1>
+      <p>
+        فرم صدور سند نکسوس‌پور جامع‌ترین فرم انبارداری است که علاوه بر ورود و خروج، مقادیر دو واحدی و هزینه‌های مستقیم بار را محاسبه می‌نماید:
+      </p>
+
+      <div class="card-accent">
+        <h3>فرمولاسیون محاسبه بهای تمام‌شده ورودی (Landed Cost Formula)</h3>
+        <p style="font-size: 8.5pt; margin-bottom: 4px;">
+          سیستم ارزش دفتری هر کیلوگرم یا تن کالای وارد شده را طبق فرمول دقیق زیر محاسبه و در کاردکس ثبت می‌کند:
+        </p>
+        <div style="background: #ffffff; border: 1px solid #0284c7; border-radius: 6px; padding: 8px; font-size: 8.5pt; font-family: monospace; text-align: center; color: #0369a1; direction: ltr;">
+          Landed Cost = (Qty × Unit Price) + Freight Cost + Insurance + Weighbridge - Penalty
+        </div>
+        <p style="font-size: 8pt; color: #64748b; margin-top: 5px;">
+          در صورت کسری بار فراتر از افت مجاز (Allowed Tolerance %0.3)، جریمه کسری به طور خودکار از حساب بستانکاری راننده یا شرکت حمل کسر می‌گردد.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>انتقال بین انبارها (/inventory/transfer)</h3>
+          <p style="font-size: 8.5pt;">
+            جابجایی اقلام بین انبار شماره یک و دو با صدور یک سند مکانیزه دوطرفه صورت می‌گیرد؛ مقدار کالا همزمان از انبار مبدأ کسر و با همان بهای تمام‌شده میانگین موزون به انبار مقصد اضافه می‌شود.
+          </p>
+        </div>
+        <div class="card">
+          <h3>انبارگردانی دوره‌ای (/inventory/stocktaking)</h3>
+          <p style="font-size: 8.5pt;">
+            امکان شمارش عینی انبار و ثبت مغایرت‌ها با کاردکس سیستمی. پس از تأیید مدیر انبار، اسناد اتوماتیک کسر یا اضافه انبارگردانی (Inventory Adjustment) برای تطبیق ۱۰۰٪ دفاتر صادر می‌شود.
+          </p>
+        </div>
+      </div>
+
+      <h2>کاردکس مقداری و کاردکس ریالی میانگین موزون متحرک (/inventory/balance)</h2>
+      <p>
+        در نکسوس‌پور، روش ارزیابی خروج کالا <strong>میانگین موزون متحرک (Moving Weighted Average)</strong> است که مورد تأیید کامل سازمان امور مالیاتی و استانداردهای حسابداری شماره ۸ ایران می‌باشد:
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ردیف</th>
+            <th>نوع سند</th>
+            <th>وارده (تن)</th>
+            <th>صادره (تن)</th>
+            <th>مانده (تن)</th>
+            <th>فی میانگین (ریال)</th>
+            <th>ارزش مانده ریالی انبار</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>۱</td>
+            <td>موجودی اول دوره</td>
+            <td>۱۰.۰۰</td>
+            <td>-</td>
+            <td>۱۰.۰۰</td>
+            <td>۳۰۰,۰۰۰,۰۰۰</td>
+            <td>۳,۰۰۰,۰۰۰,۰۰۰ ریال</td>
+          </tr>
+          <tr>
+            <td>۲</td>
+            <td>رسید خرید جدید</td>
+            <td>۲۰.۰۰</td>
+            <td>-</td>
+            <td>۳۰.۰۰</td>
+            <td>۳۳۰,۰۰۰,۰۰۰</td>
+            <td>۹,۶۰۰,۰۰۰,۰۰۰ ریال (فی جدید: ۳۲۰,۰۰۰,۰۰۰)</td>
+          </tr>
+          <tr>
+            <td>۳</td>
+            <td>حواله خروج مشتری</td>
+            <td>-</td>
+            <td>۱۵.۰۰</td>
+            <td>۱۵.۰۰</td>
+            <td>۳۲۰,۰۰۰,۰۰۰</td>
+            <td>۴,۸۰۰,۰۰۰,۰۰۰ ریال</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- صفحه ۸: فصل ششم — شناسنامه MTC، سامانه جامع، امنیت و نتیجه‌گیری -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>امید پورمحمود</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>📜</span>
+          <span>فصل ششم: شناسنامه کیفیت MTC، انطباق با سامانه جامع تجارت و امنیت</span>
+        </div>
+        <div class="page-header-meta">CHAPTER 6 • MTC QUALITY, COMPLIANCE & SECURITY</div>
+      </div>
+
+      <h1>۱. صدور شناسنامه کیفیت و سرتیفیکیت متالورژی MTC</h1>
+      <p>
+        خریداران حرفه‌ای صنایع نفت، گاز، پتروشیمی و سازه‌های سنگین فلزی بدون <strong>گواهی آزمون مواد (Mill Test Certificate - MTC)</strong> بار را تحویل نمی‌گیرند. نکسوس‌پور امکان صدور سرتیفیکیت استاندارد را مستقیماً از روی سند رسید انبار فراهم ساخته است:
+      </p>
+
+      <div class="card-accent">
+        <h3>جدول پارامترهای شناسنامه کیفیت در نکسوس‌پور</h3>
+        <table class="data-table" style="margin: 0; background: #ffffff;">
+          <tr>
+            <td style="width: 25%;"><strong>کد ذوب (Heat No)</strong></td>
+            <td>شناسه یکتای پاتیل مذاب فولادسازی جهت ردیابی شمش یا میلگرد در کارخانه سازنده.</td>
+          </tr>
+          <tr>
+            <td><strong>آنالیز شیمیایی</strong></td>
+            <td>درصد کربن (C)، سیلیسیم (Si)، منگنز (Mn)، فسفر (P)، گوگرد (S) و معادل کربن (CEV).</td>
+          </tr>
+          <tr>
+            <td><strong>خواص مکانیکی</strong></td>
+            <td>تنش تسلیم (Yield Strength)، استحکام کششی (Tensile Strength) و ازدیاد طول (Elongation).</td>
+          </tr>
+          <tr>
+            <td><strong>شاخص اوره شیمیایی</strong></td>
+            <td>درصد نیتروژن (حداقل ۴۶٪)، بیورت (حداکثر ۱٪) و رطوبت باقیمانده (Moisture).</td>
+          </tr>
+        </table>
+      </div>
+
+      <h1>۲. انطباق ۱۰۰٪ با سامانه جامع انبارها و تجارت صمت (/compliance)</h1>
+      <p>
+        طبق قانون مبارزه با قاچاق کالا و ارز، هرگونه خروج یا ورود آهن‌آلات و محصولات پتروشیمی بدون ثبت در سامانه جامع تجارت جرم محسوب می‌شود. نکسوس‌پور شامل ماژول خروجی مستقیم اکسل منطبق با فیلدهای اظهارنامه وزارت صمت است:
+      </p>
+      <ul class="check-list" style="margin-bottom: 12px;">
+        <li>ثبت کد رهگیری بارنامه برخط و کد پستی انبار مقصد.</li>
+        <li>خروجی یک‌کلیکه اکسل <code>NTSW-Declaration.xlsx</code> بدون نیاز به تغییر فرمت.</li>
+      </ul>
+
+      <h1>۳. لایه‌های امنیت، کنترل دسترسی و لاگ حسابرسی (/admin/audit-logs)</h1>
+      <div class="grid-2">
+        <div class="card">
+          <h3>نقش‌های کاربری (RBAC)</h3>
+          <p style="font-size: 8.5pt; margin: 0;">
+            <strong>مدیر کل (Admin):</strong> دسترسی نامحدود به تعاریف پایه، حذف قطعی، تنظیمات کاربران و لاگ‌ها.<br>
+            <strong>اپراتور انبار (Operator):</strong> دسترسی به ثبت ورود/خروج و مشاهده موجودی، بدون دسترسی به تغییرات پایه.
+          </p>
+        </div>
+        <div class="card">
+          <h3>ردپای امنیتی (Audit Logs)</h3>
+          <p style="font-size: 8.5pt; margin: 0;">
+            تمام رفتارهای کاربران شامل زمان دقیق، آدرس IP، شناسه رکورد، و محتوای تغییر یافته ثبت شده و امکان انکار یا دستکاری اسناد وجود ندارد.
+          </p>
+        </div>
+      </div>
+
+      <!-- کادر امضای رسمی و نتیجه‌گیری -->
+      <div class="card-dark" style="margin-top: 14px; text-align: center; border: 1px solid #38bdf8;">
+        <div style="font-size: 11pt; font-weight: 800; color: #38bdf8; margin-bottom: 4px;">
+          NexusPour ERP — نماد هوشمندی، اعتماد و قدرت در زنجیره تأمین
+        </div>
+        <div style="font-size: 8.5pt; color: #cbd5e1; line-height: 1.6;">
+          این سامانه با هدف ارتقای استانداردهای لجستیک و انبارداری کشور توسط <strong>امید پورمحمود</strong> مهندسی و توسعه یافته است.<br>
+          پشتیبانی فنی و توسعه سازمانی: <code>Omid Pourmahmoud • All Rights Reserved © 2026</code>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

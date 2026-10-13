@@ -529,6 +529,8 @@
         <div class="sidebar-category">📊 پیشخوان و وضعیت</div>
         <div class="d-grid gap-1">
           <a href="/dashboard" class="sidebar-item"><i class="bi bi-speedometer2 text-info me-2"></i>داشبورد و نمودار کیکی</a>
+          <a href="/guide" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-book-half text-teal me-2"></i>راهنمای جامع کاربری</a>
+          <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="sidebar-item" style="color: #00d4c8 !important;"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>دانلود دفترچه راهنما (PDF)</a>
           <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-bar-chart-line text-teal me-2"></i>گزارش موجودی لحظه‌ای</a>
           <a href="/inventory/transactions" class="sidebar-item"><i class="bi bi-clock-history text-secondary me-2"></i>لیست و جستجوی تراکنش‌ها</a>
         </div>
@@ -646,10 +648,19 @@
           <li class="nav-item">
             <a class="nav-link" href="/master-data/parties"><i class="bi bi-people me-1"></i>طرف‌های تجاری</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/guide"><i class="bi bi-book-half me-1"></i>راهنما</a>
+          </li>
         </ul>
 
         {% if user %}
         <div class="d-flex align-items-center gap-2">
+          <!-- دکمه دانلود PDF راهنما -->
+          <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info btn-sm px-2 py-1 me-1 d-none d-lg-inline-flex align-items-center gap-1" title="دانلود دفترچه راهنمای جامع PDF">
+            <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+            <span class="small fw-bold">دانلود PDF</span>
+          </a>
+
           <!-- زنگوله هشدار نقطه سفارش -->
           <a href="/inventory/alerts" class="btn btn-glass px-2 py-1 position-relative me-2" title="هشدارهای هوشمند موجودی و نقطه سفارش">
             <i class="bi bi-bell fs-5 text-warning"></i>
