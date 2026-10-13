@@ -688,16 +688,21 @@
     </div>
   </footer>
 
-  <!-- مودال تقویم خورشیدی تعاملی نکسوس‌پور (Jalali DatePicker) -->
+  <!-- مودال تقویم تعاملی دوگانه نکسوس‌پور (Jalali & Gregorian DatePicker) -->
   <div class="modal fade" id="jalaliDatePickerModal" tabindex="-1" aria-labelledby="jalaliDatePickerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 395px;">
       <div class="modal-content glass-card border-secondary shadow-lg">
-        <div class="modal-header py-2 px-3 border-secondary border-opacity-25">
+        <div class="modal-header py-2 px-3 border-secondary border-opacity-25 align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-calendar-event text-teal fs-5"></i>
-            <h6 class="modal-title fw-bold mb-0 text-light" id="jalaliDatePickerModalLabel">انتخاب تاریخ خورشیدی</h6>
+            <h6 class="modal-title fw-bold mb-0 text-light" id="jalaliDatePickerModalLabel">انتخاب تاریخ</h6>
           </div>
-          <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
+          <!-- سوئیچ تقویم خورشیدی / میلادی -->
+          <div class="btn-group btn-group-sm ms-auto me-2" role="group" aria-label="انتخاب نوع تقویم">
+            <button type="button" class="btn btn-outline-teal btn-sm active py-1 px-2" id="jdpTypeJalali">خورشیدی</button>
+            <button type="button" class="btn btn-outline-teal btn-sm py-1 px-2" id="jdpTypeGregorian">میلادی</button>
+          </div>
+          <button type="button" class="btn-close btn-close-white btn-sm m-0" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-3">
           <!-- هدر انتخاب سال و ماه -->
@@ -706,19 +711,7 @@
               <i class="bi bi-chevron-right"></i>
             </button>
             <div class="d-flex gap-2 flex-grow-1 justify-content-center">
-              <select class="form-select form-select-sm bg-dark border-secondary text-light py-1 font-monospace" id="jdpMonthSelect" style="width: 125px;">
-                <option value="1">فروردین</option>
-                <option value="2">اردیبهشت</option>
-                <option value="3">خرداد</option>
-                <option value="4">تیر</option>
-                <option value="5">مرداد</option>
-                <option value="6">شهریور</option>
-                <option value="7">مهر</option>
-                <option value="8">آبان</option>
-                <option value="9">آذر</option>
-                <option value="10">دی</option>
-                <option value="11">بهمن</option>
-                <option value="12">اسفند</option>
+              <select class="form-select form-select-sm bg-dark border-secondary text-light py-1 font-monospace" id="jdpMonthSelect" style="width: 150px;">
               </select>
               <select class="form-select form-select-sm bg-dark border-secondary text-light py-1 font-monospace" id="jdpYearSelect" style="width: 95px;">
               </select>
@@ -729,18 +722,17 @@
           </div>
 
           <!-- سرستون روزهای هفته -->
-          <div class="jdp-calendar-grid mb-1">
-            <div class="jdp-day-header">ش</div>
-            <div class="jdp-day-header">ی</div>
-            <div class="jdp-day-header">د</div>
-            <div class="jdp-day-header">س</div>
-            <div class="jdp-day-header">چ</div>
-            <div class="jdp-day-header">پ</div>
-            <div class="jdp-day-header friday">ج</div>
+          <div class="jdp-calendar-grid mb-1" id="jdpWeekHeaders">
           </div>
 
           <!-- شبکه روزهای ماه -->
           <div class="jdp-calendar-grid" id="jdpDaysGrid">
+          </div>
+
+          <!-- کادر تبدیل آنی تقویم معادل (Dual Conversion Hint) -->
+          <div class="p-2 mt-3 rounded text-center small font-monospace" id="jdpConversionBox" style="background: rgba(255, 255, 255, 0.04); border: 1px dashed var(--glass-border); cursor: pointer;" title="برای تغییر نوع تقویم کلیک کنید">
+            <span class="text-secondary" id="jdpAltLabel">معادل میلادی:</span>
+            <strong class="text-info ms-1" id="jdpAltValue">---</strong>
           </div>
         </div>
         <div class="modal-footer py-2 px-3 d-flex justify-content-between border-secondary border-opacity-25">
@@ -840,73 +832,182 @@
       return gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
     }
 
-    /* ===== کنترلر تقویم خورشیدی ===== */
+    function isGregorianLeapYear(gy) {
+      return (gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0);
+    }
+
+    function getDaysInGregorianMonth(gy, gm) {
+      const gDays = [0, 31, isGregorianLeapYear(gy) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      return gDays[gm];
+    }
+
+    function getGregorianToday() {
+      const now = new Date();
+      return [now.getFullYear(), now.getMonth() + 1, now.getDate()];
+    }
+
+    /* ===== کنترلر تقویم دوگانه (خورشیدی جلالی ⇄ میلادی گرگوری) ===== */
     let jdpTargetInput = null;
+    let jdpCalendarType = 'jalali'; // 'jalali' | 'gregorian'
     let jdpCurrentYear = 1403;
     let jdpCurrentMonth = 1;
-    let jdpSelectedDay = null;
+    let jdpSelectedDay = null; // { year, month, day, type }
+
+    const JALALI_MONTH_NAMES = [
+      'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+      'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+    ];
+
+    const GREGORIAN_MONTH_NAMES = [
+      'January (ژانویه)', 'February (فوریه)', 'March (مارس)', 'April (آوریل)',
+      'May (مه)', 'June (ژوئن)', 'July (ژوئیه)', 'August (اوت)',
+      'September (سپتامبر)', 'October (اکتبر)', 'November (نوامبر)', 'December (دسامبر)'
+    ];
 
     function initJalaliDatePicker() {
       const modalEl = document.getElementById('jalaliDatePickerModal');
       if (!modalEl) return;
       const bsModal = new bootstrap.Modal(modalEl);
 
+      const modalTitle = document.getElementById('jalaliDatePickerModalLabel');
+      const btnJalali = document.getElementById('jdpTypeJalali');
+      const btnGregorian = document.getElementById('jdpTypeGregorian');
       const yearSelect = document.getElementById('jdpYearSelect');
       const monthSelect = document.getElementById('jdpMonthSelect');
+      const weekHeaders = document.getElementById('jdpWeekHeaders');
+      const daysGrid = document.getElementById('jdpDaysGrid');
       const prevBtn = document.getElementById('jdpPrevMonth');
       const nextBtn = document.getElementById('jdpNextMonth');
       const todayBtn = document.getElementById('jdpBtnToday');
       const clearBtn = document.getElementById('jdpBtnClear');
-      const daysGrid = document.getElementById('jdpDaysGrid');
+      const conversionBox = document.getElementById('jdpConversionBox');
+      const altLabel = document.getElementById('jdpAltLabel');
+      const altValue = document.getElementById('jdpAltValue');
 
-      // پر کردن سال‌ها (از ۱۴۰۰ تا ۱۴۱۰)
-      yearSelect.innerHTML = '';
-      for (let y = 1400; y <= 1410; y++) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = toPersianDigits(y);
-        yearSelect.appendChild(opt);
+      function updateTypeButtons() {
+        if (jdpCalendarType === 'jalali') {
+          btnJalali.classList.add('active');
+          btnGregorian.classList.remove('active');
+          modalTitle.textContent = 'انتخاب تاریخ خورشیدی';
+        } else {
+          btnGregorian.classList.add('active');
+          btnJalali.classList.remove('active');
+          modalTitle.textContent = 'انتخاب تاریخ میلادی (Gregorian)';
+        }
+      }
+
+      function populateSelects() {
+        // ۱. پر کردن ماه‌ها
+        monthSelect.innerHTML = '';
+        const months = (jdpCalendarType === 'jalali') ? JALALI_MONTH_NAMES : GREGORIAN_MONTH_NAMES;
+        months.forEach((name, idx) => {
+          const opt = document.createElement('option');
+          opt.value = idx + 1;
+          opt.textContent = name;
+          monthSelect.appendChild(opt);
+        });
+
+        // ۲. پر کردن سال‌ها
+        yearSelect.innerHTML = '';
+        const startY = (jdpCalendarType === 'jalali') ? 1395 : 2018;
+        const endY = (jdpCalendarType === 'jalali') ? 1415 : 2035;
+        for (let y = startY; y <= endY; y++) {
+          const opt = document.createElement('option');
+          opt.value = y;
+          opt.textContent = (jdpCalendarType === 'jalali') ? toPersianDigits(y) : String(y);
+          yearSelect.appendChild(opt);
+        }
+
+        // ۳. سرستون روزهای هفته
+        weekHeaders.innerHTML = '';
+        if (jdpCalendarType === 'jalali') {
+          const headers = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+          headers.forEach((h, idx) => {
+            const div = document.createElement('div');
+            div.className = 'jdp-day-header' + (idx === 6 ? ' friday' : '');
+            div.textContent = h;
+            weekHeaders.appendChild(div);
+          });
+        } else {
+          const headers = ['Sa', 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr'];
+          headers.forEach((h, idx) => {
+            const div = document.createElement('div');
+            div.className = 'jdp-day-header' + (idx === 1 ? ' text-info' : '') + (idx === 6 ? ' friday' : '');
+            div.textContent = h;
+            weekHeaders.appendChild(div);
+          });
+        }
+      }
+
+      function updateConversionBox() {
+        const targetDay = (jdpSelectedDay && jdpSelectedDay.day) ? jdpSelectedDay.day : 1;
+        if (jdpCalendarType === 'jalali') {
+          const [gy, gm, gd] = jalaliToGregorian(jdpCurrentYear, jdpCurrentMonth, targetDay);
+          altLabel.textContent = 'معادل میلادی:';
+          const mm = String(gm).padStart(2, '0');
+          const dd = String(gd).padStart(2, '0');
+          altValue.textContent = `${gy}-${mm}-${dd}`;
+        } else {
+          const [jy, jm, jd] = gregorianToJalali(jdpCurrentYear, jdpCurrentMonth, targetDay);
+          altLabel.textContent = 'معادل خورشیدی:';
+          const mm = String(jm).padStart(2, '0');
+          const dd = String(jd).padStart(2, '0');
+          altValue.textContent = `${toPersianDigits(jy)}/${toPersianDigits(mm)}/${toPersianDigits(dd)}`;
+        }
       }
 
       function renderGrid() {
         daysGrid.innerHTML = '';
-        const daysInMonth = getDaysInJalaliMonth(jdpCurrentYear, jdpCurrentMonth);
-        
-        // محاسبه روز هفته روز اول ماه (شنبه=0, یکشنبه=1, ..., جمعه=6)
-        const [gy, gm, gd] = jalaliToGregorian(jdpCurrentYear, jdpCurrentMonth, 1);
-        const gDate = new Date(gy, gm - 1, gd);
-        const gDay = gDate.getDay(); // 0 is Sunday, 6 is Saturday
-        const jStartDay = (gDay + 1) % 7; // تبدیل به شنبه=0
+        let startDayIndex = 0;
+        let totalDays = 30;
+        let tYear, tMonth, tDay;
 
-        // خانه‌های خالی قبل از شروع ماه
-        for (let i = 0; i < jStartDay; i++) {
+        if (jdpCalendarType === 'jalali') {
+          totalDays = getDaysInJalaliMonth(jdpCurrentYear, jdpCurrentMonth);
+          const [gy, gm, gd] = jalaliToGregorian(jdpCurrentYear, jdpCurrentMonth, 1);
+          const gDate = new Date(gy, gm - 1, gd);
+          startDayIndex = (gDate.getDay() + 1) % 7; // شنبه=0
+          [tYear, tMonth, tDay] = getJalaliToday();
+        } else {
+          totalDays = getDaysInGregorianMonth(jdpCurrentYear, jdpCurrentMonth);
+          const gDate = new Date(jdpCurrentYear, jdpCurrentMonth - 1, 1);
+          startDayIndex = (gDate.getDay() + 1) % 7; // شنبه=0 (Sa=0, Su=1, ...)
+          [tYear, tMonth, tDay] = getGregorianToday();
+        }
+
+        // خانه‌های خالی ابتدای ماه
+        for (let i = 0; i < startDayIndex; i++) {
           const emptyCell = document.createElement('div');
           emptyCell.className = 'jdp-day disabled';
           daysGrid.appendChild(emptyCell);
         }
 
-        const [tYear, tMonth, tDay] = getJalaliToday();
-
         // روزهای ماه
-        for (let d = 1; d <= daysInMonth; d++) {
+        for (let d = 1; d <= totalDays; d++) {
           const dayCell = document.createElement('div');
-          const dayOfWeek = (jStartDay + d - 1) % 7;
+          const dayOfWeek = (startDayIndex + d - 1) % 7;
           dayCell.className = 'jdp-day' + (dayOfWeek === 6 ? ' friday' : '');
-          dayCell.textContent = toPersianDigits(d);
+          dayCell.textContent = (jdpCalendarType === 'jalali') ? toPersianDigits(d) : String(d);
 
           if (jdpCurrentYear === tYear && jdpCurrentMonth === tMonth && d === tDay) {
             dayCell.classList.add('today');
           }
 
-          if (jdpSelectedDay && d === jdpSelectedDay.day && jdpCurrentMonth === jdpSelectedDay.month && jdpCurrentYear === jdpSelectedDay.year) {
+          if (jdpSelectedDay && d === jdpSelectedDay.day && jdpCurrentMonth === jdpSelectedDay.month && jdpCurrentYear === jdpSelectedDay.year && jdpCalendarType === jdpSelectedDay.type) {
             dayCell.classList.add('selected');
           }
 
           dayCell.addEventListener('click', function() {
+            jdpSelectedDay = { year: jdpCurrentYear, month: jdpCurrentMonth, day: d, type: jdpCalendarType };
+            updateConversionBox();
             if (jdpTargetInput) {
               const mm = String(jdpCurrentMonth).padStart(2, '0');
               const dd = String(d).padStart(2, '0');
-              jdpTargetInput.value = `${jdpCurrentYear}/${mm}/${dd}`;
+              if (jdpCalendarType === 'jalali') {
+                jdpTargetInput.value = `${jdpCurrentYear}/${mm}/${dd}`;
+              } else {
+                jdpTargetInput.value = `${jdpCurrentYear}-${mm}-${dd}`;
+              }
               jdpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
               jdpTargetInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
@@ -915,13 +1016,44 @@
 
           daysGrid.appendChild(dayCell);
         }
+
+        updateConversionBox();
       }
 
-      function updateSelects() {
+      function updateSelectsAndRender() {
         yearSelect.value = jdpCurrentYear;
         monthSelect.value = jdpCurrentMonth;
         renderGrid();
       }
+
+      function switchToCalendar(newType) {
+        if (jdpCalendarType === newType) return;
+        const currentDay = (jdpSelectedDay && jdpSelectedDay.day) ? jdpSelectedDay.day : 1;
+
+        if (newType === 'gregorian') {
+          const [gy, gm, gd] = jalaliToGregorian(jdpCurrentYear, jdpCurrentMonth, currentDay);
+          jdpCalendarType = 'gregorian';
+          jdpCurrentYear = gy;
+          jdpCurrentMonth = gm;
+          jdpSelectedDay = { year: gy, month: gm, day: gd, type: 'gregorian' };
+        } else {
+          const [jy, jm, jd] = gregorianToJalali(jdpCurrentYear, jdpCurrentMonth, currentDay);
+          jdpCalendarType = 'jalali';
+          jdpCurrentYear = jy;
+          jdpCurrentMonth = jm;
+          jdpSelectedDay = { year: jy, month: jm, day: jd, type: 'jalali' };
+        }
+
+        updateTypeButtons();
+        populateSelects();
+        updateSelectsAndRender();
+      }
+
+      btnJalali.addEventListener('click', () => switchToCalendar('jalali'));
+      btnGregorian.addEventListener('click', () => switchToCalendar('gregorian'));
+      conversionBox.addEventListener('click', () => {
+        switchToCalendar(jdpCalendarType === 'jalali' ? 'gregorian' : 'jalali');
+      });
 
       yearSelect.addEventListener('change', function() {
         jdpCurrentYear = parseInt(this.value);
@@ -940,7 +1072,7 @@
           jdpCurrentMonth = 12;
           jdpCurrentYear--;
         }
-        updateSelects();
+        updateSelectsAndRender();
       });
 
       nextBtn.addEventListener('click', function() {
@@ -950,17 +1082,34 @@
           jdpCurrentMonth = 1;
           jdpCurrentYear++;
         }
-        updateSelects();
+        updateSelectsAndRender();
       });
 
       todayBtn.addEventListener('click', function() {
-        const [ty, tm, td] = getJalaliToday();
-        if (jdpTargetInput) {
-          const mm = String(tm).padStart(2, '0');
-          const dd = String(td).padStart(2, '0');
-          jdpTargetInput.value = `${ty}/${mm}/${dd}`;
-          jdpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
-          jdpTargetInput.dispatchEvent(new Event('change', { bubbles: true }));
+        if (jdpCalendarType === 'jalali') {
+          const [ty, tm, td] = getJalaliToday();
+          jdpCurrentYear = ty;
+          jdpCurrentMonth = tm;
+          jdpSelectedDay = { year: ty, month: tm, day: td, type: 'jalali' };
+          if (jdpTargetInput) {
+            const mm = String(tm).padStart(2, '0');
+            const dd = String(td).padStart(2, '0');
+            jdpTargetInput.value = `${ty}/${mm}/${dd}`;
+            jdpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
+            jdpTargetInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        } else {
+          const [ty, tm, td] = getGregorianToday();
+          jdpCurrentYear = ty;
+          jdpCurrentMonth = tm;
+          jdpSelectedDay = { year: ty, month: tm, day: td, type: 'gregorian' };
+          if (jdpTargetInput) {
+            const mm = String(tm).padStart(2, '0');
+            const dd = String(td).padStart(2, '0');
+            jdpTargetInput.value = `${ty}-${mm}-${dd}`;
+            jdpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
+            jdpTargetInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         }
         bsModal.hide();
       });
@@ -971,10 +1120,11 @@
           jdpTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
           jdpTargetInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
+        jdpSelectedDay = null;
         bsModal.hide();
       });
 
-      // اتصال به تمامی اینپوت‌ها و دکمه‌ها
+      // اتصال به تمامی اینپوت‌ها و دکمه‌های تقویم
       document.querySelectorAll('.jalali-datepicker, .datepicker-trigger').forEach(el => {
         el.addEventListener('click', function(e) {
           let input = null;
@@ -989,18 +1139,30 @@
 
           jdpTargetInput = input;
           const val = toEnglishDigits(input.value.trim());
-          const match = val.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-          if (match) {
-            jdpCurrentYear = parseInt(match[1]);
-            jdpCurrentMonth = parseInt(match[2]);
-            jdpSelectedDay = { year: jdpCurrentYear, month: jdpCurrentMonth, day: parseInt(match[3]) };
+          const gMatch = val.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+          const jMatch = val.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+
+          if (gMatch) {
+            jdpCalendarType = 'gregorian';
+            jdpCurrentYear = parseInt(gMatch[1]);
+            jdpCurrentMonth = parseInt(gMatch[2]);
+            jdpSelectedDay = { year: jdpCurrentYear, month: jdpCurrentMonth, day: parseInt(gMatch[3]), type: 'gregorian' };
+          } else if (jMatch) {
+            jdpCalendarType = 'jalali';
+            jdpCurrentYear = parseInt(jMatch[1]);
+            jdpCurrentMonth = parseInt(jMatch[2]);
+            jdpSelectedDay = { year: jdpCurrentYear, month: jdpCurrentMonth, day: parseInt(jMatch[3]), type: 'jalali' };
           } else {
+            jdpCalendarType = 'jalali';
             const [ty, tm, td] = getJalaliToday();
             jdpCurrentYear = ty;
             jdpCurrentMonth = tm;
             jdpSelectedDay = null;
           }
-          updateSelects();
+
+          updateTypeButtons();
+          populateSelects();
+          updateSelectsAndRender();
           bsModal.show();
         });
       });
