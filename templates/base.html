@@ -1129,24 +1129,33 @@
           }
           input.value = formatted;
 
-          // اعتبارسنجی ۱۱ رقمی با ۰۹
-          if (val.length === 11 && val.startsWith('09')) {
+          // اعتبارسنجی ۱۱ رقمی با ۰۹ یا ۰
+          if (val.length === 11 && (val.startsWith('09') || val.startsWith('0'))) {
             input.classList.remove('is-invalid');
             input.classList.add('is-valid');
+            input.setCustomValidity('');
             if (statusIcon) statusIcon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
             if (hint) {
-              hint.textContent = 'شماره معتبر است.';
+              hint.textContent = 'شماره تماس معتبر است.';
               hint.className = 'form-text text-success small';
             }
           } else if (val.length > 0) {
             input.classList.remove('is-valid');
-            if (statusIcon) statusIcon.innerHTML = '<i class="bi bi-exclamation-circle-fill text-warning"></i>';
+            input.classList.add('is-invalid');
+            input.setCustomValidity('شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).');
+            if (statusIcon) statusIcon.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
             if (hint) {
               hint.textContent = 'شماره باید ۱۱ رقم بوده و با ۰۹ شروع شود.';
-              hint.className = 'form-text text-warning small';
+              hint.className = 'form-text text-danger small';
             }
           } else {
-            input.classList.remove('is-valid', 'is-invalid');
+            if (input.hasAttribute('required')) {
+              input.classList.remove('is-valid');
+              input.setCustomValidity('وارد کردن شماره تماس الزامی است.');
+            } else {
+              input.classList.remove('is-valid', 'is-invalid');
+              input.setCustomValidity('');
+            }
             if (statusIcon) statusIcon.innerHTML = '';
             if (hint) {
               hint.textContent = 'فرمت استاندارد موبایل ۱۱ رقمی با پیش‌شماره ۰۹';

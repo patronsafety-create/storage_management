@@ -120,6 +120,85 @@ async def list_parties(
     )
 
 
+def to_english_digits(text: Optional[str]) -> str:
+    """تبدیل کلیه ارقام فارسی و عربی به ارقام انگلیسی"""
+    if not text:
+        return ""
+    persian_digits = "۰۱۲۳۴۵۶۷۸۹"
+    arabic_digits = "٠١٢٣٤٥٦٧٨٩"
+    result = str(text)
+    for i, d in enumerate(persian_digits):
+        result = result.replace(d, str(i))
+    for i, d in enumerate(arabic_digits):
+        result = result.replace(d, str(i))
+    return result
+
+
+def is_valid_iranian_national_code(code: str) -> bool:
+    """اعتبارسنجی الگوریتم ۱۰ رقمی کد ملی اشخاص حقیقی با رقم کنترل"""
+    clean = to_english_digits(code).replace("-", "").strip()
+    if len(clean) != 10 or not clean.isdigit():
+        return False
+    # کدهای با ارقام تماماً یکسان نامعتبرند
+    if len(set(clean)) == 1:
+        return False
+    check_digit = int(clean[9])
+    total_sum = sum(int(clean[i]) * (10 - i) for i in range(9))
+    remainder = total_sum % 11
+    if remainder < 2:
+        return check_digit == remainder
+    return check_digit == (11 - remainder)
+
+
+def validate_party_data(
+    name: str,
+    phone: Optional[str],
+    national_id: Optional[str],
+    party_type_label: str = "طرف تجاری"
+) -> tuple[Optional[str], str, Optional[str], Optional[str]]:
+    """
+    اعتبارسنجی جامع مشخصات طرف تجاری:
+    1. نام: حداقل ۳ کاراکتر، دارای حروف، جلوگیری از ورود صرفاً عدد
+    2. شماره تماس: الزامی، دقیقاً ۱۱ رقم، آغاز با 09 یا 0
+    3. کد ملی / شناسه اقتصادی: در صورت ورود، ۱۰ رقم معتبر یا ۱۱ رقم حقوقی
+    """
+    clean_name = name.strip()
+    clean_phone = to_english_digits(phone).replace("-", "").replace(" ", "").strip() if phone else ""
+    clean_nid = to_english_digits(national_id).replace("-", "").replace(" ", "").strip() if national_id else None
+
+    # ۱. اعتبارسنجی نام
+    if len(clean_name) < 3:
+        return (f"نام {party_type_label} باید حداقل ۳ کاراکتر باشد.", clean_name, clean_phone, clean_nid)
+
+    # جلوگیری از ورود صرفاً عدد در نام
+    numeric_test = to_english_digits(clean_name).replace(" ", "").replace("-", "")
+    if numeric_test.isdigit():
+        return (f"نام {party_type_label} نمی‌تواند صرفاً از اعداد تشکیل شود. لطفاً نام معتبر شخص یا شرکت را وارد نمایید.", clean_name, clean_phone, clean_nid)
+
+    # نام باید حداقل دارای یک حرف فارسی یا انگلیسی باشد
+    has_letter = any(c.isalpha() or '\u0600' <= c <= '\u06FF' for c in clean_name)
+    if not has_letter:
+        return (f"نام {party_type_label} باید شامل حروف معتبر باشد.", clean_name, clean_phone, clean_nid)
+
+    # ۲. اعتبارسنجی شماره تماس
+    if not clean_phone:
+        return (f"وارد کردن شماره تماس / همراه برای {party_type_label} الزامی است.", clean_name, clean_phone, clean_nid)
+
+    if not clean_phone.isdigit() or len(clean_phone) != 11 or not (clean_phone.startswith("09") or clean_phone.startswith("0")):
+        return ("شماره تماس وارد شده نامعتبر است. شماره همراه باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).", clean_name, clean_phone, clean_nid)
+
+    # ۳. اعتبارسنجی شناسه ملی / کد اقتصادی
+    if clean_nid:
+        if not clean_nid.isdigit():
+            return ("شناسه ملی یا کد اقتصادی باید صرفاً از ارقام تشکیل شده باشد.", clean_name, clean_phone, clean_nid)
+        if len(clean_nid) not in (10, 11):
+            return ("شناسه ملی / کد اقتصادی باید ۱۰ رقم (اشخاص حقیقی) یا ۱۱ رقم (اشخاص حقوقی) باشد.", clean_name, clean_phone, clean_nid)
+        if len(clean_nid) == 10 and not is_valid_iranian_national_code(clean_nid):
+            return ("کد ملی ۱۰ رقمی وارد شده نامعتبر است (رقم کنترل چک‌سام ناصحیح است).", clean_name, clean_phone, clean_nid)
+
+    return (None, clean_name, clean_phone, clean_nid)
+
+
 @router.post("/supplier")
 async def create_supplier(
     name: str = Form(...),
@@ -133,18 +212,24 @@ async def create_supplier(
     admin: User = Depends(require_admin)
 ):
     """ایجاد تأمین‌کننده جدید"""
+    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
+    if err:
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=suppliers&error={quote(err)}",
+            status_code=303
+        )
+
     try:
-        clean_name = name.strip()
         clean_code = code.strip().upper() if code and code.strip() else f"SUP-{db.query(Supplier).count() + 1:03d}"
 
         new_sup = Supplier(
             name=clean_name,
             code=clean_code,
             contact_person=contact_person.strip() if contact_person and contact_person.strip() else None,
-            phone=phone.strip() if phone and phone.strip() else None,
+            phone=clean_phone,
             email=email.strip() if email and email.strip() else None,
             address=address.strip() if address and address.strip() else None,
-            national_id=national_id.strip() if national_id and national_id.strip() else None,
+            national_id=clean_nid,
             is_active=True
         )
         db.add(new_sup)
@@ -179,14 +264,21 @@ async def edit_supplier(
     if not supplier:
         return RedirectResponse(url="/master-data/parties?tab=suppliers&error=" + quote("تأمین‌کننده یافت نشد"), status_code=303)
 
+    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
+    if err:
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=suppliers&error={quote(err)}",
+            status_code=303
+        )
+
     try:
-        supplier.name = name.strip()
+        supplier.name = clean_name
         supplier.code = code.strip().upper() if code and code.strip() else supplier.code
         supplier.contact_person = contact_person.strip() if contact_person and contact_person.strip() else None
-        supplier.phone = phone.strip() if phone and phone.strip() else None
+        supplier.phone = clean_phone
         supplier.email = email.strip() if email and email.strip() else None
         supplier.address = address.strip() if address and address.strip() else None
-        supplier.national_id = national_id.strip() if national_id and national_id.strip() else None
+        supplier.national_id = clean_nid
         db.commit()
         return RedirectResponse(
             url=f"/master-data/parties?tab=suppliers&msg={quote('مشخصات تأمین‌کننده با موفقیت به‌روزرسانی شد')}",
@@ -233,18 +325,24 @@ async def create_customer(
     admin: User = Depends(require_admin)
 ):
     """ایجاد مشتری جدید"""
+    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")
+    if err:
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=customers&error={quote(err)}",
+            status_code=303
+        )
+
     try:
-        clean_name = name.strip()
         clean_code = code.strip().upper() if code and code.strip() else f"CUST-{db.query(Customer).count() + 1:03d}"
 
         new_cust = Customer(
             name=clean_name,
             code=clean_code,
             contact_person=contact_person.strip() if contact_person and contact_person.strip() else None,
-            phone=phone.strip() if phone and phone.strip() else None,
+            phone=clean_phone,
             email=email.strip() if email and email.strip() else None,
             address=address.strip() if address and address.strip() else None,
-            national_id=national_id.strip() if national_id and national_id.strip() else None,
+            national_id=clean_nid,
             credit_limit=credit_limit or 0.0,
             is_active=True
         )
@@ -281,14 +379,21 @@ async def edit_customer(
     if not customer:
         return RedirectResponse(url="/master-data/parties?tab=customers&error=" + quote("مشتری یافت نشد"), status_code=303)
 
+    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")
+    if err:
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=customers&error={quote(err)}",
+            status_code=303
+        )
+
     try:
-        customer.name = name.strip()
+        customer.name = clean_name
         customer.code = code.strip().upper() if code and code.strip() else customer.code
         customer.contact_person = contact_person.strip() if contact_person and contact_person.strip() else None
-        customer.phone = phone.strip() if phone and phone.strip() else None
+        customer.phone = clean_phone
         customer.email = email.strip() if email and email.strip() else None
         customer.address = address.strip() if address and address.strip() else None
-        customer.national_id = national_id.strip() if national_id and national_id.strip() else None
+        customer.national_id = clean_nid
         customer.credit_limit = credit_limit or 0.0
         db.commit()
         return RedirectResponse(

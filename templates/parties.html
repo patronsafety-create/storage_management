@@ -381,10 +381,12 @@
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
+            <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label">نام شرکت / کارخانه / تأمین‌کننده <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="name" required placeholder="مثلاً: شرکت سهامی ذوب‌آهن اصفهان">
+                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت سهامی ذوب‌آهن اصفهان">
+                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">کد سیستمی تأمین‌کننده</label>
@@ -395,15 +397,17 @@
                     <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس رضایی">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تلفن / همراه</label>
+                    <label class="form-label">شماره تلفن / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
+                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">شناسه ملی / کد اقتصادی</label>
-                    <input type="text" class="form-control" name="national_id" placeholder="شناسه ۱۱ رقمی">
+                    <input type="text" class="form-control font-monospace national-id-input" name="national_id" placeholder="۱۰ یا ۱۱ رقم">
+                    <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">پست الکترونیکی (ایمیل)</label>
@@ -436,10 +440,12 @@
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
+            <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label">نام شرکت / کارخانه <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="edit_sup_name" name="name" required>
+                    <input type="text" class="form-control party-name-input" id="edit_sup_name" name="name" required minlength="3">
+                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">کد سیستمی</label>
@@ -450,15 +456,17 @@
                     <input type="text" class="form-control" id="edit_sup_contact" name="contact_person">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تلفن / همراه</label>
+                    <label class="form-label">شماره تلفن / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_sup_phone" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_sup_phone" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
+                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">شناسه ملی / کد اقتصادی</label>
-                    <input type="text" class="form-control" id="edit_sup_national_id" name="national_id">
+                    <input type="text" class="form-control font-monospace national-id-input" id="edit_sup_national_id" name="national_id">
+                    <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">پست الکترونیکی</label>
@@ -491,10 +499,12 @@
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
+            <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label">نام شخص / نام شرکت خریدار <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="name" required placeholder="مثلاً: شرکت مهندسی و ساختمانی آرمان">
+                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت مهندسی و ساختمانی آرمان">
+                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">کد مشتری</label>
@@ -505,15 +515,17 @@
                     <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس حسینی">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تماس / همراه</label>
+                    <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
+                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">شناسه ملی / کد ملی</label>
-                    <input type="text" class="form-control" name="national_id" placeholder="کد ۱۰ یا ۱۱ رقمی">
+                    <input type="text" class="form-control font-monospace national-id-input" name="national_id" placeholder="کد ۱۰ یا ۱۱ رقمی">
+                    <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">سقف اعتبار مالی (ریال)</label>
@@ -550,10 +562,12 @@
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
+            <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label">نام شخص / نام شرکت <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="edit_cust_name" name="name" required>
+                    <input type="text" class="form-control party-name-input" id="edit_cust_name" name="name" required minlength="3">
+                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">کد مشتری</label>
@@ -564,15 +578,17 @@
                     <input type="text" class="form-control" id="edit_cust_contact" name="contact_person">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تماس / همراه</label>
+                    <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_cust_phone" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_cust_phone" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
+                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">شناسه ملی / کد ملی</label>
-                    <input type="text" class="form-control" id="edit_cust_national_id" name="national_id">
+                    <input type="text" class="form-control font-monospace national-id-input" id="edit_cust_national_id" name="national_id">
+                    <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">سقف اعتبار (ریال)</label>
@@ -598,8 +614,108 @@
 </div>
 
 <script>
+/* ===== اعتبارسنجی الگوریتم ۱۰ رقمی کد ملی اشخاص حقیقی ===== */
+function isValidIranianNationalCode(code) {
+    if (!code) return false;
+    code = toEnglishDigits(code).replace(/[^0-9]/g, '');
+    if (code.length !== 10) return false;
+    if (/^(\d)\1{9}$/.test(code)) return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        sum += parseInt(code.charAt(i), 10) * (10 - i);
+    }
+    const rem = sum % 11;
+    const check = parseInt(code.charAt(9), 10);
+    return rem < 2 ? check === rem : check === (11 - rem);
+}
+
+function showModalError(form, inputEl, message) {
+    let errorAlert = form.querySelector('.modal-error-alert');
+    if (errorAlert) {
+        errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle-fill fs-5 text-danger flex-shrink-0"></i><div>${message}</div>`;
+        errorAlert.classList.remove('d-none');
+        errorAlert.classList.add('d-flex');
+    }
+    if (inputEl) {
+        inputEl.classList.add('is-invalid');
+        inputEl.classList.remove('is-valid');
+        inputEl.focus();
+    }
+}
+
+function clearModalError(form) {
+    let errorAlert = form.querySelector('.modal-error-alert');
+    if (errorAlert) {
+        errorAlert.classList.add('d-none');
+        errorAlert.classList.remove('d-flex');
+        errorAlert.innerHTML = '';
+    }
+}
+
+function validatePartyForm(form) {
+    clearModalError(form);
+
+    // ۱. بررسی نام طرف تجاری
+    const nameInput = form.querySelector('[name="name"]');
+    if (nameInput) {
+        const rawName = nameInput.value.trim();
+        const engDigitsName = toEnglishDigits(rawName).replace(/\s+/g, '');
+        if (rawName.length < 3) {
+            showModalError(form, nameInput, 'نام طرف تجاری باید حداقل شامل ۳ حرف باشد.');
+            return false;
+        }
+        if (/^\d+$/.test(engDigitsName)) {
+            showModalError(form, nameInput, 'نام طرف تجاری نمی‌تواند صرفاً از ارقام تشکیل شود. لطفاً نام واقعی شخص یا شرکت را وارد نمایید.');
+            return false;
+        }
+        const hasLetter = /[a-zA-Z\u0600-\u06FF]/.test(rawName);
+        if (!hasLetter) {
+            showModalError(form, nameInput, 'نام طرف تجاری باید شامل حروف معتبر باشد.');
+            return false;
+        }
+        nameInput.classList.remove('is-invalid');
+        nameInput.classList.add('is-valid');
+    }
+
+    // ۲. بررسی شماره تماس / همراه
+    const phoneInput = form.querySelector('[name="phone"]');
+    if (phoneInput) {
+        const phoneDigits = toEnglishDigits(phoneInput.value).replace(/[^0-9]/g, '');
+        if (!phoneDigits) {
+            showModalError(form, phoneInput, 'وارد کردن شماره تماس / همراه الزامی است.');
+            return false;
+        }
+        if (phoneDigits.length !== 11 || (!phoneDigits.startsWith('09') && !phoneDigits.startsWith('0'))) {
+            showModalError(form, phoneInput, 'شماره همراه باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).');
+            return false;
+        }
+        phoneInput.classList.remove('is-invalid');
+        phoneInput.classList.add('is-valid');
+    }
+
+    // ۳. بررسی کد ملی / شناسه ملی (در صورت پر بودن)
+    const nidInput = form.querySelector('[name="national_id"]');
+    if (nidInput && nidInput.value.trim()) {
+        const nidDigits = toEnglishDigits(nidInput.value).replace(/[^0-9]/g, '');
+        if (nidDigits.length !== 10 && nidDigits.length !== 11) {
+            showModalError(form, nidInput, 'شناسه ملی یا کد اقتصادی باید ۱۰ رقم (اشخاص حقیقی) یا ۱۱ رقم (اشخاص حقوقی) باشد.');
+            return false;
+        }
+        if (nidDigits.length === 10 && !isValidIranianNationalCode(nidDigits)) {
+            showModalError(form, nidInput, 'کد ملی ۱۰ رقمی وارد شده نامعتبر است (رقم کنترل چک‌سام همخوانی ندارد).');
+            return false;
+        }
+        nidInput.classList.remove('is-invalid');
+        nidInput.classList.add('is-valid');
+    }
+
+    return true;
+}
+
 function openEditSupplierModal(sup) {
-    document.getElementById('editSupplierForm').action = '/master-data/supplier/' + sup.id + '/edit';
+    const form = document.getElementById('editSupplierForm');
+    clearModalError(form);
+    form.action = '/master-data/supplier/' + sup.id + '/edit';
     document.getElementById('edit_sup_name').value = sup.name || '';
     document.getElementById('edit_sup_code').value = sup.code || '';
     document.getElementById('edit_sup_contact').value = sup.contact_person || '';
@@ -617,7 +733,9 @@ function openEditSupplierModal(sup) {
 }
 
 function openEditCustomerModal(cust) {
-    document.getElementById('editCustomerForm').action = '/master-data/customer/' + cust.id + '/edit';
+    const form = document.getElementById('editCustomerForm');
+    clearModalError(form);
+    form.action = '/master-data/customer/' + cust.id + '/edit';
     document.getElementById('edit_cust_name').value = cust.name || '';
     document.getElementById('edit_cust_code').value = cust.code || '';
     document.getElementById('edit_cust_contact').value = cust.contact_person || '';
@@ -644,6 +762,64 @@ document.addEventListener("DOMContentLoaded", function() {
         supTab.addEventListener('shown.bs.tab', () => { tabInput.value = 'suppliers'; });
         custTab.addEventListener('shown.bs.tab', () => { tabInput.value = 'customers'; });
     }
+
+    // اتصال اعتبارسنجی زنده و ارسال فرم به تمامی فرم‌های مودال
+    const modalForms = document.querySelectorAll('#addSupplierModal form, #editSupplierForm, #addCustomerModal form, #editCustomerForm');
+    modalForms.forEach(form => {
+        // اعتبارسنجی بلادرنگ فیلد نام
+        const nameInput = form.querySelector('[name="name"]');
+        if (nameInput) {
+            nameInput.addEventListener('input', function() {
+                const val = this.value.trim();
+                const engDigits = toEnglishDigits(val).replace(/\s+/g, '');
+                if (val.length >= 3 && !/^\d+$/.test(engDigits) && /[a-zA-Z\u0600-\u06FF]/.test(val)) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    clearModalError(form);
+                } else if (val.length > 0) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        }
+
+        // اعتبارسنجی بلادرنگ کد ملی
+        const nidInput = form.querySelector('[name="national_id"]');
+        if (nidInput) {
+            nidInput.addEventListener('input', function() {
+                const val = toEnglishDigits(this.value).replace(/[^0-9]/g, '');
+                if (val.length === 10) {
+                    if (isValidIranianNationalCode(val)) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        clearModalError(form);
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                } else if (val.length === 11) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    clearModalError(form);
+                } else if (val.length > 0) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-valid', 'is-invalid');
+                    clearModalError(form);
+                }
+            });
+        }
+
+        // جلوگیری از ثبت فرم در صورت عدم صحت اطلاعات
+        form.addEventListener('submit', function(e) {
+            if (!validatePartyForm(this)) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+    });
 });
 </script>
 {% endif %}
