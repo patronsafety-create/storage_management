@@ -49,8 +49,14 @@
           </div>
 
           <div class="col-md-3">
-            <label for="delivery_due_date" class="form-label">مهلت تحویل بار</label>
-            <input type="text" class="form-control" id="delivery_due_date" name="delivery_due_date" placeholder="مثلاً: ۱۴۰۳/۰۸/۲۰">
+            <label for="delivery_due_date" class="form-label fw-bold">مهلت تحویل بار (تقویم)</label>
+            <div class="input-group">
+              <input type="text" class="form-control jalali-datepicker font-monospace" id="delivery_due_date" name="delivery_due_date" placeholder="۱۴۰۳/۰۸/۲۰" autocomplete="off">
+              <button type="button" class="btn btn-outline-teal datepicker-trigger" data-target="delivery_due_date" title="انتخاب تاریخ خورشیدی">
+                <i class="bi bi-calendar3"></i>
+              </button>
+            </div>
+            <div class="form-text text-secondary small">کلیک جهت انتخاب از تقویم خورشیدی</div>
           </div>
         </div>
 

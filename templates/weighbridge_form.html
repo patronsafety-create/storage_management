@@ -26,15 +26,56 @@
             <input type="text" class="form-control font-monospace" id="ticket_number" name="ticket_number" value="{{ generated_ticket_number }}" required>
           </div>
 
-          <div class="col-md-4">
-            <label for="truck_plate" class="form-label fw-bold">
-              پلاک خودرو (ایران) <span class="text-danger">*</span>
-            </label>
-            <input type="text" class="form-control font-monospace" id="truck_plate" name="truck_plate" placeholder="مثلاً: ایران ۶۸ - ۳۴۵ ع ۱۲" required>
-            <div class="form-text text-secondary small">شماره پلاک انتظامی مندرج در کارت هوشمند یا بارنامه</div>
+          <div class="col-md-5">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-bold mb-0">
+                پلاک انتظامی ناوگان <span class="text-danger">*</span>
+              </label>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="plateTypeToggle" checked>
+                <label class="form-check-label text-warning small" for="plateTypeToggle" id="plateTypeLabel">پلاک زرد عمومی</label>
+              </div>
+            </div>
+            
+            <div class="iran-plate-container shadow-sm" id="weighbridgePlate">
+              <div class="iran-plate-flag">
+                <div class="iran-flag-bar"></div>
+                <div class="iran-plate-text">I.R.<br>IRAN</div>
+              </div>
+              <input type="text" maxlength="2" class="plate-part plate-digits-2 font-monospace" id="plate_d2" placeholder="۱۲" inputmode="numeric" autocomplete="off" required>
+              <select class="plate-part plate-letter" id="plate_letter">
+                <option value="ع" selected>ع (عمومی)</option>
+                <option value="الف">الف (دولتی)</option>
+                <option value="ب">ب</option>
+                <option value="پ">پ</option>
+                <option value="ت">ت</option>
+                <option value="ث">ث</option>
+                <option value="ج">ج</option>
+                <option value="د">د</option>
+                <option value="س">س</option>
+                <option value="ص">ص</option>
+                <option value="ط">ط</option>
+                <option value="ق">ق</option>
+                <option value="ل">ل</option>
+                <option value="م">م</option>
+                <option value="ن">ن</option>
+                <option value="و">و</option>
+                <option value="هـ">هـ</option>
+                <option value="ی">ی</option>
+              </select>
+              <input type="text" maxlength="3" class="plate-part plate-digits-3 font-monospace" id="plate_d3" placeholder="۳۴۵" inputmode="numeric" autocomplete="off" required>
+              <div class="plate-iran-box">
+                <span class="plate-iran-title">ایران</span>
+                <input type="text" maxlength="2" class="plate-part plate-city font-monospace" id="plate_city" placeholder="۱۱" inputmode="numeric" autocomplete="off" required>
+              </div>
+            </div>
+            <input type="hidden" name="truck_plate" id="truck_plate" value="">
+            <div class="form-text text-secondary small mt-1">
+              پیش‌نمایش سیستمی: <strong class="text-teal font-monospace" id="platePreviewDisplay">---</strong>
+            </div>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="truck_type" class="form-label fw-bold">نوع ناوگان</label>
             <select class="form-select" id="truck_type" name="truck_type">
               <option value="تریلی کفی ۱۸ چرخ (بندیل و میلگرد)">تریلی کفی ۱۸ چرخ (بندیل و میلگرد)</option>
@@ -53,8 +94,12 @@
             <input type="text" class="form-control" id="driver_name" name="driver_name" required placeholder="مثلاً: محمد صادقی">
           </div>
           <div class="col-md-6">
-            <label for="driver_phone" class="form-label">شماره تلفن همراه راننده</label>
-            <input type="text" class="form-control font-monospace" id="driver_phone" name="driver_phone" placeholder="مثلاً: 09121112233">
+            <label for="driver_phone" class="form-label fw-bold">شماره تلفن همراه راننده</label>
+            <div class="ir-mobile-wrapper">
+              <input type="text" class="form-control ir-mobile font-monospace" id="driver_phone" name="driver_phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹" autocomplete="tel">
+              <span class="ir-mobile-status" id="driver_phone_status"></span>
+            </div>
+            <div class="form-text text-secondary small" id="driver_phone_hint">فرمت استاندارد موبایل ۱۱ رقمی با پیش‌شماره ۰۹</div>
           </div>
         </div>
 
@@ -175,6 +220,23 @@ document.addEventListener("DOMContentLoaded", function() {
 
     weightInput.addEventListener('input', checkWeight);
     maxWeightInput.addEventListener('input', checkWeight);
+
+    const wbForm = document.querySelector('form[action="/weighbridge/new"]');
+    if (wbForm) {
+        wbForm.addEventListener('submit', function(e) {
+            const d2 = document.getElementById('plate_d2').value.trim();
+            const d3 = document.getElementById('plate_d3').value.trim();
+            const city = document.getElementById('plate_city').value.trim();
+            const letter = document.getElementById('plate_letter').value.trim();
+            if (!d2 || !d3 || !city) {
+                e.preventDefault();
+                alert('لطفاً کلیه بخش‌های پلاک انتظامی ناوگان (۲ رقم، حرف، ۳ رقم، کد شهر) را وارد نمایید.');
+                document.getElementById('plate_d2').focus();
+                return false;
+            }
+            document.getElementById('truck_plate').value = `${d2} ${letter} ${d3} ایران ${city}`;
+        });
+    }
 });
 </script>
 {% endblock %}

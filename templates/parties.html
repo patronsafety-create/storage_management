@@ -395,8 +395,11 @@
                     <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس رضایی">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تلفن / نمابر</label>
-                    <input type="text" class="form-control" name="phone" placeholder="مثلاً: 031-33445566">
+                    <label class="form-label">شماره تلفن / همراه</label>
+                    <div class="ir-mobile-wrapper">
+                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">شناسه ملی / کد اقتصادی</label>
@@ -447,8 +450,11 @@
                     <input type="text" class="form-control" id="edit_sup_contact" name="contact_person">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تلفن</label>
-                    <input type="text" class="form-control" id="edit_sup_phone" name="phone">
+                    <label class="form-label">شماره تلفن / همراه</label>
+                    <div class="ir-mobile-wrapper">
+                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_sup_phone" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">شناسه ملی / کد اقتصادی</label>
@@ -500,7 +506,10 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">شماره تماس / همراه</label>
-                    <input type="text" class="form-control" name="phone" placeholder="مثلاً: 09121234567">
+                    <div class="ir-mobile-wrapper">
+                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">شناسه ملی / کد ملی</label>
@@ -555,8 +564,11 @@
                     <input type="text" class="form-control" id="edit_cust_contact" name="contact_person">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">شماره تماس</label>
-                    <input type="text" class="form-control" id="edit_cust_phone" name="phone">
+                    <label class="form-label">شماره تماس / همراه</label>
+                    <div class="ir-mobile-wrapper">
+                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_cust_phone" name="phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">شناسه ملی / کد ملی</label>
@@ -591,7 +603,11 @@ function openEditSupplierModal(sup) {
     document.getElementById('edit_sup_name').value = sup.name || '';
     document.getElementById('edit_sup_code').value = sup.code || '';
     document.getElementById('edit_sup_contact').value = sup.contact_person || '';
-    document.getElementById('edit_sup_phone').value = sup.phone || '';
+    const supPhone = document.getElementById('edit_sup_phone');
+    if (supPhone) {
+        supPhone.value = sup.phone || '';
+        supPhone.dispatchEvent(new Event('input'));
+    }
     document.getElementById('edit_sup_email').value = sup.email || '';
     document.getElementById('edit_sup_address').value = sup.address || '';
     document.getElementById('edit_sup_national_id').value = sup.national_id || '';
@@ -605,7 +621,11 @@ function openEditCustomerModal(cust) {
     document.getElementById('edit_cust_name').value = cust.name || '';
     document.getElementById('edit_cust_code').value = cust.code || '';
     document.getElementById('edit_cust_contact').value = cust.contact_person || '';
-    document.getElementById('edit_cust_phone').value = cust.phone || '';
+    const custPhone = document.getElementById('edit_cust_phone');
+    if (custPhone) {
+        custPhone.value = cust.phone || '';
+        custPhone.dispatchEvent(new Event('input'));
+    }
     document.getElementById('edit_cust_email').value = cust.email || '';
     document.getElementById('edit_cust_address').value = cust.address || '';
     document.getElementById('edit_cust_national_id').value = cust.national_id || '';
