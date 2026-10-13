@@ -123,20 +123,25 @@
             </li>
         </ul>
 
-        <!-- فیلتر جستجو -->
-        <form method="get" action="/master-data/parties" class="d-flex gap-2">
+        <!-- فیلتر جستجو و وضعیت -->
+        <form method="get" action="/master-data/parties" class="d-flex align-items-center gap-2 flex-wrap">
             <input type="hidden" name="tab" id="tabInput" value="{{ active_tab }}">
-            <div class="input-group">
+            <div class="input-group" style="min-width: 250px;">
                 <span class="input-group-text bg-transparent border-secondary border-opacity-25 text-secondary">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" name="search" class="form-control" placeholder="جستجو در نام، کد، رابط یا شناسه ملی..." value="{{ search }}" style="min-width: 260px;">
+                <input type="text" name="search" class="form-control" placeholder="جستجو در نام، کد، رابط یا شناسه ملی..." value="{{ search }}">
             </div>
+            <select name="status" class="form-select bg-dark border-secondary border-opacity-25 text-light" style="width: 160px;" onchange="this.form.submit()" title="فیلتر وضعیت طرف‌های تجاری">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>همه وضعیت‌ها</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>فقط فعال‌ها</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>بایگانی و غیرفعال</option>
+            </select>
             <button type="submit" class="btn btn-outline-info">
-                جستجو
+                اعمال
             </button>
-            {% if search %}
-            <a href="/master-data/parties?tab={{ active_tab }}" class="btn btn-outline-secondary" title="پاک کردن فیلتر">
+            {% if search or status_filter != 'all' %}
+            <a href="/master-data/parties?tab={{ active_tab }}" class="btn btn-outline-secondary" title="پاک کردن فیلترها">
                 <i class="bi bi-x-lg"></i>
             </a>
             {% endif %}
@@ -206,7 +211,7 @@
                                     {% if s.is_active %}
                                     <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">فعال</span>
                                     {% else %}
-                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">غیرفعال</span>
+                                    <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25">بایگانی / غیرفعال</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
@@ -226,8 +231,13 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <form action="/master-data/supplier/{{ s.id }}/toggle-status" method="post" class="m-0">
-                                            <button type="submit" class="btn btn-sm {% if s.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if s.is_active %}غیرفعال‌سازی{% else %}فعال‌سازی{% endif %}">
-                                                <i class="bi {% if s.is_active %}bi-slash-circle{% else %}bi-check-circle{% endif %}"></i>
+                                            <button type="submit" class="btn btn-sm {% if s.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if s.is_active %}غیرفعال‌سازی (انتقال به بایگانی){% else %}فعال‌سازی مجدد{% endif %}">
+                                                <i class="bi {% if s.is_active %}bi-eye-slash{% else %}bi-check-circle{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        <form action="/master-data/supplier/{{ s.id }}/delete" method="post" class="m-0" onsubmit="return confirm('آیا از حذف قطعی تأمین‌کننده «{{ s.name }}» اطمینان دارید؟\nدر صورت وجود سابقه سند انبار یا باسکول، حذف قطعی به منظور حفظ صحت دفاتر رد خواهد شد.');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف قطعی از پایگاه داده">
+                                                <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -319,7 +329,7 @@
                                     {% if c.is_active %}
                                     <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">فعال</span>
                                     {% else %}
-                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">غیرفعال</span>
+                                    <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25">بایگانی / غیرفعال</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
@@ -340,8 +350,13 @@
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <form action="/master-data/customer/{{ c.id }}/toggle-status" method="post" class="m-0">
-                                            <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if c.is_active %}غیرفعال‌سازی{% else %}فعال‌سازی{% endif %}">
-                                                <i class="bi {% if c.is_active %}bi-slash-circle{% else %}bi-check-circle{% endif %}"></i>
+                                            <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if c.is_active %}غیرفعال‌سازی (انتقال به بایگانی){% else %}فعال‌سازی مجدد{% endif %}">
+                                                <i class="bi {% if c.is_active %}bi-eye-slash{% else %}bi-check-circle{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        <form action="/master-data/customer/{{ c.id }}/delete" method="post" class="m-0" onsubmit="return confirm('آیا از حذف قطعی مشتری «{{ c.name }}» اطمینان دارید؟\nدر صورت وجود سابقه گردش انبار یا باسکول، حذف قطعی به منظور حفظ صحت دفاتر رد خواهد شد.');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف قطعی از پایگاه داده">
+                                                <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>
                                     </div>

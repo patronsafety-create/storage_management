@@ -8,7 +8,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_
 
 from src.core.dependencies import get_db, require_admin, get_current_user
-from src.domain_model.inventory_models import Supplier, Customer, StockTransaction, TransactionType
+from src.domain_model.inventory_models import (
+    Supplier, Customer, StockTransaction, TransactionType,
+    PurchaseOrder, WeighbridgeTicket
+)
 from src.domain_model.auth_models import User
 
 router = APIRouter(
@@ -23,6 +26,7 @@ templates = Jinja2Templates(directory="templates")
 async def list_parties(
     request: Request,
     search: Optional[str] = Query(None),
+    status: Optional[str] = Query("all"),
     tab: Optional[str] = Query("suppliers"),
     msg: Optional[str] = Query(None),
     error: Optional[str] = Query(None),
@@ -32,9 +36,17 @@ async def list_parties(
     """مدیریت طرف‌های تجاری: تأمین‌کنندگان و مشتریان"""
     is_admin = any(role.name == "Admin" for role in current_user.roles)
 
-    # کوئری تأمین‌کنندگان
+    # کوئری تأمین‌کنندگان و مشتریان
     sup_query = db.query(Supplier)
     cust_query = db.query(Customer)
+
+    # فیلتر وضعیت فعال / غیرفعال
+    if status == "active":
+        sup_query = sup_query.filter(Supplier.is_active == True)
+        cust_query = cust_query.filter(Customer.is_active == True)
+    elif status == "inactive":
+        sup_query = sup_query.filter(Supplier.is_active == False)
+        cust_query = cust_query.filter(Customer.is_active == False)
 
     if search and search.strip():
         term = f"%{search.strip()}%"
@@ -114,6 +126,7 @@ async def list_parties(
             "stats": stats,
             "active_tab": tab or "suppliers",
             "search": search or "",
+            "status_filter": status or "all",
             "msg": msg,
             "error": error
         }
@@ -311,6 +324,59 @@ async def toggle_supplier_status(
     return RedirectResponse(url="/master-data/parties?tab=suppliers", status_code=303)
 
 
+@router.post("/supplier/{supplier_id}/delete")
+async def delete_supplier(
+    supplier_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """حذف قطعی تأمین‌کننده در صورت عدم وجود گردش یا اسناد مرتبط"""
+    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    if not supplier:
+        return RedirectResponse(
+            url="/master-data/parties?tab=suppliers&error=" + quote("تأمین‌کننده مورد نظر یافت نشد."),
+            status_code=303
+        )
+
+    tx_count = db.query(StockTransaction).filter(StockTransaction.supplier_id == supplier_id).count()
+    po_count = db.query(PurchaseOrder).filter(PurchaseOrder.supplier_id == supplier_id).count()
+    wb_count = db.query(WeighbridgeTicket).filter(WeighbridgeTicket.supplier_id == supplier_id).count()
+
+    if tx_count > 0 or po_count > 0 or wb_count > 0:
+        reasons = []
+        if tx_count > 0:
+            reasons.append(f"{tx_count} سند ورود/رسید انبار")
+        if po_count > 0:
+            reasons.append(f"{po_count} سفارش خرید")
+        if wb_count > 0:
+            reasons.append(f"{wb_count} قبض باسکول")
+        reason_str = "، ".join(reasons)
+        err_msg = (
+            f"امکان حذف قطعی تأمین‌کننده «{supplier.name}» وجود ندارد؛ زیرا دارای گردش اسناد در سامانه است ({reason_str}). "
+            "جهت حفظ یکپارچگی دفاتر مالی و کاردکس انبار، لطفاً وضعیت آن را به «غیرفعال» تغییر دهید تا در لیست‌های روزانه پنهان شود."
+        )
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=suppliers&error={quote(err_msg)}",
+            status_code=303
+        )
+
+    try:
+        sup_name = supplier.name
+        db.delete(supplier)
+        db.commit()
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=suppliers&msg={quote(f'تأمین‌کننده «{sup_name}» با موفقیت به صورت قطعی حذف شد.')}",
+            status_code=303
+        )
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=suppliers&error={quote('خطا در حذف: این طرف تجاری در سایر بخش‌های سیستم دارای وابستگی است.')}",
+            status_code=303
+        )
+
+
+
 @router.post("/customer")
 async def create_customer(
     name: str = Form(...),
@@ -425,3 +491,53 @@ async def toggle_customer_status(
             status_code=303
         )
     return RedirectResponse(url="/master-data/parties?tab=customers", status_code=303)
+
+
+@router.post("/customer/{customer_id}/delete")
+async def delete_customer(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """حذف قطعی مشتری در صورت عدم وجود گردش یا اسناد مرتبط"""
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        return RedirectResponse(
+            url="/master-data/parties?tab=customers&error=" + quote("مشتری مورد نظر یافت نشد."),
+            status_code=303
+        )
+
+    tx_count = db.query(StockTransaction).filter(StockTransaction.customer_id == customer_id).count()
+    wb_count = db.query(WeighbridgeTicket).filter(WeighbridgeTicket.customer_id == customer_id).count()
+
+    if tx_count > 0 or wb_count > 0:
+        reasons = []
+        if tx_count > 0:
+            reasons.append(f"{tx_count} سند حواله/خروج انبار")
+        if wb_count > 0:
+            reasons.append(f"{wb_count} قبض باسکول")
+        reason_str = "، ".join(reasons)
+        err_msg = (
+            f"امکان حذف قطعی مشتری «{customer.name}» وجود ندارد؛ زیرا دارای سوابق در سیستم است ({reason_str}). "
+            "جهت جلوگیری از مخدوش شدن دفاتر مالی و اسناد رهگیری، لطفاً مشتری را «غیرفعال» کنید تا در دید روزانه قرار نگیرد."
+        )
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=customers&error={quote(err_msg)}",
+            status_code=303
+        )
+
+    try:
+        cust_name = customer.name
+        db.delete(customer)
+        db.commit()
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=customers&msg={quote(f'مشتری «{cust_name}» با موفقیت به صورت قطعی حذف شد.')}",
+            status_code=303
+        )
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            url=f"/master-data/parties?tab=customers&error={quote('خطا در حذف: این طرف تجاری در سایر بخش‌های سیستم دارای وابستگی است.')}",
+            status_code=303
+        )
+
