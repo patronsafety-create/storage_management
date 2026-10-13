@@ -277,20 +277,77 @@
       padding: 0.5rem 0.6rem 0.2rem 0.6rem;
       font-weight: 700;
     }
+
+    /* ===== NEXUSPOUR BRANDING ===== */
+    .brand-logo-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(0, 212, 200, 0.2), rgba(139, 92, 246, 0.3));
+      border: 1px solid rgba(0, 212, 200, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-teal);
+      box-shadow: 0 0 15px rgba(0, 212, 200, 0.25);
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .brand-logo-box:hover {
+      transform: rotate(6deg) scale(1.06);
+      box-shadow: 0 0 22px rgba(0, 212, 200, 0.5);
+    }
+    .brand-title-main {
+      font-weight: 900;
+      font-size: 1.25rem;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--accent-teal) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+    .badge-edition {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.18rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(0, 212, 200, 0.12);
+      border: 1px solid rgba(0, 212, 200, 0.35);
+      color: var(--accent-teal);
+    }
+    .brand-signature {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 1px;
+    }
+    .brand-signature strong {
+      color: #e2e8f0;
+      font-weight: 600;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- منوی کشویی سایدبار (Offcanvas Sidebar) -->
-  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarDrawer" aria-labelledby="sidebarDrawerLabel" style="background: rgba(13, 17, 23, 0.98) !important; backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); width: 320px;">
+  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarDrawer" aria-labelledby="sidebarDrawerLabel" style="background: rgba(13, 17, 23, 0.98) !important; backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); width: 330px;">
     <div class="offcanvas-header border-bottom border-secondary border-opacity-25 py-3">
       <div class="d-flex align-items-center gap-2">
-        <div class="p-2 rounded-3" style="background: rgba(0, 212, 200, 0.15); color: var(--accent-teal);">
-          <i class="bi bi-boxes fs-4"></i>
+        <div class="brand-logo-box">
+          <i class="bi bi-box-seam-fill"></i>
         </div>
         <div>
-          <h6 class="offcanvas-title fw-bold text-light mb-0" id="sidebarDrawerLabel">سامانه مدیریت انبار</h6>
-          <span class="text-secondary small font-monospace">Enterprise ERP Storage</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="brand-title-main">نکسوس‌پـور</span>
+            <span class="badge-edition">NexusPour ERP</span>
+          </div>
+          <div class="brand-signature">
+            <i class="bi bi-shield-check text-teal"></i> مالکیت و مهندسی: <strong>امید پورمحمود</strong>
+          </div>
         </div>
       </div>
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -357,8 +414,19 @@
           <i class="bi bi-list fs-5 align-middle"></i>
           <span class="d-none d-sm-inline ms-1 fw-bold small">منوی سیستم</span>
         </button>
-        <a class="navbar-brand mb-0" href="/dashboard">
-          <i class="bi bi-boxes"></i> StorageERP
+        <a class="navbar-brand mb-0 text-decoration-none d-flex align-items-center gap-2" href="/dashboard">
+          <div class="brand-logo-box">
+            <i class="bi bi-box-seam-fill"></i>
+          </div>
+          <div class="d-flex flex-column text-start">
+            <div class="d-flex align-items-center gap-2">
+              <span class="brand-title-main">نکسوس‌پـور</span>
+              <span class="badge-edition d-none d-md-inline-block">NexusPour ERP</span>
+            </div>
+            <div class="brand-signature d-none d-sm-flex">
+              <i class="bi bi-shield-check text-teal"></i> مالکیت و مهندسی: <strong>امید پورمحمود</strong>
+            </div>
+          </div>
         </a>
       </div>
 
@@ -403,6 +471,19 @@
   <div class="container-fluid px-4 py-4 app-content-fade">
     {% block content %}{% endblock %}
   </div>
+
+  <!-- فوتر رسمی و حقوق مالکیت معنوی -->
+  <footer class="mt-auto py-3 border-top border-secondary border-opacity-10 text-secondary" style="background: rgba(13, 17, 23, 0.7); backdrop-filter: blur(10px);">
+    <div class="container-fluid px-4 d-flex justify-content-between align-items-center flex-wrap gap-2 small">
+      <div>
+        <i class="bi bi-c-circle text-teal me-1"></i> تمامی حقوق مادی و معنوی این نرم‌افزار متعلق به <strong>امید پورمحمود (Omid Pourmahmoud)</strong> است.
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge-edition">NexusPour Enterprise Edition v2.0</span>
+        <span class="text-secondary opacity-75">سامانه یکپارچه انبارداری و زنجیره تامین</span>
+      </div>
+    </div>
+  </footer>
 
   {% block modals %}{% endblock %}
 

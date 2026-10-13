@@ -80,8 +80,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Storage ERP API",
-    description="سیستم مدیریت انبار و احراز هویت",
+    title="NexusPour ERP API",
+    description="سامانه یکپارچه انبارداری نکسوس‌پور (NexusPour ERP) — طراحی و مهندسی: امید پورمحمود",
     version="2.0.0",
     lifespan=lifespan
 )
