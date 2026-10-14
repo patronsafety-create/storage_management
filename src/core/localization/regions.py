@@ -147,30 +147,113 @@ def format_currency(amount: float, region_code: str = "IR") -> str:
 # دیکشنری جامع ترجمه و بومی‌سازی داده‌های پایه (کالاها، دسته‌بندی‌ها، انبارها، واحدها و برندها)
 TR_MASTER_DATA_MAP: Dict[str, str] = {
     # اقلام و محصولات فولادی و شیمیایی
+    # ۱. شمش فولادی و آهن
     "شمش فولادی ۱۵۰×۱۵۰": "Sürekli Döküm Çelik Kütük 150×150mm",
     "شمش فولادی 150*150": "Sürekli Döküm Çelik Kütük 150×150mm",
     "شمش فولادی 150×150": "Sürekli Döküm Çelik Kütük 150×150mm",
+    "شمش فولادی ۱۳۰×۱۳۰": "Sürekli Döküm Çelik Kütük 130×130mm",
+    "شمش فولادی 130*130": "Sürekli Döküm Çelik Kütük 130×130mm",
+    "شمش فولادی 130×130": "Sürekli Döküm Çelik Kütük 130×130mm",
     "شمش فولادی": "Sürekli Döküm Çelik Kütük",
+    "شمش آهن": "Çelik Kütük (Demir Kütük)",
     "شمش بیلت فولادی ۱۵۰×۱۵۰ S235JR": "Sürekli Döküm Çelik Kütük 150×150mm S235JR",
     "شمش بیلت فولادی 150×150 S235JR": "Sürekli Döküm Çelik Kütük 150×150mm S235JR",
+    "شمش بیلت فولادی ۱۳۰×۱۳۰ 3SP": "Sürekli Döküm Çelik Kütük 130×130mm 3SP",
+    "شمش بیلت فولادی 130×130 3SP": "Sürekli Döküm Çelik Kütük 130×130mm 3SP",
+    "آهن": "Demir ve Çelik",
+    "آهن‌آلات": "Demir ve Çelik Ürünleri",
+
+    # ۲. میلگرد در ابعاد و سایزهای مختلف
+    "میلگرد آجدار سایز ۱۴ (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø14mm B420B (12m)",
+    "میلگرد آجدار سایز 14 (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø14mm B420B (12m)",
+    "میلگرد آجدار ۱۴ میلی‌متر B420B (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø14mm B420B (12m)",
+    "میلگرد آجدار 14 میلی‌متر B420B (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø14mm B420B (12m)",
+    "میلگرد آجدار ۱۴": "Nervürlü İnşaat Demiri Ø14mm",
+    "میلگرد آجدار 14": "Nervürlü İnşaat Demiri Ø14mm",
+    "میلگرد ۱۴": "Nervürlü İnşaat Demiri Ø14mm",
+    "میلگرد 14": "Nervürlü İnşaat Demiri Ø14mm",
+
     "میلگرد آجدار سایز ۱۶ (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
     "میلگرد آجدار سایز 16 (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
     "میلگرد آجدار ۱۶ میلی‌متر B420B (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
     "میلگرد آجدار 16 میلی‌متر B420B (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
     "میلگرد آجدار ۱۶": "Nervürlü İnşaat Demiri Ø16mm",
     "میلگرد آجدار 16": "Nervürlü İnşaat Demiri Ø16mm",
-    "میلگرد آجدار": "Nervürlü İnşaat Demiri",
+    "میلگرد ۱۶": "Nervürlü İnşaat Demiri Ø16mm",
+    "میلگرد 16": "Nervürlü İnşaat Demiri Ø16mm",
+
+    "میلگرد آجدار سایز ۱۸ (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø18mm B420B (12m)",
+    "میلگرد آجدار سایز 18 (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø18mm B420B (12m)",
+    "میلگرد آجدار ۱۸ میلی‌متر B420B (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø18mm B420B (12m)",
+    "میلگرد آجدار 18 میلی‌متر B420B (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø18mm B420B (12m)",
+    "میلگرد آجدار ۱۸": "Nervürlü İnşaat Demiri Ø18mm",
+    "میلگرد آجدار 18": "Nervürlü İnşaat Demiri Ø18mm",
+    "میلگرد ۱۸": "Nervürlü İnşaat Demiri Ø18mm",
+    "میلگرد 18": "Nervürlü İnşaat Demiri Ø18mm",
+
+    "میلگرد آجدار سایز ۲۰ (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø20mm B420B (12m)",
+    "میلگرد آجدار سایز 20 (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø20mm B420B (12m)",
+    "میلگرد آجدار ۲۰ میلی‌متر B420B (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø20mm B420B (12m)",
+    "میلگرد آجدار 20 میلی‌متر B420B (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø20mm B420B (12m)",
+    "میلگرد آجدار ۲۰": "Nervürlü İnşaat Demiri Ø20mm",
+    "میلگرد آجدار 20": "Nervürlü İnşaat Demiri Ø20mm",
+    "میلگرد ۲۰": "Nervürlü İnşaat Demiri Ø20mm",
+    "میلگرد 20": "Nervürlü İnşaat Demiri Ø20mm",
+
+    "میلگرد آجدار سایز ۲۲ (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø22mm B420B (12m)",
+    "میلگرد آجدار سایز 22 (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø22mm B420B (12m)",
+    "میلگرد آجدار ۲۲": "Nervürlü İnşaat Demiri Ø22mm",
+    "میلگرد آجدار 22": "Nervürlü İnşaat Demiri Ø22mm",
+    "میلگرد ۲۲": "Nervürlü İnşaat Demiri Ø22mm",
+    "میلگرد 22": "Nervürlü İnşaat Demiri Ø22mm",
+    "میلگرد": "Nervürlü İnşaat Demiri",
+
+    # ۳. تیرآهن و پروفیل‌های ساختمانی
+    "تیرآهن IPE 14": "IPE 140 Yapısal Çelik Profil",
+    "تیرآهن IPE 14 (شاخه ۱۲ متری)": "IPE 140 Yapısal Çelik Profil (12m)",
+    "تیرآهن IPE 14 (شاخه 12 متری)": "IPE 140 Yapısal Çelik Profil (12m)",
+    "تیرآهن ۱۴": "IPE 140 Yapısal Çelik Profil",
+    "تیرآهن 14": "IPE 140 Yapısal Çelik Profil",
+
+    "تیرآهن IPE 16": "IPE 160 Yapısal Çelik Profil",
+    "تیرآهن IPE 16 (شاخه ۱۲ متری)": "IPE 160 Yapısal Çelik Profil (12m)",
+    "تیرآهن IPE 16 (شاخه 12 متری)": "IPE 160 Yapısal Çelik Profil (12m)",
+    "تیرآهن ۱۶": "IPE 160 Yapısal Çelik Profil",
+    "تیرآهن 16": "IPE 160 Yapısal Çelik Profil",
+
+    "تیرآهن IPE 18": "IPE 180 Yapısal Çelik Profil",
+    "تیرآهن IPE 18 (شاخه ۱۲ متری)": "IPE 180 Yapısal Çelik Profil (12m)",
+    "تیرآهن IPE 18 (شاخه 12 متری)": "IPE 180 Yapısal Çelik Profil (12m)",
+    "تیرآهن ۱۸": "IPE 180 Yapısal Çelik Profil",
+    "تیرآهن 18": "IPE 180 Yapısal Çelik Profil",
+
+    "تیرآهن IPE 20": "IPE 200 Yapısal Çelik Profil",
+    "تیرآهن IPE 20 (شاخه ۱۲ متری)": "IPE 200 Yapısal Çelik Profil (12m)",
+    "تیرآهن IPE 20 (شاخه 12 متری)": "IPE 200 Yapısal Çelik Profil (12m)",
+    "تیرآهن ۲۰": "IPE 200 Yapısal Çelik Profil",
+    "تیرآهن 20": "IPE 200 Yapısal Çelik Profil",
+    "تیرآهن": "Yapısal Çelik Profil",
+
+    # ۴. اوره و کودهای شیمیایی
     "اوره گرانول صادراتی (فله)": "Granül Üre Gübresi %46 Azot (Dökme)",
     "اوره گرانول": "Granül Üre Gübresi %46",
+    "کود اوره گرانول ۴۶ درصد ازت (فله)": "Granül Üre Gübresi %46 Azot (Dökme)",
+    "کود اوره گرانول 46 درصد ازت (فله)": "Granül Üre Gübresi %46 Azot (Dökme)",
     "کود اوره گرانول ۴۶ درصد ازت (فله و جامبوبگ)": "Granül Üre Gübresi %46 Azot (Dökme & Big Bag)",
     "کود اوره گرانول 46 درصد ازت (فله و جامبوبگ)": "Granül Üre Gübresi %46 Azot (Dökme & Big Bag)",
+    "کود اوره گرانول ۴۶ درصد ازت (جامبوبگ ۱ تنی)": "Granül Üre Gübresi %46 Azot (1 Tonluk Big-Bag)",
+    "کود اوره گرانول 46 درصد ازت (جامبوبگ 1 تنی)": "Granül Üre Gübresi %46 Azot (1 Tonluk Big-Bag)",
+    "کود اوره ۵۰ کیلویی لمینت": "50 kg Torbalı Granül Üre Gübresi",
+    "کود اوره 50 کیلویی لمینت": "50 kg Torbalı Granül Üre Gübresi",
     "کود اوره گرانول": "Granül Üre Gübresi",
     "کود اوره": "Üre Gübresi",
+    "اوره": "Üre",
+
+    # ۵. ورق و کلاف فولادی
+    "کلاف گرم فولادی (ورق سیاه رول HRC)": "Sıcak Haddelenmiş Rulo Sac (HRC)",
     "کلاف گرم فولادی": "Sıcak Haddelenmiş Rulo Sac (HRC)",
-    "تیرآهن IPE 20": "IPE 200 Yapısal Çelik Profil",
-    "تیرآهن IPE 18": "IPE 180 Yapısal Çelik Profil",
-    "تیرآهن IPE 16": "IPE 160 Yapısal Çelik Profil",
-    "تیرآهن": "Yapısal Çelik Profil",
+    "ورق سیاه برشی فولادی (شیت ۱۰ میل)": "Sıcak Haddelenmiş Plaka Sac (10mm)",
+    "ورق سیاه برشی فولادی (شیت 10 میل)": "Sıcak Haddelenmiş Plaka Sac (10mm)",
     "ورق سیاه فولادی": "Sıcak Haddelenmiş Siyah Sac",
     "ورق سیاه": "Siyah Sac",
     "ورق گالوانیزه": "Galvanizli Sac",
@@ -205,6 +288,8 @@ TR_MASTER_DATA_MAP: Dict[str, str] = {
     "انبار شماره ۱": "1 Nolu Depo",
     "انبار شماره ۲": "2 Nolu Depo",
     "انبار مرکزی": "Merkez Depo",
+    "انبار مرکزی تهران": "İstanbul / Tahran Merkez Deposu",
+    "انبار روباز تیرآهن و میلگرد": "Açık Profil ve İnşaat Demiri Deposu",
     "انبار قطعات": "Yedek Parça Deposu",
     "انبار مواد اولیه": "Hammadde Deposu",
     "انبار محصول نهایی": "Mamul Deposu",
@@ -212,6 +297,7 @@ TR_MASTER_DATA_MAP: Dict[str, str] = {
     "انبار ضایعات": "Hurda Deposu",
     "انبار قراضه": "Hurda Deposu",
     "انبار برش": "Kesim Sahası Deposu",
+    "انبار ته‌شاخه‌ها": "Kalan Parça ve Kesim Deposu",
 
     # واحدهای سنجش (UOM)
     "کیلوگرم": "kg",
@@ -219,6 +305,7 @@ TR_MASTER_DATA_MAP: Dict[str, str] = {
     "شاخه": "çubuk",
     "بندیل": "bağ",
     "قالب": "blok",
+    "کوتوک": "kütük",
     "جامبوبگ": "big-bag",
     "کیسه": "torba",
     "متر": "m",
@@ -235,23 +322,96 @@ TR_MASTER_DATA_MAP: Dict[str, str] = {
     "ذوب‌آهن اصفهان": "İsfahan Çelik (ESCO)",
     "فولاد مبارکه": "Mobarakeh Çelik",
 
+    # تأمین‌کنندگان (Suppliers)
+    "مجتمع فولاد مبارکه اصفهان": "Mobarakeh Çelik Sanayi A.Ş.",
+    "تأمین‌کننده فرضی ۱ (مجتمع فولاد مبارکه اصفهان)": "Mobarakeh Çelik Sanayi A.Ş.",
+    "شرکت سهامی ذوب‌آهن اصفهان": "İsfahan Demir Çelik Fabrikaları (ESCO)",
+    "تأمین‌کننده فرضی ۲ (شرکت سهامی ذوب‌آهن اصفهان)": "İsfahan Demir Çelik Fabrikaları (ESCO)",
+    "شرکت پتروشیمی پردیس عسلویه": "Pardis Petrokimya Kompleksi (Assaluyeh)",
+    "تأمین‌کننده فرضی ۳ (شرکت پتروشیمی پردیس عسلویه)": "Pardis Petrokimya Kompleksi (Assaluyeh)",
+    "شرکت فولاد خوزستان": "Khouzestan Çelik Sanayi (KSC)",
+    "مجتمع فولاد خراسان (نیشابور)": "Khorasan (Neyshabur) Çelik Kompleksi",
+    "Ereğli Demir ve Çelik Fabrikaları T.A.Ş. (Erdemir)": "Ereğli Demir ve Çelik Fabrikaları T.A.Ş. (Erdemir)",
+    "İskenderun Demir ve Çelik A.Ş. (İsdemir)": "İskenderun Demir ve Çelik A.Ş. (İsdemir)",
+    "Karabük Demir Çelik Sanayi ve Ticaret A.Ş. (Kardemir)": "Karabük Demir Çelik Sanayi ve Ticaret A.Ş. (Kardemir)",
+    "Toros Tarım ve Gübre Sanayi A.Ş. (Toros Gübre)": "Toros Tarım ve Gübre Sanayi A.Ş. (Toros Gübre)",
+    "Tosyalı Demir Çelik Sanayi A.Ş.": "Tosyalı Demir Çelik Sanayi A.Ş.",
+
+    # مشتریان و خریداران (Customers)
+    "پروژه ساختمانی برج آرمان امید": "Arman Kule İnşaat Projesi",
+    "مشتری فرضی ۱ (پروژه ساختمانی برج آرمان امید)": "Arman Kule İnşaat Projesi",
+    "شرکت مهندسی و توسعه خطوط لوله پارس": "Pars Boru Hatları Mühendislik ve Geliştirme A.Ş.",
+    "مشتری فرضی ۲ (شرکت مهندسی و توسعه خطوط لوله پارس)": "Pars Boru Hatları Mühendislik ve Geliştirme A.Ş.",
+    "بازرگانی صنایع فلزی کاوه": "Kaveh Metal Sanayi ve Ticaret",
+    "مشتری فرضی ۳ (بازرگانی صنایع فلزی کاوه)": "Kaveh Metal Sanayi ve Ticaret",
+    "شرکت سازه‌های فولادی البرز": "Alborz Çelik Yapı Sanayi A.Ş.",
+    "مجتمع کشت و صنعت مغان": "Mogan Tarım ve Hayvancılık Kompleksi",
+    "Rönesans Holding / İnşaat Sanayi ve Ticaret A.Ş.": "Rönesans Holding / İnşaat Sanayi ve Ticaret A.Ş.",
+    "ENKA İnşaat ve Sanayi A.Ş.": "ENKA İnşaat ve Sanayi A.Ş.",
+    "Marmara Çelik Profil ve Dış Ticaret Ltd. Şti.": "Marmara Çelik Profil ve Dış Ticaret Ltd. Şti.",
+
     # انواع خودرو و ناوگان حمل و نقل
     "تریلی کفی ۱۸ چرخ (بندیل و میلگرد)": "Standart 5 Dingilli Açık Kasa Treyler (Tır)",
+    "تریلی کفی ۱۸ چرخ": "Standart 5 Dingilli Açık Kasa Treyler (Tır)",
     "تریلی لبه‌دار / ترانزیت": "Tenteli / Kapalı Kasa Tır",
     "کمپرسی سنگین (فله و شمش)": "Ağır Tonajlı Damperli Kamyon",
+    "کمپرسی سنگین": "Ağır Tonajlı Damperli Kamyon",
     "کامیون جفت (۱۰ چرخ)": "3 Dingilli Kamyon (26 Ton)",
     "کامیون تک (۶ چرخ)": "2 Dingilli Kamyon (18 Ton)",
 }
 
+# دیکشنری نگاشت معکوس (ترکی به فارسی)
 IR_MASTER_DATA_MAP: Dict[str, str] = {
     "Nervürlü İnşaat Demiri Ø16mm B420B (12m)": "میلگرد آجدار ۱۶ میلی‌متر B420B (شاخه ۱۲ متری)",
+    "Nervürlü İnşaat Demiri Ø14mm B420B (12m)": "میلگرد آجدار سایز ۱۴ (شاخه ۱۲ متری)",
+    "Nervürlü İnşaat Demiri Ø18mm B420B (12m)": "میلگرد آجدار سایز ۱۸ (شاخه ۱۲ متری)",
+    "Nervürlü İnşaat Demiri Ø20mm B420B (12m)": "میلگرد آجدار سایز ۲۰ (شاخه ۱۲ متری)",
+    "Nervürlü İnşaat Demiri Ø22mm B420B (12m)": "میلگرد آجدار سایز ۲۲ (شاخه ۱۲ متری)",
+    "IPE 140 Yapısal Çelik Profil": "تیرآهن IPE 14",
+    "IPE 160 Yapısal Çelik Profil": "تیرآهن IPE 16",
+    "IPE 180 Yapısal Çelik Profil": "تیرآهن IPE 18",
+    "IPE 200 Yapısal Çelik Profil": "تیرآهن IPE 20",
     "Sürekli Döküm Çelik Kütük 150×150mm S235JR": "شمش بیلت فولادی ۱۵۰×۱۵۰ S235JR",
+    "Sürekli Döküm Çelik Kütük 150×150mm": "شمش فولادی ۱۵۰×۱۵۰",
+    "Sürekli Döküm Çelik Kütük 130×130mm": "شمش فولادی ۱۳۰×۱۳۰",
+    "Sürekli Döküm Çelik Kütük": "شمش فولادی",
     "Granül Üre Gübresi %46 Azot (Dökme & Big Bag)": "کود اوره گرانول ۴۶ درصد ازت (فله و جامبوبگ)",
+    "Granül Üre Gübresi %46 Azot (Dökme)": "اوره گرانول صادراتی (فله)",
+    "Granül Üre Gübresi %46 Azot (1 Tonluk Big-Bag)": "کود اوره گرانول ۴۶ درصد ازت (جامبوبگ ۱ تنی)",
+    "50 kg Torbalı Granül Üre Gübresi": "کود اوره ۵۰ کیلویی لمینت",
+    "Sıcak Haddelenmiş Rulo Sac (HRC)": "کلاف گرم فولادی (ورق سیاه رول HRC)",
+    "Sıcak Haddelenmiş Plaka Sac (10mm)": "ورق سیاه برشی فولادی (شیت ۱۰ میل)",
+    "1 Nolu Açık Saha Deposu (Kütük ve Ağır Çelik)": "انبار شماره یک (محوطه سنگین و شمش)",
+    "2 Nolu Kapalı Depo (Kimyasal ve Gübre)": "انبار شماره دو (سوله مسقف و شیمیایی)",
+    "Açık Profil ve İnşaat Demiri Deposu": "انبار روباز تیرآهن و میلگرد",
+    "İstanbul / Tahran Merkez Deposu": "انبار مرکزی تهران",
+    "Kalan Parça ve Kesim Deposu": "انبار ته‌شاخه‌ها",
+    "Standart 5 Dingilli Açık Kasa Treyler (Tır)": "تریلی کفی ۱۸ چرخ (بندیل و میلگرد)",
+    "Tenteli / Kapalı Kasa Tır": "تریلی لبه‌دار / ترانزیت",
+    "Ağır Tonajlı Damperli Kamyon": "کمپرسی سنگین (فله و شمش)",
+    "3 Dingilli Kamyon (26 Ton)": "کامیون جفت (۱۰ چرخ)",
+    "2 Dingilli Kamyon (18 Ton)": "کامیون تک (۶ چرخ)",
+    "Arman Kule İnşaat Projesi": "پروژه ساختمانی برج آرمان امید",
+    "Pars Boru Hatları Mühendislik ve Geliştirme A.Ş.": "شرکت مهندسی و توسعه خطوط لوله پارس",
+    "Kaveh Metal Sanayi ve Ticaret": "بازرگانی صنایع فلزی کاوه",
+    "Ereğli Demir ve Çelik Fabrikaları T.A.Ş. (Erdemir)": "فولاد اردمیر ترکیه (Erdemir)",
+    "İskenderun Demir ve Çelik A.Ş. (İsdemir)": "فولاد ایسدمیر ترکیه (İsdemir)",
+    "Karabük Demir Çelik Sanayi ve Ticaret A.Ş. (Kardemir)": "فولاد کاردمیر ترکیه (Kardemir)",
+    "Toros Tarım ve Gübre Sanayi A.Ş. (Toros Gübre)": "صنایع کود و شیمیایی توروس ترکیه",
+    "Rönesans Holding / İnşaat Sanayi ve Ticaret A.Ş.": "هلدینگ ساختمانی رونسانس ترکیه",
+    "ENKA İnşaat ve Sanayi A.Ş.": "شرکت ساختمانی انکا ترکیه",
+    "Marmara Çelik Profil ve Dış Ticaret Ltd. Şti.": "شرکت پروفیل مرمره ترکیه",
 }
+
+# خودکارسازی نگاشت معکوس برای کلیه موارد تعریف شده در دیکشنری
+for _fa, _tr in TR_MASTER_DATA_MAP.items():
+    if _tr not in IR_MASTER_DATA_MAP:
+        IR_MASTER_DATA_MAP[_tr] = _fa
+
 
 def localize_display_name(name: Optional[str], is_tr: bool = False) -> str:
     """
-    ترجمه هوشمند و بدون بازگشت نام کالاها، دسته‌بندی‌ها، انبارها و واحدها متناسب با منطقه فعال
+    ترجمه هوشمند و بدون بازگشت نام کالاها، دسته‌بندی‌ها، انبارها، طرف‌های حساب و واحدها متناسب با منطقه فعال
     """
     if not name:
         return ""
@@ -259,4 +419,5 @@ def localize_display_name(name: Optional[str], is_tr: bool = False) -> str:
     if is_tr:
         return TR_MASTER_DATA_MAP.get(trimmed, trimmed)
     return IR_MASTER_DATA_MAP.get(trimmed, trimmed)
+
 

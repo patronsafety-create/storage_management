@@ -721,7 +721,12 @@ async def lifespan(app: FastAPI):
                 is_active=True
             )
             operator_user.roles.append(operator_role)
-            db.add(operator_user)
+        # ۱۳. تزریق جامع و خودکار سناریوها و داده‌های نمونه تخصصی آهن‌آلات، میلگردها، تیرآهن، شمش، اوره و طرف‌های تجاری
+        try:
+            from scripts.seed_demo_data import seed_database
+            seed_database(db)
+        except Exception as seed_err:
+            print(f"Demo seed notice: {seed_err}")
 
         db.commit()
     finally:
