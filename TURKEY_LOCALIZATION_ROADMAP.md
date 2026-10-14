@@ -104,7 +104,7 @@ graph TD
 | **پارت ۲** | طرف‌های تجاری و شناسه‌های هویتی ترکیه | 🟢 تکمیل و فعال شده | `src/domain_model/inventory_models.py`, `src/api/parties_ui.py`, `templates/parties.html`, `scripts/test_part2.py` | ۱۴۰۵/۰۷/۲۲ |
 | **پارت ۳** | کدینگ کالا و استانداردهای TSE و GTİP | 🟢 تکمیل و فعال شده | `src/domain_model/inventory_models.py`, `src/api/master_data_ui.py`, `templates/products.html`, `templates/barcode_label.html`, `scripts/test_part3.py` | ۱۴۰۵/۰۷/۲۲ |
 | **پارت ۴** | مالیات KDV و توقیف مالیاتی آهن‌آلات | 🟢 تکمیل و فعال شده | `src/services/tax_service.py`, `src/domain_model/inventory_models.py`, `src/api/purchases_ui.py`, `templates/purchase_detail.html`, `scripts/test_part4.py` | ۱۴۰۵/۰۷/۲۲ |
-| **پارت ۵** | باسکول تریلی و پلاک خودرو ترکیه | ⚪ در انتظار | `src/api/weighbridge_ui.py`, `templates/weighbridge.html` | - |
+| **پارت ۵** | باسکول تریلی و پلاک خودرو ترکیه و سناریوهای داده نمونه | 🟢 تکمیل و فعال شده | `src/api/weighbridge_ui.py`, `templates/weighbridge.html`, `scripts/seed_demo_data.py`, `scripts/test_part5.py`, `scripts/test_seed_and_localization.py` | ۱۴۰۵/۰۷/۲۳ |
 | **پارت ۶** | بارنامه e-İrsaliye و سامانه ترابری U-ETDS | ⚪ در انتظار | `src/api/compliance_ui.py`, `templates/compliance.html` | - |
 | **پارت ۷** | گزارش‌ها و اسناد رسمی دوزبانه | ⚪ در انتظار | `templates/reports.html`, `templates/mtc_certificate.html` | - |
 
