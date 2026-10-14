@@ -9,12 +9,12 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
                 <div>
                     <h4 class="fw-bold mb-1 text-light">
-                        <i class="bi bi-box-arrow-in-down-right text-teal me-2"></i>ثبت تراکنش انبار (رسید / حواله)
+                        <i class="bi bi-box-arrow-in-down-right text-teal me-2"></i>{% if is_tr %}Depo Hareketi Girişi (Giriş / Çıkış Fişi){% else %}ثبت تراکنش انبار (رسید / حواله){% endif %}
                     </h4>
-                    <p class="text-secondary small mb-0">ورود موجودی جدید یا صدور حواله خروج کالا همراه با استعلام لحظه‌ای موجودی</p>
+                    <p class="text-secondary small mb-0">{% if is_tr %}Anlık stok kontrolü ile depoya malzeme girişi veya sevk irsaliyesi düzenleme{% else %}ورود موجودی جدید یا صدور حواله خروج کالا همراه با استعلام لحظه‌ای موجودی{% endif %}</p>
                 </div>
                 <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-right me-1"></i>بازگشت
+                    <i class="bi bi-arrow-{% if is_tr %}left{% else %}right{% endif %} me-1"></i>{% if is_tr %}Geri Dön{% else %}بازگشت{% endif %}
                 </a>
             </div>
 
@@ -30,12 +30,12 @@
                 <!-- نوع عملیات -->
                 <div class="mb-4">
                     <label for="transaction_type" class="form-label fw-bold">
-                        نوع عملیات انبارداری <span class="text-danger">*</span>
+                        {% if is_tr %}Depo İşlem Türü{% else %}نوع عملیات انبارداری{% endif %} <span class="text-danger">*</span>
                     </label>
                     <select class="form-select form-select-lg" id="transaction_type" name="transaction_type" required>
-                        <option value="" selected disabled>انتخاب کنید...</option>
-                        <option value="IN">📥 رسید انبار (ورود کالا به انبار - IN)</option>
-                        <option value="OUT">📤 حواله انبار (خروج کالا از انبار - OUT)</option>
+                        <option value="" selected disabled>{% if is_tr %}Seçiniz...{% else %}انتخاب کنید...{% endif %}</option>
+                        <option value="IN">📥 {% if is_tr %}Giriş İrsaliyesi / Mal Kabul (IN){% else %}رسید انبار (ورود کالا به انبار - IN){% endif %}</option>
+                        <option value="OUT">📤 {% if is_tr %}Çıkış İrsaliyesi / Sevk Emri (OUT){% else %}حواله انبار (خروج کالا از انبار - OUT){% endif %}</option>
                     </select>
                 </div>
 
@@ -43,24 +43,24 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label for="product_id" class="form-label fw-bold">
-                            نام کالا <span class="text-danger">*</span>
+                            {% if is_tr %}Malzeme Adı{% else %}نام کالا{% endif %} <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" id="product_id" name="product_id" required>
-                            <option value="" selected disabled>انتخاب کالا...</option>
+                            <option value="" selected disabled>{% if is_tr %}Malzeme Seçiniz...{% else %}انتخاب کالا...{% endif %}</option>
                             {% for product in products %}
-                            <option value="{{ product.id }}" data-uom="{{ product.uom }}">{{ product.name }} ({{ product.uom }})</option>
+                            <option value="{{ product.id }}" data-uom="{{ product.uom | tr_loc(is_tr) }}">{{ product.name | tr_loc(is_tr) }} ({{ product.uom | tr_loc(is_tr) }})</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="col-md-6">
                         <label for="warehouse_id" class="form-label fw-bold">
-                            انبار مقصد / مبدأ <span class="text-danger">*</span>
+                            {% if is_tr %}Hedef / Kaynak Depo{% else %}انبار مقصد / مبدأ{% endif %} <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" id="warehouse_id" name="warehouse_id" required>
-                            <option value="" selected disabled>انتخاب انبار...</option>
+                            <option value="" selected disabled>{% if is_tr %}Depo Seçiniz...{% else %}انتخاب انبار...{% endif %}</option>
                             {% for warehouse in warehouses %}
-                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            <option value="{{ warehouse.id }}">{{ warehouse.name | tr_loc(is_tr) }}</option>
                             {% endfor %}
                         </select>
                     </div>

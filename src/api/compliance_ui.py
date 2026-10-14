@@ -10,9 +10,11 @@ from src.infrastructure.database import get_db
 from src.core.dependencies import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import Product, StockTransaction, Warehouse
+from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/compliance", tags=["Trade & Regulatory Compliance"])
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("", response_class=HTMLResponse)
@@ -22,6 +24,9 @@ async def compliance_dashboard(
     current_user: User = Depends(get_current_user)
 ):
     """داشبورد انطباق با سامانه‌های دولتی (سامانه جامع تجارت ntsw.ir و سامانه جامع انبارها nwms.ir)"""
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
+
     products = db.query(Product).filter_by(is_active=True).all()
     transactions = (
         db.query(StockTransaction)
@@ -36,7 +41,7 @@ async def compliance_dashboard(
         .all()
     )
 
-    products_with_irc = sum(1 for p in products if p.irc_code)
+    products_with_irc = sum(1 for p in products if (p.gtip_code if is_tr else p.irc_code))
     tx_with_waybill = sum(1 for t in transactions if t.waybill_number or t.tracking_code)
 
     return templates.TemplateResponse(
@@ -50,7 +55,9 @@ async def compliance_dashboard(
             "total_products": len(products),
             "tx_with_waybill": tx_with_waybill,
             "total_transactions": len(transactions),
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 

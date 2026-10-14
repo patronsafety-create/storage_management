@@ -142,3 +142,121 @@ def format_currency(amount: float, region_code: str = "IR") -> str:
     if cfg.code == Region.TR:
         return f"{formatted_num} {cfg.currency_symbol}"
     return f"{formatted_num} {cfg.currency_symbol}"
+
+
+# دیکشنری جامع ترجمه و بومی‌سازی داده‌های پایه (کالاها، دسته‌بندی‌ها، انبارها، واحدها و برندها)
+TR_MASTER_DATA_MAP: Dict[str, str] = {
+    # اقلام و محصولات فولادی و شیمیایی
+    "شمش فولادی ۱۵۰×۱۵۰": "Sürekli Döküm Çelik Kütük 150×150mm",
+    "شمش فولادی 150*150": "Sürekli Döküm Çelik Kütük 150×150mm",
+    "شمش فولادی 150×150": "Sürekli Döküm Çelik Kütük 150×150mm",
+    "شمش فولادی": "Sürekli Döküm Çelik Kütük",
+    "شمش بیلت فولادی ۱۵۰×۱۵۰ S235JR": "Sürekli Döküm Çelik Kütük 150×150mm S235JR",
+    "شمش بیلت فولادی 150×150 S235JR": "Sürekli Döküm Çelik Kütük 150×150mm S235JR",
+    "میلگرد آجدار سایز ۱۶ (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
+    "میلگرد آجدار سایز 16 (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
+    "میلگرد آجدار ۱۶ میلی‌متر B420B (شاخه ۱۲ متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
+    "میلگرد آجدار 16 میلی‌متر B420B (شاخه 12 متری)": "Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
+    "میلگرد آجدار ۱۶": "Nervürlü İnşaat Demiri Ø16mm",
+    "میلگرد آجدار 16": "Nervürlü İnşaat Demiri Ø16mm",
+    "میلگرد آجدار": "Nervürlü İnşaat Demiri",
+    "اوره گرانول صادراتی (فله)": "Granül Üre Gübresi %46 Azot (Dökme)",
+    "اوره گرانول": "Granül Üre Gübresi %46",
+    "کود اوره گرانول ۴۶ درصد ازت (فله و جامبوبگ)": "Granül Üre Gübresi %46 Azot (Dökme & Big Bag)",
+    "کود اوره گرانول 46 درصد ازت (فله و جامبوبگ)": "Granül Üre Gübresi %46 Azot (Dökme & Big Bag)",
+    "کود اوره گرانول": "Granül Üre Gübresi",
+    "کود اوره": "Üre Gübresi",
+    "کلاف گرم فولادی": "Sıcak Haddelenmiş Rulo Sac (HRC)",
+    "تیرآهن IPE 20": "IPE 200 Yapısal Çelik Profil",
+    "تیرآهن IPE 18": "IPE 180 Yapısal Çelik Profil",
+    "تیرآهن IPE 16": "IPE 160 Yapısal Çelik Profil",
+    "تیرآهن": "Yapısal Çelik Profil",
+    "ورق سیاه فولادی": "Sıcak Haddelenmiş Siyah Sac",
+    "ورق سیاه": "Siyah Sac",
+    "ورق گالوانیزه": "Galvanizli Sac",
+    "نبشی": "Köşebent Profil",
+    "ناودانی": "U Profil",
+    "پروفیل قوطی": "Kutu Profil",
+    "لوله مانیسمان": "Dikişsiz Çelik Boru (Mannesmann)",
+    "قراضه سنگین ذوبی (ویژه)": "Ağır Ergitme Çelik Hurdası (HMS 1)",
+    "قراضه آهن": "Demir Çelik Hurdası",
+    "ضایعات آهن": "Hurda Demir",
+    "کیسه جامبوبگ ۱ تنی": "1 Tonluk Big-Bag Torba",
+    "کیسه جامبوبگ 1 تنی": "1 Tonluk Big-Bag Torba",
+    "کیسه ۵۰ کیلویی لمینت": "50 kg Lamineli Torba",
+    "کیسه 50 کیلویی لمینت": "50 kg Lamineli Torba",
+
+    # دسته‌بندی‌های کالا
+    "مقاطع و شمش فولادی": "Çelik Kütük ve Profil Ürünleri",
+    "مواد شیمیایی و پتروشیمی": "Kimyasal ve Petrokimya Ürünleri",
+    "لوله و پروفیل صنعتی": "Sanayi Boru ve Profil",
+    "ملزومات بسته‌بندی و پالت": "Paketleme ve Palet Malzemeleri",
+    "فلزات و آهن‌آلات": "Demir ve Çelik Ürünleri",
+    "مواد اولیه": "Hammadde",
+    "کالای نهایی": "Bitmiş Ürünler",
+    "قطعات یدکی": "Yedek Parça",
+    "ضایعات و بازیافت": "Hurda ve Geri Kazanım",
+
+    # انبارها
+    "انبار شماره یک (محوطه سنگین و شمش)": "1 Nolu Açık Saha Deposu (Kütük ve Ağır Çelik)",
+    "انبار شماره دو (سوله مسقف و شیمیایی)": "2 Nolu Kapalı Depo (Kimyasal ve Gübre)",
+    "انبار شماره یک": "1 Nolu Açık Saha Deposu",
+    "انبار شماره دو": "2 Nolu Kapalı Depo",
+    "انبار شماره ۱": "1 Nolu Depo",
+    "انبار شماره ۲": "2 Nolu Depo",
+    "انبار مرکزی": "Merkez Depo",
+    "انبار قطعات": "Yedek Parça Deposu",
+    "انبار مواد اولیه": "Hammadde Deposu",
+    "انبار محصول نهایی": "Mamul Deposu",
+    "انبار ضایعات و قراضه": "Hurda ve İkincil Ürün Deposu",
+    "انبار ضایعات": "Hurda Deposu",
+    "انبار قراضه": "Hurda Deposu",
+    "انبار برش": "Kesim Sahası Deposu",
+
+    # واحدهای سنجش (UOM)
+    "کیلوگرم": "kg",
+    "تن": "ton",
+    "شاخه": "çubuk",
+    "بندیل": "bağ",
+    "قالب": "blok",
+    "جامبوبگ": "big-bag",
+    "کیسه": "torba",
+    "متر": "m",
+    "عدد": "adet",
+    "بسته": "paket",
+    "رول": "rulo",
+    "ورق": "levha",
+    "دستگاه": "cihaz",
+
+    # کارخانجات و برندهای مادر
+    "فولاد خوزستان": "KSC Steel",
+    "پتروشیمی پردیس": "Pardis Petrokimya",
+    "فولاد نیشابور": "Neyshabur Steel",
+    "ذوب‌آهن اصفهان": "İsfahan Çelik (ESCO)",
+    "فولاد مبارکه": "Mobarakeh Çelik",
+
+    # انواع خودرو و ناوگان حمل و نقل
+    "تریلی کفی ۱۸ چرخ (بندیل و میلگرد)": "Standart 5 Dingilli Açık Kasa Treyler (Tır)",
+    "تریلی لبه‌دار / ترانزیت": "Tenteli / Kapalı Kasa Tır",
+    "کمپرسی سنگین (فله و شمش)": "Ağır Tonajlı Damperli Kamyon",
+    "کامیون جفت (۱۰ چرخ)": "3 Dingilli Kamyon (26 Ton)",
+    "کامیون تک (۶ چرخ)": "2 Dingilli Kamyon (18 Ton)",
+}
+
+IR_MASTER_DATA_MAP: Dict[str, str] = {
+    "Nervürlü İnşaat Demiri Ø16mm B420B (12m)": "میلگرد آجدار ۱۶ میلی‌متر B420B (شاخه ۱۲ متری)",
+    "Sürekli Döküm Çelik Kütük 150×150mm S235JR": "شمش بیلت فولادی ۱۵۰×۱۵۰ S235JR",
+    "Granül Üre Gübresi %46 Azot (Dökme & Big Bag)": "کود اوره گرانول ۴۶ درصد ازت (فله و جامبوبگ)",
+}
+
+def localize_display_name(name: Optional[str], is_tr: bool = False) -> str:
+    """
+    ترجمه هوشمند و بدون بازگشت نام کالاها، دسته‌بندی‌ها، انبارها و واحدها متناسب با منطقه فعال
+    """
+    if not name:
+        return ""
+    trimmed = str(name).strip()
+    if is_tr:
+        return TR_MASTER_DATA_MAP.get(trimmed, trimmed)
+    return IR_MASTER_DATA_MAP.get(trimmed, trimmed)
+

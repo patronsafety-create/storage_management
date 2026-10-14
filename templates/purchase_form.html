@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}ثبت سفارش خرید جدید (PO) | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Yeni Satın Alma Siparişi (PO) | Enterprise ERP' if is_tr else 'ثبت سفارش خرید جدید (PO) | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -9,12 +9,24 @@
       <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
         <div>
           <h4 class="fw-bold mb-1 text-light">
-            <i class="bi bi-cart-plus text-teal me-2"></i>ثبت سفارش خرید جدید (Purchase Order)
+            <i class="bi bi-cart-plus text-teal me-2"></i>
+            {% if is_tr %}
+            Yeni Satın Alma Siparişi (Purchase Order)
+            {% else %}
+            ثبت سفارش خرید جدید (Purchase Order)
+            {% endif %}
           </h4>
-          <p class="text-secondary small mb-0">صدور سفارش رسمی خرید به نام تأمین‌کننده همراه با اقلام و شرایط تحویل</p>
+          <p class="text-secondary small mb-0">
+            {% if is_tr %}
+            Tedarikçi adına resmi satın alma siparişi, kalemler ve teslim koşullarının oluşturulması
+            {% else %}
+            صدور سفارش رسمی خرید به نام تأمین‌کننده همراه با اقلام و شرایط تحویل
+            {% endif %}
+          </p>
         </div>
         <a href="/purchases" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-right me-1"></i>بازگشت به لیست
+          <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+          {{ 'Listeye Dön' if is_tr else 'بازگشت به لیست' }}
         </a>
       </div>
 
@@ -31,25 +43,31 @@
         <div class="row g-3 mb-4">
           <div class="col-md-4">
             <label for="po_number" class="form-label fw-bold">
-              شماره سفارش خرید (PO Number) <span class="text-danger">*</span>
+              {{ 'Sipariş Numarası (PO No)' if is_tr else 'شماره سفارش خرید (PO Number)' }} <span class="text-danger">*</span>
             </label>
             <input type="text" class="form-control font-monospace" id="po_number" name="po_number" value="{{ generated_po_number }}" required>
           </div>
 
           <div class="col-md-5">
             <label for="supplier_id" class="form-label fw-bold">
-              تأمین‌کننده / کارخانه تولیدی <span class="text-danger">*</span>
+              {{ 'Tedarikçi / Üretici Fabrika' if is_tr else 'تأمین‌کننده / کارخانه تولیدی' }} <span class="text-danger">*</span>
             </label>
             <select class="form-select" id="supplier_id" name="supplier_id" required>
-              <option value="" selected disabled>انتخاب تأمین‌کننده...</option>
+              <option value="" selected disabled>{{ 'Tedarikçi seçiniz...' if is_tr else 'انتخاب تأمین‌کننده...' }}</option>
               {% for s in suppliers %}
-              <option value="{{ s.id }}">{{ s.name }} {% if s.code %}({{ s.code }}){% endif %}</option>
+              <option value="{{ s.id }}">{{ s.name | tr_loc(is_tr) }} {% if s.code %}({{ s.code }}){% endif %}</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="col-md-3">
-            <label for="delivery_due_date" class="form-label fw-bold">مهلت تحویل بار (تقویم)</label>
+            <label for="delivery_due_date" class="form-label fw-bold">
+              {{ 'Teslim Tarihi' if is_tr else 'مهلت تحویل بار (تقویم)' }}
+            </label>
+            {% if is_tr %}
+            <input type="date" class="form-control font-monospace" id="delivery_due_date" name="delivery_due_date">
+            <div class="form-text text-secondary small">Beklenen teslimat tarihi</div>
+            {% else %}
             <div class="input-group">
               <input type="text" class="form-control jalali-datepicker font-monospace" id="delivery_due_date" name="delivery_due_date" placeholder="۱۴۰۳/۰۸/۲۰" autocomplete="off">
               <button type="button" class="btn btn-outline-teal datepicker-trigger" data-target="delivery_due_date" title="انتخاب تاریخ خورشیدی">
@@ -57,22 +75,26 @@
               </button>
             </div>
             <div class="form-text text-secondary small">کلیک جهت انتخاب از تقویم خورشیدی</div>
+            {% endif %}
           </div>
         </div>
 
         <div class="mb-4">
-          <label for="notes" class="form-label">توضیحات و شرایط قرارداد خرید</label>
-          <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="شرایط پرداخت، توافقات تلورانس تناژ، باربری یا تحویل در کارخانه..."></textarea>
+          <label for="notes" class="form-label">
+            {{ 'Sözleşme Notları ve Teslim Koşulları' if is_tr else 'توضیحات و شرایط قرارداد خرید' }}
+          </label>
+          <textarea class="form-control" id="notes" name="notes" rows="2"
+                    placeholder="{{ 'Ödeme vadesi, tolerans şartları, nakliye veya fabrika teslimi...' if is_tr else 'شرایط پرداخت، توافقات تلورانس تناژ، باربری یا تحویل در کارخانه...' }}"></textarea>
         </div>
 
         <!-- اقلام سفارش خرید -->
         <div class="mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0 text-light">
-              <i class="bi bi-list-check text-info me-2"></i>اقلام سفارش خرید
+              <i class="bi bi-list-check text-info me-2"></i>{{ 'Sipariş Kalemleri' if is_tr else 'اقلام سفارش خرید' }}
             </h5>
             <button type="button" class="btn btn-sm btn-outline-info" id="addRowBtn">
-              <i class="bi bi-plus-lg me-1"></i>افزودن ردیف کالا
+              <i class="bi bi-plus-lg me-1"></i>{{ 'Yeni Kalem Ekle' if is_tr else 'افزودن ردیف کالا' }}
             </button>
           </div>
 
@@ -80,27 +102,27 @@
             <table class="table table-dark table-bordered mb-0 align-middle" id="itemsTable">
               <thead style="background: rgba(255,255,255,0.05);">
                 <tr>
-                  <th style="width: 45%;">نام کالا</th>
-                  <th style="width: 25%;">مقدار / تناژ سفارش</th>
-                  <th style="width: 25%;">نرخ واحد توافقی (ریال)</th>
-                  <th style="width: 5%;" class="text-center">حذف</th>
+                  <th style="width: 45%;">{{ 'Malzeme Adı' if is_tr else 'نام کالا' }}</th>
+                  <th style="width: 25%;">{{ 'Miktar / Sipariş Tonajı' if is_tr else 'مقدار / تناژ سفارش' }}</th>
+                  <th style="width: 25%;">{{ 'Birim Fiyat (' ~ ('₺' if is_tr else 'ریال') ~ ')' }}</th>
+                  <th style="width: 5%;" class="text-center">{{ 'Sil' if is_tr else 'حذف' }}</th>
                 </tr>
               </thead>
               <tbody id="itemsBody">
                 <tr>
                   <td>
                     <select name="product_id" class="form-select product-select" required>
-                      <option value="" selected disabled>انتخاب کالا...</option>
+                      <option value="" selected disabled>{{ 'Malzeme seçiniz...' if is_tr else 'انتخاب کالا...' }}</option>
                       {% for p in products %}
-                      <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+                      <option value="{{ p.id }}">{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
                       {% endfor %}
                     </select>
                   </td>
                   <td>
-                    <input type="number" step="0.001" min="0.001" name="quantity" class="form-control" required placeholder="مثلاً: 25.0">
+                    <input type="number" step="0.001" min="0.001" name="quantity" class="form-control" required placeholder="{{ 'Örn: 25.0' if is_tr else 'مثلاً: 25.0' }}">
                   </td>
                   <td>
-                    <input type="number" step="1" min="0" name="unit_price" class="form-control" value="0" placeholder="نرخ واحد">
+                    <input type="number" step="1" min="0" name="unit_price" class="form-control" value="0" placeholder="{{ 'Birim Fiyat' if is_tr else 'نرخ واحد' }}">
                   </td>
                   <td class="text-center">
                     <button type="button" class="btn btn-sm btn-outline-danger remove-row" disabled>
@@ -114,9 +136,10 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
-          <a href="/purchases" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <a href="/purchases" class="btn btn-outline-secondary px-4 py-2">{{ 'Vazgeç' if is_tr else 'انصراف' }}</a>
           <button type="submit" class="btn btn-teal px-5 py-2">
-            <i class="bi bi-check2-circle me-1"></i>ثبت نهایی سفارش خرید
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ 'Siparişi Onayla ve Kaydet' if is_tr else 'ثبت نهایی سفارش خرید' }}
           </button>
         </div>
       </form>

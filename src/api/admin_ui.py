@@ -13,12 +13,15 @@ from src.core.dependencies import get_db, require_admin, get_current_user
 from src.domain_model.auth_models import User, Role
 from src.infrastructure.security import get_password_hash
 
+from src.core.localization.regions import localize_display_name, get_active_region
+
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
     dependencies=[Depends(require_admin)]
 )
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("/users", response_class=HTMLResponse)
@@ -31,6 +34,8 @@ async def list_users(
 ):
     users = db.query(User).order_by(User.id).all()
     roles = db.query(Role).order_by(Role.name).all()
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="users.html",
@@ -40,7 +45,9 @@ async def list_users(
             "roles": roles,
             "user": current_user,
             "msg": msg,
-            "error": error
+            "error": error,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 

@@ -24,9 +24,11 @@ from src.domain_model.inventory_models import (
 from src.domain_model.enums import PurchaseOrderStatus, DocumentStatus
 from src.services.audit_service import AuditService
 from src.services.tax_service import TaxService
+from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/purchases", tags=["Purchase Orders"])
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("", response_class=HTMLResponse)
@@ -38,6 +40,9 @@ async def list_purchase_orders(
     supplier_filter: Optional[int] = Query(None)
 ):
     """لیست و داشبورد سفارشات خرید کالا از کارخانجات و تأمین‌کنندگان"""
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
+
     query = (
         db.query(PurchaseOrder)
         .options(
@@ -79,7 +84,9 @@ async def list_purchase_orders(
             "pending_receipt": pending_receipt,
             "completed_orders": completed_orders,
             "total_value": total_value,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 
@@ -91,12 +98,15 @@ async def new_purchase_order_form(
     current_user: User = Depends(get_current_user)
 ):
     """فرم ثبت سفارش خرید جدید (PO)"""
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
+
     suppliers = db.query(Supplier).filter_by(is_active=True).order_by(Supplier.name).all()
     products = db.query(Product).filter_by(is_active=True).order_by(Product.name).all()
 
     # تولید شماره سفارش بعدی
     count = db.query(PurchaseOrder).count() + 1
-    generated_po_number = f"PO-1403-{count:04d}"
+    generated_po_number = f"PO-TR-{count:04d}" if is_tr else f"PO-1403-{count:04d}"
 
     return templates.TemplateResponse(
         request=request,
@@ -106,7 +116,9 @@ async def new_purchase_order_form(
             "suppliers": suppliers,
             "products": products,
             "generated_po_number": generated_po_number,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 
@@ -257,6 +269,8 @@ async def view_purchase_order(
         tevkifat_ratio=po.tevkifat_rate
     )
 
+    active_region = get_active_region(request)
+
     return templates.TemplateResponse(
         request=request,
         name="purchase_detail.html",
@@ -267,7 +281,8 @@ async def view_purchase_order(
             "total_amount": tax_info.total_payable,
             "tax_info": tax_info,
             "is_tr": is_tr,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region
         }
     )
 

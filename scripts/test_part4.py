@@ -151,7 +151,9 @@ def run_tests():
         print(" [PASS] Test 6: Database ORM persistence for PurchaseOrder with Tevkifat passed.")
 
         # ۷. تست رندر قالب purchase_detail.html
+        from src.core.localization.regions import localize_display_name
         env = Environment(loader=FileSystemLoader("templates"))
+        env.filters["tr_loc"] = localize_display_name
         tmpl = env.get_template("purchase_detail.html")
 
         # رندر نسخه ترکیه با جعبه توقیف مالیات

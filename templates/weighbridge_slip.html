@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="{{ 'tr' if is_tr else 'fa' }}" dir="{{ 'ltr' if is_tr else 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قبض رسمی باسکول دیجیتال | {{ ticket.ticket_number }}</title>
+  <title>{{ 'Resmi Elektronik Kantar Fişi | ' ~ ticket.ticket_number if is_tr else 'قبض رسمی باسکول دیجیتال | ' ~ ticket.ticket_number }}</title>
+  {% if is_tr %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  {% else %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap" rel="stylesheet">
+  {% endif %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     body {
-      font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+      font-family: {% if is_tr %}'Inter', -apple-system, BlinkMacSystemFont, sans-serif{% else %}'Vazirmatn', Tahoma, sans-serif{% endif %} !important;
       background: #f8fafc;
       color: #0f172a;
       padding: 20px;
@@ -72,10 +77,11 @@
 
 <div class="text-center mb-3 no-print">
   <button onclick="window.print()" class="btn btn-primary px-4 py-2 fw-bold shadow-sm">
-    <i class="bi bi-printer me-1"></i>چاپ قبض رسمی باسکول (A5 / A4)
+    <i class="bi bi-printer me-1"></i>
+    {{ 'Kantar Fişini Yazdır (A4 / A5)' if is_tr else 'چاپ قبض رسمی باسکول (A5 / A4)' }}
   </button>
   <a href="/weighbridge" class="btn btn-outline-secondary px-3 py-2 ms-2">
-    بازگشت به لیست
+    {{ 'Listeye Dön' if is_tr else 'بازگشت به لیست' }}
   </a>
 </div>
 
@@ -83,16 +89,20 @@
   <!-- سربرگ -->
   <div class="slip-header d-flex justify-content-between align-items-center">
     <div>
-      <h4 class="fw-bold mb-1">سامانه انبارداری نکسوس‌پـور</h4>
-      <div class="small text-muted">قبض رسمی توزین دیجیتال ۶۰ تنی (Weighbridge Slip)</div>
+      <h4 class="fw-bold mb-1">
+        {{ 'NexusPour Depo ve Lojistik Yönetimi' if is_tr else 'سامانه انبارداری نکسوس‌پـور' }}
+      </h4>
+      <div class="small text-muted">
+        {{ 'Resmi 60 Tonluk Elektronik Tır Kantar Fişi (Weighbridge Slip)' if is_tr else 'قبض رسمی توزین دیجیتال ۶۰ تنی (Weighbridge Slip)' }}
+      </div>
     </div>
     <div class="text-center">
       <div class="fw-bold fs-5 font-monospace text-primary">{{ ticket.ticket_number }}</div>
-      <div class="small text-muted">تاریخ: {{ ticket.created_at.strftime('%Y/%m/%d') if ticket.created_at else '-' }}</div>
+      <div class="small text-muted">{{ 'Tarih:' if is_tr else 'تاریخ:' }} {{ ticket.created_at.strftime('%Y-%m-%d') if ticket.created_at else '-' }}</div>
     </div>
     <div class="text-end small">
-      <div><strong>مالکیت:</strong> امید پورمحمود</div>
-      <div class="text-muted">نسخه نرم‌افزار: NexusPour 2.0</div>
+      <div><strong>{{ 'Mülkiyet:' if is_tr else 'مالکیت:' }}</strong> Omid Pourmahmoud</div>
+      <div class="text-muted">{{ 'Sürüm:' if is_tr else 'نسخه نرم‌افزار:' }} NexusPour 2.0</div>
     </div>
   </div>
 
@@ -101,7 +111,7 @@
     <div class="col-6">
       <table class="table table-sm table-borderless mb-0">
         <tr>
-          <td class="text-muted" style="width: 120px;">پلاک خودرو:</td>
+          <td class="text-muted" style="width: 130px;">{{ 'Araç Plakası:' if is_tr else 'پلاک خودرو:' }}</td>
           <td>
             <div class="plate-box">
               <i class="bi bi-truck me-2"></i>{{ ticket.truck_plate }}
@@ -109,15 +119,15 @@
           </td>
         </tr>
         <tr>
-          <td class="text-muted">نوع خودرو:</td>
+          <td class="text-muted">{{ 'Araç Tipi:' if is_tr else 'نوع خودرو:' }}</td>
           <td><strong>{{ ticket.truck_type }}</strong></td>
         </tr>
         <tr>
-          <td class="text-muted">نام راننده:</td>
+          <td class="text-muted">{{ 'Sürücü Adı:' if is_tr else 'نام راننده:' }}</td>
           <td><strong>{{ ticket.driver_name }}</strong></td>
         </tr>
         <tr>
-          <td class="text-muted">شماره تماس:</td>
+          <td class="text-muted">{{ 'İletişim Tel:' if is_tr else 'شماره تماس:' }}</td>
           <td class="font-monospace">{{ ticket.driver_phone or '-' }}</td>
         </tr>
       </table>
@@ -125,28 +135,28 @@
     <div class="col-6">
       <table class="table table-sm table-borderless mb-0">
         <tr>
-          <td class="text-muted" style="width: 120px;">نوع کالا:</td>
-          <td><strong class="text-primary">{{ ticket.product.name }}</strong></td>
+          <td class="text-muted" style="width: 130px;">{{ 'Malzeme Cinsi:' if is_tr else 'نوع کالا:' }}</td>
+          <td><strong class="text-primary">{{ (ticket.product.name | tr_loc(is_tr)) if ticket.product else '-' }}</strong></td>
         </tr>
         <tr>
-          <td class="text-muted">انبار مقصد/مبدأ:</td>
-          <td><strong>{{ ticket.warehouse.name }}</strong></td>
+          <td class="text-muted">{{ 'İşlem Deposu:' if is_tr else 'انبار مقصد/مبدأ:' }}</td>
+          <td><strong>{{ (ticket.warehouse.name | tr_loc(is_tr)) if ticket.warehouse else '-' }}</strong></td>
         </tr>
         <tr>
-          <td class="text-muted">طرف حساب:</td>
+          <td class="text-muted">{{ 'Cari Hesap:' if is_tr else 'طرف حساب:' }}</td>
           <td>
             {% if ticket.supplier %}
-              <span>تأمین‌کننده: {{ ticket.supplier.name }}</span>
+              <span>{{ 'Tedarikçi:' if is_tr else 'تأمین‌کننده:' }} {{ ticket.supplier.name | tr_loc(is_tr) }}</span>
             {% elif ticket.customer %}
-              <span>مشتری: {{ ticket.customer.name }}</span>
+              <span>{{ 'Müşteri:' if is_tr else 'مشتری:' }} {{ ticket.customer.name | tr_loc(is_tr) }}</span>
             {% else %}
-              <span>عمومی / آزاد</span>
+              <span>{{ 'Genel / Serbest' if is_tr else 'عمومی / آزاد' }}</span>
             {% endif %}
           </td>
         </tr>
         <tr>
-          <td class="text-muted">زمان توزین نهایی:</td>
-          <td class="font-monospace">{{ ticket.completed_at.strftime('%Y/%m/%d %H:%M') if ticket.completed_at else '-' }}</td>
+          <td class="text-muted">{{ 'Tartım Zamanı:' if is_tr else 'زمان توزین نهایی:' }}</td>
+          <td class="font-monospace">{{ ticket.completed_at.strftime('%Y-%m-%d %H:%M') if ticket.completed_at else '-' }}</td>
         </tr>
       </table>
     </div>
@@ -156,37 +166,45 @@
   <div class="row g-3 mb-4">
     <div class="col-4">
       <div class="weight-card">
-        <div class="text-muted small mb-1">وزن ناخالص (پر - Gross)</div>
+        <div class="text-muted small mb-1">{{ 'Brüt Ağırlık (Dolu - Gross)' if is_tr else 'وزن ناخالص (پر - Gross)' }}</div>
         <div class="fs-4 fw-bold font-monospace">{{ "{:,.0f}".format(ticket.gross_weight or 0) }}</div>
-        <div class="small text-muted">کیلوگرم</div>
+        <div class="small text-muted">kg</div>
       </div>
     </div>
     <div class="col-4">
       <div class="weight-card">
-        <div class="text-muted small mb-1">وزن خالی (تار - Tare)</div>
+        <div class="text-muted small mb-1">{{ 'Dara Ağırlığı (Boş - Tare)' if is_tr else 'وزن خالی (تار - Tare)' }}</div>
         <div class="fs-4 fw-bold font-monospace text-secondary">{{ "{:,.0f}".format(ticket.tare_weight or 0) }}</div>
-        <div class="small text-muted">کیلوگرم</div>
+        <div class="small text-muted">kg</div>
       </div>
     </div>
     <div class="col-4">
       <div class="weight-card weight-net">
-        <div class="text-primary fw-bold small mb-1">وزن خالص (Net Weight)</div>
+        <div class="text-primary fw-bold small mb-1">{{ 'Net Ağırlık (Net Weight)' if is_tr else 'وزن خالص (Net Weight)' }}</div>
         <div class="fs-3 fw-bold font-monospace text-primary">{{ "{:,.0f}".format(ticket.net_weight or 0) }}</div>
-        <div class="fw-bold text-primary small">معادل: {{ "{:,.3f}".format((ticket.net_weight or 0) / 1000.0) }} تن خالص</div>
+        <div class="fw-bold text-primary small">
+          {{ 'Net:' if is_tr else 'معادل:' }} {{ "{:,.3f}".format((ticket.net_weight or 0) / 1000.0) }} {{ 'ton' if is_tr else 'تن خالص' }}
+        </div>
       </div>
     </div>
   </div>
 
   {% if ticket.is_overweight %}
   <div class="alert alert-warning py-2 small mb-4">
-    <i class="bi bi-exclamation-triangle-fill me-1"></i>توجه: وزن ناخالص خودرو بیش از سقف استاندارد ۴۰ تن است. مسئولیت جریمه اضافه تناژ پلیس‌راه متوجه راننده می‌باشد.
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+    {% if is_tr %}
+    DİKKAT: Araç brüt ağırlığı KGM azami yasal sınırını aşmıştır. Trafik cezası ve tonaj aşımı sorumluluğu taşıyıcıya aittir.
+    {% else %}
+    توجه: وزن ناخالص خودرو بیش از سقف استاندارد ۴۰ تن است. مسئولیت جریمه اضافه تناژ پلیس‌راه متوجه راننده می‌باشد.
+    {% endif %}
   </div>
   {% endif %}
 
   <!-- توضیحات و بارکد -->
   <div class="d-flex justify-content-between align-items-center mb-4 p-2 bg-light rounded border">
     <div class="small">
-      <strong>توضیحات:</strong> {{ ticket.notes or 'توزین با دستگاه دیجیتال کالیبره‌شده انجام پذیرفت.' }}
+      <strong>{{ 'Açıklama:' if is_tr else 'توضیحات:' }}</strong>
+      {{ ticket.notes or ('Elektronik kantar ile kalibre edilmiş tartım yapılmıştır.' if is_tr else 'توزین با دستگاه دیجیتال کالیبره‌شده انجام پذیرفت.') }}
     </div>
     <div class="text-center font-monospace small">
       <i class="bi bi-upc-scan fs-3 d-block"></i>
@@ -198,20 +216,20 @@
   <div class="row g-3 text-center">
     <div class="col-4">
       <div class="signature-box">
-        <div>امضای راننده ناوگان</div>
+        <div>{{ 'Sürücü İmzası' if is_tr else 'امضای راننده ناوگان' }}</div>
         <div class="small text-muted">{{ ticket.driver_name }}</div>
       </div>
     </div>
     <div class="col-4">
       <div class="signature-box">
-        <div>امضای متصدی باسکول</div>
-        <div class="small text-muted">{{ ticket.operator_name or 'متصدی شیفت' }}</div>
+        <div>{{ 'Kantar Operatörü İmzası' if is_tr else 'امضای متصدی باسکول' }}</div>
+        <div class="small text-muted">{{ ticket.operator_name or ('Kantar Görevlisi' if is_tr else 'متصدی شیفت') }}</div>
       </div>
     </div>
     <div class="col-4">
       <div class="signature-box">
-        <div>تأییدیه انباردار / تحویل‌گیرنده</div>
-        <div class="small text-muted">مهر و امضای انبار</div>
+        <div>{{ 'Depo Sorumlusu Onayı' if is_tr else 'تأییدیه انباردار / تحویل‌گیرنده' }}</div>
+        <div class="small text-muted">{{ 'Kaşe ve İmza' if is_tr else 'مهر و امضای انبار' }}</div>
       </div>
     </div>
   </div>

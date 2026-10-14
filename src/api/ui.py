@@ -9,9 +9,11 @@ from src.infrastructure.database import get_db
 from src.domain_model.inventory_models import StockTransaction, ProductCategory
 from src.domain_model.auth_models import User
 from src.services.inventory_service import InventoryService
+from src.core.localization.regions import localize_display_name, get_active_region
 
 router = APIRouter(tags=["UI"], dependencies=[Depends(get_current_user)])
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -37,6 +39,9 @@ async def dashboard(
     stock_balances = InventoryService.calculate_stock_balances(db)
     categories = db.query(ProductCategory).order_by(ProductCategory.name).all()
 
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
@@ -50,6 +55,8 @@ async def dashboard(
             "is_admin": is_admin,
             "stock_balances": stock_balances,
             "categories": categories,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -61,12 +68,16 @@ async def user_guide(
 ):
     """کاتالوگ فنی و راهنمای جامع کاربری سامانه نکسوس‌پور"""
     is_admin = any(role.name == "Admin" for role in current_user.roles)
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="user_guide.html",
         context={
             "request": request,
             "user": current_user,
-            "is_admin": is_admin
+            "is_admin": is_admin,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )

@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}مدیریت کاربران و دسترسی‌ها | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Kullanıcı Yönetimi ve Yetkiler | NexusPour ERP' if is_tr else 'مدیریت کاربران و دسترسی‌ها | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div>
     <h3 class="fw-bold mb-1">
-      <i class="bi bi-people-fill text-teal me-2"></i>مدیریت کاربران و سطوح دسترسی
+      <i class="bi bi-people-fill text-teal me-2"></i>{{ 'Kullanıcı Yönetimi ve Erişim Seviyeleri' if is_tr else 'مدیریت کاربران و سطوح دسترسی' }}
     </h3>
-    <p class="text-secondary small mb-0">تعریف کاربران جدید، تخصیص نقش‌های سیستمی و مدیریت وضعیت فعال/غیرفعال</p>
+    <p class="text-secondary small mb-0">{{ 'Yeni kullanıcı tanımlama, sistem rolleri atama ve aktif/pasif durum yönetimi' if is_tr else 'تعریف کاربران جدید، تخصیص نقش‌های سیستمی و مدیریت وضعیت فعال/غیرفعال' }}</p>
   </div>
 </div>
 
@@ -31,32 +31,32 @@
   <div class="col-lg-4">
     <div class="glass-card p-4">
       <h5 class="fw-bold mb-3 text-info">
-        <i class="bi bi-person-plus-fill me-2"></i>تعریف کاربر جدید
+        <i class="bi bi-person-plus-fill me-2"></i>{{ 'Yeni Kullanıcı Tanımla' if is_tr else 'تعریف کاربر جدید' }}
       </h5>
       <form method="post" action="/admin/users">
         <div class="mb-3">
-          <label class="form-label text-secondary small">نام و نام خانوادگی:</label>
-          <input type="text" name="full_name" class="form-control bg-dark border-secondary text-light" placeholder="مثال: علی رضایی" required>
+          <label class="form-label text-secondary small">{{ 'Ad Soyad:' if is_tr else 'نام و نام خانوادگی:' }}</label>
+          <input type="text" name="full_name" class="form-control bg-dark border-secondary text-light" placeholder="{{ 'Örnek: Ahmet Yılmaz' if is_tr else 'مثال: علی رضایی' }}" required>
         </div>
         <div class="mb-3">
-          <label class="form-label text-secondary small">نام کاربری (Username):</label>
-          <input type="text" name="username" class="form-control bg-dark border-secondary text-light" placeholder="مثال: alireza" required>
+          <label class="form-label text-secondary small">{{ 'Kullanıcı Adı (Username):' if is_tr else 'نام کاربری (Username):' }}</label>
+          <input type="text" name="username" class="form-control bg-dark border-secondary text-light" placeholder="{{ 'Örnek: ayilmaz' if is_tr else 'مثال: alireza' }}" required>
         </div>
         <div class="mb-3">
-          <label class="form-label text-secondary small">کلمه عبور:</label>
-          <input type="password" name="password" class="form-control bg-dark border-secondary text-light" placeholder="رمز عبور امن" required>
+          <label class="form-label text-secondary small">{{ 'Şifre:' if is_tr else 'کلمه عبور:' }}</label>
+          <input type="password" name="password" class="form-control bg-dark border-secondary text-light" placeholder="{{ 'Güvenli şifre' if is_tr else 'رمز عبور امن' }}" required>
         </div>
         <div class="mb-3">
-          <label class="form-label text-secondary small">نقش سازمانی:</label>
+          <label class="form-label text-secondary small">{{ 'Kurumsal Rol:' if is_tr else 'نقش سازمانی:' }}</label>
           <select name="role_id" class="form-select bg-dark border-secondary text-light" required>
-            <option value="">انتخاب نقش...</option>
+            <option value="">{{ 'Rol seçiniz...' if is_tr else 'انتخاب نقش...' }}</option>
             {% for r in roles %}
             <option value="{{ r.id }}">{{ r.name }} ({{ r.description }})</option>
             {% endfor %}
           </select>
         </div>
         <button type="submit" class="btn btn-primary w-100 py-2">
-          <i class="bi bi-check2-circle me-1"></i>ثبت کاربر
+          <i class="bi bi-check2-circle me-1"></i>{{ 'Kullanıcıyı Kaydet' if is_tr else 'ثبت کاربر' }}
         </button>
       </form>
     </div>
@@ -67,7 +67,7 @@
     <div class="glass-card p-0 overflow-hidden">
       <div class="p-3 border-bottom border-secondary border-opacity-25">
         <h5 class="fw-bold mb-0 text-light">
-          <i class="bi bi-person-lines-fill me-2"></i>کاربران فعال سامانه
+          <i class="bi bi-person-lines-fill me-2"></i>{{ 'Sistem Aktif Kullanıcıları' if is_tr else 'کاربران فعال سامانه' }}
         </h5>
       </div>
       <div class="table-responsive">
@@ -75,11 +75,11 @@
           <thead style="background: rgba(255, 255, 255, 0.05);">
             <tr>
               <th class="py-3 px-3">#</th>
-              <th>نام و نام خانوادگی</th>
-              <th>نام کاربری</th>
-              <th>نقش(ها)</th>
-              <th>وضعیت</th>
-              <th>عملیات</th>
+              <th>{{ 'Ad Soyad' if is_tr else 'نام و نام خانوادگی' }}</th>
+              <th>{{ 'Kullanıcı Adı' if is_tr else 'نام کاربری' }}</th>
+              <th>{{ 'Rol(ler)' if is_tr else 'نقش(ها)' }}</th>
+              <th>{{ 'Durum' if is_tr else 'وضعیت' }}</th>
+              <th>{{ 'İşlemler' if is_tr else 'عملیات' }}</th>
             </tr>
           </thead>
           <tbody>
@@ -97,9 +97,9 @@
               </td>
               <td>
                 {% if u.is_active %}
-                  <span class="badge bg-success bg-opacity-25 text-success">فعال</span>
+                  <span class="badge bg-success bg-opacity-25 text-success">{{ 'Aktif' if is_tr else 'فعال' }}</span>
                 {% else %}
-                  <span class="badge bg-secondary bg-opacity-25 text-secondary">غیرفعال</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary">{{ 'Pasif' if is_tr else 'غیرفعال' }}</span>
                 {% endif %}
               </td>
               <td>
@@ -107,14 +107,14 @@
                 <form method="post" action="/admin/users/{{ u.id }}/toggle" style="display:inline;">
                   <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
                     {% if u.is_active %}
-                    <i class="bi bi-slash-circle me-1"></i>غیرفعال‌سازی
+                    <i class="bi bi-slash-circle me-1"></i>{{ 'Pasife Al' if is_tr else 'غیرفعال‌سازی' }}
                     {% else %}
-                    <i class="bi bi-check-circle me-1"></i>فعال‌سازی
+                    <i class="bi bi-check-circle me-1"></i>{{ 'Aktifleştir' if is_tr else 'فعال‌سازی' }}
                     {% endif %}
                   </button>
                 </form>
                 {% else %}
-                <span class="text-secondary small">غیرقابل تغییر</span>
+                <span class="text-secondary small">{{ 'Değiştirilemez' if is_tr else 'غیرقابل تغییر' }}</span>
                 {% endif %}
               </td>
             </tr>

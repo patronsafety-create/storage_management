@@ -13,9 +13,11 @@ from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import BaggingOrder, Product, Warehouse, StockTransaction, TransactionType
 from src.domain_model.enums import BaggingStatus, DocumentStatus
 from src.services.audit_service import AuditService
+from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/bagging", tags=["Bagging Operations"])
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("", response_class=HTMLResponse)
@@ -25,6 +27,9 @@ async def list_bagging_orders(
     current_user: User = Depends(get_current_user)
 ):
     """لیست و داشبورد عملیات کیسه‌گیری فله به جامبوبگ اوره و کودهای شیمیایی"""
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
+
     orders = (
         db.query(BaggingOrder)
         .options(
@@ -46,7 +51,9 @@ async def list_bagging_orders(
             "orders": orders,
             "total_bulk_tonnage": total_bulk_tonnage,
             "total_packages": total_packages,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 
@@ -58,10 +65,13 @@ async def new_bagging_form(
     current_user: User = Depends(get_current_user)
 ):
     """فرم ثبت دستور کیسه‌گیری فله به جامبوبگ یا کیسه ۵۰ کیلویی"""
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
+
     products = db.query(Product).filter_by(is_active=True).all()
     warehouses = db.query(Warehouse).all()
     count = db.query(BaggingOrder).count() + 1
-    generated_bag_number = f"BAG-1403-{count:04d}"
+    generated_bag_number = f"BAG-TR-{count:04d}" if is_tr else f"BAG-1403-{count:04d}"
 
     return templates.TemplateResponse(
         request=request,
@@ -71,7 +81,9 @@ async def new_bagging_form(
             "generated_bag_number": generated_bag_number,
             "products": products,
             "warehouses": warehouses,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 
@@ -146,8 +158,12 @@ async def create_bagging_order(
             details=f"عملیات کیسه‌گیری {bag_order.order_number}: مصرف {bulk_tonnage_used} تن فله و تولید {packages_produced} {package_type}"
         )
 
+        active_region = get_active_region(request)
+        is_tr = (active_region.code == Region.TR)
+        msg_text = f"Torbalama emri {bag_order.order_number} tamamlandı ve stok güncellendi" if is_tr else f"عملیات کیسه‌گیری {bag_order.order_number} انجام شد و موجودی انبار به‌روزرسانی گردید"
+
         return RedirectResponse(
-            url="/bagging?msg=" + quote(f"عملیات کیسه‌گیری {bag_order.order_number} انجام شد و موجودی انبار به‌روزرسانی گردید"),
+            url="/bagging?msg=" + quote(msg_text),
             status_code=303
         )
     except Exception as e:

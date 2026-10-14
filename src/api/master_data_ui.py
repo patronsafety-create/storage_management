@@ -12,6 +12,7 @@ from src.core.dependencies import get_db, require_admin, get_current_user
 from src.domain_model.inventory_models import Product, Warehouse, ProductCategory
 from src.domain_model.auth_models import User
 from src.services.inventory_service import InventoryService
+from src.core.localization.regions import get_active_region, Region, localize_display_name, TR_MASTER_DATA_MAP, IR_MASTER_DATA_MAP
 
 router = APIRouter(
     prefix="/master-data",
@@ -19,6 +20,7 @@ router = APIRouter(
 )
 
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("/products", response_class=HTMLResponse)
@@ -35,23 +37,38 @@ async def list_products(
 ):
     """کاتالوگ جامع کالاها و مدیریت تعاریف پایه صنعتی"""
     is_admin = any(role.name == "Admin" for role in current_user.roles)
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
 
     query = db.query(Product).options(joinedload(Product.category))
 
     if search and search.strip():
-        term = f"%{search.strip()}%"
-        query = query.filter(
-            or_(
-                Product.name.ilike(term),
-                Product.sku.ilike(term),
-                Product.brand.ilike(term),
-                Product.size.ilike(term),
-                Product.grade.ilike(term),
-                Product.standard.ilike(term),
-                Product.gtip_code.ilike(term),
-                Product.tse_standard.ilike(term)
-            )
-        )
+        term_clean = search.strip()
+        term = f"%{term_clean}%"
+        
+        # شناسایی واژه‌های معادل در زبان دیگر جهت جستجوی هوشمند دوزبانه
+        extra_terms = []
+        for k, v in TR_MASTER_DATA_MAP.items():
+            if term_clean.lower() in k.lower():
+                extra_terms.append(f"%{v}%")
+            elif term_clean.lower() in v.lower():
+                extra_terms.append(f"%{k}%")
+        
+        filter_conditions = [
+            Product.name.ilike(term),
+            Product.sku.ilike(term),
+            Product.brand.ilike(term),
+            Product.size.ilike(term),
+            Product.grade.ilike(term),
+            Product.standard.ilike(term),
+            Product.gtip_code.ilike(term),
+            Product.tse_standard.ilike(term)
+        ]
+        for et in extra_terms[:3]:
+            filter_conditions.append(Product.name.ilike(et))
+            filter_conditions.append(Product.brand.ilike(et))
+
+        query = query.filter(or_(*filter_conditions))
 
     if category_id:
         query = query.filter(Product.category_id == category_id)
@@ -81,6 +98,9 @@ async def list_products(
             low_stock_count += 1
         product_data.append({
             "product": p,
+            "display_name": localize_display_name(p.name, is_tr),
+            "display_uom": localize_display_name(p.uom, is_tr),
+            "display_brand": localize_display_name(p.brand, is_tr),
             "total_stock": stock,
             "is_low": is_low
         })
@@ -98,6 +118,8 @@ async def list_products(
             "user": current_user,
             "current_user": current_user,
             "is_admin": is_admin,
+            "is_tr": is_tr,
+            "active_region": active_region,
             "products_data": product_data,
             "categories": categories,
             "available_brands": available_brands,
@@ -115,6 +137,7 @@ async def list_products(
             }
         }
     )
+
 
 
 @router.post("/product")

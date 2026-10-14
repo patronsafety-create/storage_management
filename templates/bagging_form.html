@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}ثبت دستور کیسه‌گیری اوره | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Üre Torbalama Emri Kaydı | Enterprise ERP' if is_tr else 'ثبت دستور کیسه‌گیری اوره | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -9,26 +9,42 @@
       <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
         <div>
           <h4 class="fw-bold mb-1 text-light">
-            <i class="bi bi-box2-fill text-teal me-2"></i>ثبت دستور کیسه‌گیری فله به جامبوبگ / کیسه
+            <i class="bi bi-box2-fill text-teal me-2"></i>
+            {% if is_tr %}
+            Dökme Üründen Torbalama / Big-Bag Emri Kaydı
+            {% else %}
+            ثبت دستور کیسه‌گیری فله به جامبوبگ / کیسه
+            {% endif %}
           </h4>
-          <p class="text-secondary small mb-0">تبدیل اوره فله به محصولات بسته‌بندی‌شده و کسر/افزایش خودکار در کاردکس انبار</p>
+          <p class="text-secondary small mb-0">
+            {% if is_tr %}
+            Dökme ürenin paketli ürünlere dönüştürülmesi ve depo stok kartlarının otomatik güncellenmesi
+            {% else %}
+            تبدیل اوره فله به محصولات بسته‌بندی‌شده و کسر/افزایش خودکار در کاردکس انبار
+            {% endif %}
+          </p>
         </div>
         <a href="/bagging" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-right me-1"></i>بازگشت
+          <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+          {{ 'Geri' if is_tr else 'بازگشت' }}
         </a>
       </div>
 
       <form action="/bagging" method="post" id="bagForm">
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <label for="order_number" class="form-label fw-bold">شماره پارت کیسه‌گیری</label>
+            <label for="order_number" class="form-label fw-bold">
+              {{ 'Torbalama Parti Numarası' if is_tr else 'شماره پارت کیسه‌گیری' }}
+            </label>
             <input type="text" class="form-control font-monospace" id="order_number" name="order_number" value="{{ generated_bag_number }}" required>
           </div>
           <div class="col-md-6">
-            <label for="warehouse_id" class="form-label fw-bold">انبار محل عملیات بسته‌بندی <span class="text-danger">*</span></label>
+            <label for="warehouse_id" class="form-label fw-bold">
+              {{ 'Operasyon Deposu' if is_tr else 'انبار محل عملیات بسته‌بندی' }} <span class="text-danger">*</span>
+            </label>
             <select class="form-select" id="warehouse_id" name="warehouse_id" required>
               {% for w in warehouses %}
-              <option value="{{ w.id }}">{{ w.name }}</option>
+              <option value="{{ w.id }}">{{ w.name | tr_loc(is_tr) }}</option>
               {% endfor %}
             </select>
           </div>
@@ -36,21 +52,25 @@
 
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <label for="bulk_product_id" class="form-label fw-bold">محصول فله اولیه (ماده اولیه) <span class="text-danger">*</span></label>
+            <label for="bulk_product_id" class="form-label fw-bold">
+              {{ 'Hammadde Dökme Ürün' if is_tr else 'محصول فله اولیه (ماده اولیه)' }} <span class="text-danger">*</span>
+            </label>
             <select class="form-select" id="bulk_product_id" name="bulk_product_id" required>
-              <option value="" selected disabled>انتخاب کالای فله...</option>
+              <option value="" selected disabled>{{ 'Dökme ürün seçiniz...' if is_tr else 'انتخاب کالای فله...' }}</option>
               {% for p in products %}
-              <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+              <option value="{{ p.id }}">{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="col-md-6">
-            <label for="packaged_product_id" class="form-label fw-bold">محصول نهایی بسته‌بندی‌شده <span class="text-danger">*</span></label>
+            <label for="packaged_product_id" class="form-label fw-bold">
+              {{ 'Nihai Paketli Ürün' if is_tr else 'محصول نهایی بسته‌بندی‌شده' }} <span class="text-danger">*</span>
+            </label>
             <select class="form-select" id="packaged_product_id" name="packaged_product_id" required>
-              <option value="" selected disabled>انتخاب کالای بسته‌بندی...</option>
+              <option value="" selected disabled>{{ 'Paketli ürün seçiniz...' if is_tr else 'انتخاب کالای بسته‌بندی...' }}</option>
               {% for p in products %}
-              <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+              <option value="{{ p.id }}">{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
               {% endfor %}
             </select>
           </div>
@@ -58,46 +78,66 @@
 
         <div class="row g-3 mb-4">
           <div class="col-md-4">
-            <label for="package_type" class="form-label fw-bold">نوع بسته‌بندی</label>
+            <label for="package_type" class="form-label fw-bold">
+              {{ 'Paketleme Tipi' if is_tr else 'نوع بسته‌بندی' }}
+            </label>
             <select class="form-select" id="package_type" name="package_type">
+              {% if is_tr %}
+              <option value="1 Tonluk Big-Bag (4 Kulplu)">1 Tonluk Big-Bag (4 Kulplu)</option>
+              <option value="50 kg Polipropilen Torba">50 kg Polipropilen Torba</option>
+              <option value="1.5 Tonluk Big-Bag">1.5 Tonluk Big-Bag</option>
+              <option value="25 kg Torba">25 kg Torba</option>
+              {% else %}
               <option value="جامبوبگ ۱ تنی">جامبوبگ ۱ تنی (۴ بند)</option>
               <option value="کیسه ۵۰ کیلویی">کیسه لمینت ۵۰ کیلویی</option>
               <option value="جامبوبگ ۱.۵ تنی">جامبوبگ ۱.۵ تنی</option>
               <option value="کیسه ۲۵ کیلویی">کیسه ۲۵ کیلویی</option>
+              {% endif %}
             </select>
           </div>
 
           <div class="col-md-4">
-            <label for="bulk_tonnage_used" class="form-label fw-bold">تناژ فله مصرفی (تن) <span class="text-danger">*</span></label>
-            <input type="number" step="0.01" min="0.1" class="form-control font-monospace" id="bulk_tonnage_used" name="bulk_tonnage_used" placeholder="مثلاً: 50.0" required>
+            <label for="bulk_tonnage_used" class="form-label fw-bold">
+              {{ 'Tüketilen Dökme Tonajı (ton)' if is_tr else 'تناژ فله مصرفی (تن)' }} <span class="text-danger">*</span>
+            </label>
+            <input type="number" step="0.01" min="0.1" class="form-control font-monospace" id="bulk_tonnage_used" name="bulk_tonnage_used" placeholder="{{ 'Örn: 50.0' if is_tr else 'مثلاً: 50.0' }}" required>
           </div>
 
           <div class="col-md-4">
-            <label for="packages_produced" class="form-label fw-bold">تعداد بسته‌های تولیدی <span class="text-danger">*</span></label>
-            <input type="number" step="1" min="1" class="form-control font-monospace text-success fw-bold" id="packages_produced" name="packages_produced" placeholder="مثلاً: 50" required>
+            <label for="packages_produced" class="form-label fw-bold">
+              {{ 'Üretilen Paket Adedi' if is_tr else 'تعداد بسته‌های تولیدی' }} <span class="text-danger">*</span>
+            </label>
+            <input type="number" step="1" min="1" class="form-control font-monospace text-success fw-bold" id="packages_produced" name="packages_produced" placeholder="{{ 'Örn: 50' if is_tr else 'مثلاً: 50' }}" required>
           </div>
         </div>
 
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <label for="packaging_cost_per_ton" class="form-label">هزینه دستمزد و جامبوبگ/کیسه (ریال بر تن)</label>
-            <input type="number" step="1000" min="0" class="form-control font-monospace" id="packaging_cost_per_ton" name="packaging_cost_per_ton" value="0">
+            <label for="packaging_cost_per_ton" class="form-label">
+              {{ 'Paketleme ve İşçilik Maliyeti (' ~ ('TRY/ton' if is_tr else 'ریال بر تن') ~ ')' }}
+            </label>
+            <input type="number" step="10" min="0" class="form-control font-monospace" id="packaging_cost_per_ton" name="packaging_cost_per_ton" value="0">
           </div>
           <div class="col-md-6">
-            <label for="waste_tonnage" class="form-label">ریزش و پرتی حین کیسه‌گیری (تن)</label>
+            <label for="waste_tonnage" class="form-label">
+              {{ 'Fire / Döküntü Miktarı (ton)' if is_tr else 'ریزش و پرتی حین کیسه‌گیری (تن)' }}
+            </label>
             <input type="number" step="0.001" min="0" class="form-control font-monospace" id="waste_tonnage" name="waste_tonnage" value="0.0">
           </div>
         </div>
 
         <div class="mb-4">
-          <label for="notes" class="form-label">توضیحات و عطف به سفارش خریدار / کشتی</label>
-          <input type="text" class="form-control" id="notes" name="notes" placeholder="شماره پارت صادراتی، مشخصات کانتینر یا خط دوخت...">
+          <label for="notes" class="form-label">
+            {{ 'Açıklama ve İhracat / Gemi Sipariş Referansı' if is_tr else 'توضیحات و عطف به سفارش خریدار / کشتی' }}
+          </label>
+          <input type="text" class="form-control" id="notes" name="notes" placeholder="{{ 'İhracat parti no, konteyner no, dikiş hattı bilgisi...' if is_tr else 'شماره پارت صادراتی، مشخصات کانتینر یا خط دوخت...' }}">
         </div>
 
         <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
-          <a href="/bagging" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <a href="/bagging" class="btn btn-outline-secondary px-4 py-2">{{ 'Vazgeç' if is_tr else 'انصراف' }}</a>
           <button type="submit" class="btn btn-teal px-5 py-2">
-            <i class="bi bi-check2-circle me-1"></i>ثبت و اجرای عملیات کیسه‌گیری
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ 'Torbalama Operasyonunu Kaydet' if is_tr else 'ثبت و اجرای عملیات کیسه‌گیری' }}
           </button>
         </div>
       </form>
@@ -117,12 +157,14 @@ document.addEventListener("DOMContentLoaded", function() {
         const tonnage = parseFloat(bulkInput.value) || 0;
         const type = pkgType.value;
         if (tonnage > 0) {
-            if (type.includes('۱ تنی')) {
+            if (type.includes('1 Ton') || type.includes('۱ تنی')) {
                 prodInput.value = Math.floor(tonnage);
-            } else if (type.includes('۵۰ کیلویی')) {
-                prodInput.value = Math.floor(tonnage * 20); // هر تن = ۲۰ کیسه ۵۰ کیلویی
-            } else if (type.includes('۲۵ کیلویی')) {
+            } else if (type.includes('50 kg') || type.includes('۵۰ کیلویی')) {
+                prodInput.value = Math.floor(tonnage * 20); // 1 ton = 20 torba (50kg)
+            } else if (type.includes('25 kg') || type.includes('۲۵ کیلویی')) {
                 prodInput.value = Math.floor(tonnage * 40);
+            } else if (type.includes('1.5 Ton') || type.includes('۱.۵ تنی')) {
+                prodInput.value = Math.floor(tonnage / 1.5);
             }
         }
     }

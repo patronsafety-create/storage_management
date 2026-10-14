@@ -24,28 +24,28 @@
     <div>
         <h3 class="fw-bold mb-1 d-flex align-items-center gap-2 flex-wrap">
             <i class="bi bi-speedometer2 text-teal"></i>
-            <span>پیشخوان مدیریت انبار نکسوس‌پـور</span>
+            <span>{% if is_tr %}NexusPour Depo Yönetim Paneli{% else %}پیشخوان مدیریت انبار نکسوس‌پـور{% endif %}</span>
             <span class="badge-edition">NexusPour ERP v2.0</span>
         </h3>
-        <p class="text-secondary small mb-0">نظارت بر جریان ورودی، خروجی و مانده کالاها | طراحی و مالکیت معنوی: <strong>امید پورمحمود</strong></p>
+        <p class="text-secondary small mb-0">{% if is_tr %}Malzeme giriş-çıkış akışı ve anlık stok takibi | Mühendislik ve Fikri Mülkiyet: <strong>Omid Pourmahmoud</strong>{% else %}نظارت بر جریان ورودی، خروجی و مانده کالاها | طراحی و مالکیت معنوی: <strong>امید پورمحمود</strong>{% endif %}</p>
     </div>
     
     <div class="d-flex gap-2 flex-wrap">
         <a href="/inventory/transaction" class="btn btn-teal px-3 py-2">
-            <i class="bi bi-plus-circle me-1"></i>ثبت تراکنش جدید
+            <i class="bi bi-plus-circle me-1"></i>{% if is_tr %}Yeni Hareket Kaydı{% else %}ثبت تراکنش جدید{% endif %}
         </a>
         <a href="/inventory/balance" class="btn btn-glass px-3 py-2">
-            <i class="bi bi-bar-chart-line me-1"></i>گزارش موجودی
+            <i class="bi bi-bar-chart-line me-1"></i>{% if is_tr %}Stok Durumu{% else %}گزارش موجودی{% endif %}
         </a>
         <a href="/master-data/products" class="btn btn-outline-info px-3 py-2">
-            <i class="bi bi-box-seam me-1"></i>کاتالوگ کالاها
+            <i class="bi bi-box-seam me-1"></i>{% if is_tr %}Ürün Kataloğu{% else %}کاتالوگ کالاها{% endif %}
         </a>
         {% if is_admin %}
         <button type="button" class="btn btn-teal px-3 py-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="bi bi-plus-circle me-1"></i>تعریف کالا
+            <i class="bi bi-plus-circle me-1"></i>{% if is_tr %}Ürün Tanımla{% else %}تعریف کالا{% endif %}
         </button>
         <button type="button" class="btn btn-outline-secondary px-3 py-2" data-bs-toggle="modal" data-bs-target="#addWarehouseModal">
-            <i class="bi bi-building me-1"></i>تعریف انبار
+            <i class="bi bi-building me-1"></i>{% if is_tr %}Depo Tanımla{% else %}تعریف انبار{% endif %}
         </button>
         {% endif %}
     </div>
@@ -58,7 +58,7 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <div class="stat-number">{{ tx_count }}</div>
-                    <div class="stat-label">اسناد تراکنش انبار</div>
+                    <div class="stat-label">{% if is_tr %}Depo Hareket Fişi{% else %}اسناد تراکنش انبار{% endif %}</div>
                 </div>
                 <div class="p-3 rounded-3" style="background: rgba(0, 212, 200, 0.1); color: var(--accent-teal);">
                     <i class="bi bi-arrow-left-right fs-4"></i>
@@ -71,7 +71,7 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <div class="stat-number" style="color: var(--accent-purple);">{{ stock_balances | length }}</div>
-                    <div class="stat-label">اقلام ثبت‌شده در انبار</div>
+                    <div class="stat-label">{% if is_tr %}Kayıtlı Stok Kalemi{% else %}اقلام ثبت‌شده در انبار{% endif %}</div>
                 </div>
                 <div class="p-3 rounded-3" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
                     <i class="bi bi-boxes fs-4"></i>
@@ -83,8 +83,8 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-number" style="color: var(--accent-green);">فعال</div>
-                    <div class="stat-label">وضعیت پایگاه داده و سرویس</div>
+                    <div class="stat-number" style="color: var(--accent-green);">{% if is_tr %}Aktif{% else %}فعال{% endif %}</div>
+                    <div class="stat-label">{% if is_tr %}Veritabanı ve Servis Durumu{% else %}وضعیت پایگاه داده و سرویس{% endif %}</div>
                 </div>
                 <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
                     <i class="bi bi-database-check fs-4"></i>
@@ -96,8 +96,8 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-number" style="color: var(--accent-amber);">{{ user.roles[0].name if user.roles else 'اپراتور' }}</div>
-                    <div class="stat-label">سطح دسترسی شما</div>
+                    <div class="stat-number" style="color: var(--accent-amber);">{{ user.roles[0].name if user.roles else ('Operatör' if is_tr else 'اپراتور') }}</div>
+                    <div class="stat-label">{% if is_tr %}Kullanıcı Yetki Seviyesi{% else %}سطح دسترسی شما{% endif %}</div>
                 </div>
                 <div class="p-3 rounded-3" style="background: rgba(245, 158, 11, 0.1); color: var(--accent-amber);">
                     <i class="bi bi-shield-lock fs-4"></i>
@@ -114,11 +114,11 @@
         <div class="glass-card p-4 h-100 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold mb-0 text-light">
-                    <i class="bi bi-pie-chart-fill text-teal me-2"></i>نمودار کیکی موجودی کالاها
+                    <i class="bi bi-pie-chart-fill text-teal me-2"></i>{% if is_tr %}Stok Dağılım Grafiği (Donut){% else %}نمودار کیکی موجودی کالاها{% endif %}
                 </h5>
-                <span class="badge bg-secondary bg-opacity-25 text-secondary small">تفکیک حجمی</span>
+                <span class="badge bg-secondary bg-opacity-25 text-secondary small">{% if is_tr %}Hacimsel Dağılım{% else %}تفکیک حجمی{% endif %}</span>
             </div>
-            <p class="text-secondary small mb-3">سهم موجودی هر قلم کالا از کل موجودی ثبت‌شده در انبارها</p>
+            <p class="text-secondary small mb-3">{% if is_tr %}Depolardaki toplam stok payı dağılımı{% else %}سهم موجودی هر قلم کالا از کل موجودی ثبت‌شده در انبارها{% endif %}</p>
             
             <div class="flex-grow-1 d-flex align-items-center justify-content-center py-2" style="position: relative; min-height: 280px;">
                 <canvas id="stockDonutChart"></canvas>
@@ -131,21 +131,21 @@
         <div class="glass-card p-0 overflow-hidden h-100 d-flex flex-column">
             <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0 text-light">
-                    <i class="bi bi-clock-history text-teal me-2"></i>آخرین تراکنش‌های ثبت‌شده
+                    <i class="bi bi-clock-history text-teal me-2"></i>{% if is_tr %}Son Depo Hareketleri{% else %}آخرین تراکنش‌های ثبت‌شده{% endif %}
                 </h5>
                 <a href="/inventory/transactions" class="text-decoration-none small" style="color: var(--accent-teal);">
-                    مشاهده همه <i class="bi bi-arrow-left"></i>
+                    {% if is_tr %}Tümünü Gör{% else %}مشاهده همه{% endif %} <i class="bi bi-arrow-{% if is_tr %}right{% else %}left{% endif %}"></i>
                 </a>
             </div>
             <div class="table-responsive flex-grow-1">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead style="background: rgba(255, 255, 255, 0.04);">
                         <tr>
-                            <th class="py-3 px-3">سند</th>
-                            <th>نوع</th>
-                            <th>کالا</th>
-                            <th>انبار</th>
-                            <th>مقدار</th>
+                            <th class="py-3 px-3">{% if is_tr %}Fiş No{% else %}سند{% endif %}</th>
+                            <th>{% if is_tr %}Tür{% else %}نوع{% endif %}</th>
+                            <th>{% if is_tr %}Malzeme Adı{% else %}کالا{% endif %}</th>
+                            <th>{% if is_tr %}Depo{% else %}انبار{% endif %}</th>
+                            <th>{% if is_tr %}Miktar{% else %}مقدار{% endif %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -155,15 +155,15 @@
                                 <td class="px-3 text-secondary small">#{{ tx.id }}</td>
                                 <td>
                                     {% if tx.transaction_type.value == 'IN' %}
-                                        <span class="badge bg-success bg-opacity-25 text-success">ورود</span>
+                                        <span class="badge bg-success bg-opacity-25 text-success">{% if is_tr %}Giriş{% else %}ورود{% endif %}</span>
                                     {% else %}
-                                        <span class="badge bg-danger bg-opacity-25 text-danger">خروج</span>
+                                        <span class="badge bg-danger bg-opacity-25 text-danger">{% if is_tr %}Çıkış{% else %}خروج{% endif %}</span>
                                     {% endif %}
                                 </td>
-                                <td class="fw-semibold text-light">{{ tx.product.name }}</td>
-                                <td class="text-secondary small">{{ tx.warehouse.name }}</td>
+                                <td class="fw-semibold text-light">{{ tx.product.name | tr_loc(is_tr) }}</td>
+                                <td class="text-secondary small">{{ tx.warehouse.name | tr_loc(is_tr) }}</td>
                                 <td class="fw-bold font-monospace {% if tx.transaction_type.value == 'IN' %}text-success{% else %}text-danger{% endif %}">
-                                    {{ "{:,.2f}".format(tx.quantity) }} <span class="small text-secondary">{{ tx.product.uom }}</span>
+                                    {{ "{:,.2f}".format(tx.quantity) }} <span class="small text-secondary">{{ tx.product.uom | tr_loc(is_tr) }}</span>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -171,7 +171,7 @@
                             <tr>
                                 <td colspan="5" class="text-center py-5 text-secondary">
                                     <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                    هنوز هیچ تراکنشی ثبت نشده است.
+                                    {% if is_tr %}Henüz kayıtlı bir depo hareketi bulunmamaktadır.{% else %}هنوز هیچ تراکنشی ثبت نشده است.{% endif %}
                                 </td>
                             </tr>
                         {% endif %}
@@ -278,12 +278,13 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // استخراج داده‌های موجودی از سرور
+    const isTurkish = {{ 'true' if is_tr else 'false' }};
     const stockData = [
         {% for item in stock_balances %}
         {
-            name: "{{ item.name }} ({{ item.warehouse }})",
+            name: "{{ (item.name | tr_loc(is_tr)) }} ({{ (item.warehouse | tr_loc(is_tr)) }})",
             balance: {{ item.current_balance }},
-            uom: "{{ item.uom }}"
+            uom: "{{ (item.uom | tr_loc(is_tr)) }}"
         },
         {% endfor %}
     ];
@@ -293,7 +294,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // فیلتر کردن کالاهایی که موجودی مثبت دارند
     const positiveStock = stockData.filter(d => d.balance > 0);
     
-    const labels = positiveStock.length > 0 ? positiveStock.map(d => d.name) : ["بدون موجودی"];
+    const labels = positiveStock.length > 0 ? positiveStock.map(d => d.name) : [isTurkish ? "Kayıtlı Stok Yok" : "بدون موجودی"];
     const dataValues = positiveStock.length > 0 ? positiveStock.map(d => d.balance) : [1];
     const uomList = positiveStock.map(d => d.uom);
 
@@ -327,15 +328,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 },
                 tooltip: {
-                    rtl: true,
+                    rtl: !isTurkish,
                     titleFont: { family: 'Vazirmatn' },
                     bodyFont: { family: 'Vazirmatn' },
                     callbacks: {
                         label: function(context) {
-                            if (positiveStock.length === 0) return "موجودی ثبت نشده";
+                            if (positiveStock.length === 0) return isTurkish ? "Kayıtlı stok bulunamadı" : "موجودی ثبت نشده";
                             const val = context.parsed;
                             const uom = uomList[context.dataIndex] || '';
-                            return ` موجودی: ${toPersianDigits(val.toLocaleString())} ${uom}`;
+                            if (isTurkish) {
+                                return ` Stok: ${val.toLocaleString()} ${uom}`;
+                            } else {
+                                return ` موجودی: ${toPersianDigits(val.toLocaleString())} ${uom}`;
+                            }
                         }
                     }
                 }

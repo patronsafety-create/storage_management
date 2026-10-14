@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}ثبت نوبت توزین اول باسکول | Enterprise ERP{% endblock %}
+{% block title %}{{ '1. Aşama Araç Tartım Kaydı (Kantar Girişi) | Enterprise ERP' if is_tr else 'ثبت نوبت توزین اول باسکول | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -9,12 +9,24 @@
       <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
         <div>
           <h4 class="fw-bold mb-1 text-light">
-            <i class="bi bi-truck-flatbed text-teal me-2"></i>ثبت مرحله اول توزین ناوگان (ورود به باسکول)
+            <i class="bi bi-truck-flatbed text-teal me-2"></i>
+            {% if is_tr %}
+            1. Aşama Araç Tartım Kaydı (Kantar Girişi)
+            {% else %}
+            ثبت مرحله اول توزین ناوگان (ورود به باسکول)
+            {% endif %}
           </h4>
-          <p class="text-secondary small mb-0">پذیرش تریلی/کامیون، ثبت مشخصات بارنامه و پلاک، و ثبت وزن مرحله اول</p>
+          <p class="text-secondary small mb-0">
+            {% if is_tr %}
+            Tır/kamyon kabulü, sevk irsaliyesi ve plaka bilgileri ile ilk tartım (brüt/dara) kaydı
+            {% else %}
+            پذیرش تریلی/کامیون، ثبت مشخصات بارنامه و پلاک، و ثبت وزن مرحله اول
+            {% endif %}
+          </p>
         </div>
         <a href="/weighbridge" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-right me-1"></i>بازگشت
+          <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+          {{ 'Geri' if is_tr else 'بازگشت' }}
         </a>
       </div>
 
@@ -22,21 +34,37 @@
         <!-- سربرگ قبض -->
         <div class="row g-3 mb-4">
           <div class="col-md-4">
-            <label for="ticket_number" class="form-label fw-bold">شماره قبض باسکول</label>
+            <label for="ticket_number" class="form-label fw-bold">
+              {{ 'Kantar Fiş Numarası' if is_tr else 'شماره قبض باسکول' }}
+            </label>
             <input type="text" class="form-control font-monospace" id="ticket_number" name="ticket_number" value="{{ generated_ticket_number }}" required>
           </div>
 
           <div class="col-md-5">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label class="form-label fw-bold mb-0">
-                پلاک انتظامی ناوگان <span class="text-danger">*</span>
+                {{ 'Araç Plakası' if is_tr else 'پلاک انتظامی ناوگان' }} <span class="text-danger">*</span>
               </label>
+              {% if not is_tr %}
               <div class="form-check form-switch m-0">
                 <input class="form-check-input" type="checkbox" id="plateTypeToggle" checked>
                 <label class="form-check-label text-warning small" for="plateTypeToggle" id="plateTypeLabel">پلاک زرد عمومی</label>
               </div>
+              {% endif %}
             </div>
             
+            {% if is_tr %}
+            <!-- TÜRKİYE ARAÇ PLAKASI (EGM / KGM STANDARDI) -->
+            <div class="tr-plate-container shadow-sm" id="turkishPlateWidget">
+              <div class="tr-plate-flag">
+                <span>TR</span>
+              </div>
+              <input type="text" maxlength="2" class="plate-part tr-plate-city font-monospace" id="tr_plate_city" placeholder="34" inputmode="numeric" autocomplete="off" required>
+              <input type="text" maxlength="3" class="plate-part tr-plate-letters font-monospace" id="tr_plate_letters" placeholder="ABC" autocomplete="off" required>
+              <input type="text" maxlength="4" class="plate-part tr-plate-digits font-monospace" id="tr_plate_digits" placeholder="123" inputmode="numeric" autocomplete="off" required>
+            </div>
+            {% else %}
+            <!-- IRAN LICENSE PLATE WIDGET -->
             <div class="iran-plate-container shadow-sm" id="weighbridgePlate">
               <div class="iran-plate-flag">
                 <div class="iran-flag-bar"></div>
@@ -69,20 +97,32 @@
                 <input type="text" maxlength="2" class="plate-part plate-city font-monospace" id="plate_city" placeholder="۱۱" inputmode="numeric" autocomplete="off" required>
               </div>
             </div>
+            {% endif %}
+
             <input type="hidden" name="truck_plate" id="truck_plate" value="">
             <div class="form-text text-secondary small mt-1">
-              پیش‌نمایش سیستمی: <strong class="text-teal font-monospace" id="platePreviewDisplay">---</strong>
+              {{ 'Sistem Önizlemesi:' if is_tr else 'پیش‌نمایش سیستمی:' }} <strong class="text-teal font-monospace" id="platePreviewDisplay">---</strong>
             </div>
           </div>
 
           <div class="col-md-3">
-            <label for="truck_type" class="form-label fw-bold">نوع ناوگان</label>
+            <label for="truck_type" class="form-label fw-bold">
+              {{ 'Araç / Kasa Tipi' if is_tr else 'نوع ناوگان' }}
+            </label>
             <select class="form-select" id="truck_type" name="truck_type">
-              <option value="تریلی کفی ۱۸ چرخ (بندیل و میلگرد)">تریلی کفی ۱۸ چرخ (بندیل و میلگرد)</option>
-              <option value="تریلی لبه‌دار / ترانزیت">تریلی لبه‌دار / ترانزیت چادری</option>
-              <option value="کمپرسی سنگین (فله و شمش)">کمپرسی سنگین (فله و شمش)</option>
-              <option value="کامیون جفت (۱۰ چرخ)">کامیون جفت (۱۰ چرخ - ۱۵ تن)</option>
-              <option value="کامیون تک (۶ چرخ)">کامیون تک (۶ چرخ - ۱۰ تن)</option>
+              {% if is_tr %}
+              <option value="5 Dingilli Standart TIR (Azami 40 Ton)" data-limit="40000" selected>5 Dingilli TIR / Sal Kasa (40 Ton)</option>
+              <option value="Konteyner Taşıyıcı TIR (Azami 44 Ton)" data-limit="44000">Konteyner Taşıyıcı TIR (44 Ton)</option>
+              <option value="4 Dingilli Kamyon / Damperli (Azami 32 Ton)" data-limit="32000">4 Dingilli Kamyon (32 Ton)</option>
+              <option value="3 Dingilli Kamyon / 10 Teker (Azami 26 Ton)" data-limit="26000">3 Dingilli Kamyon / 10 Teker (26 Ton)</option>
+              <option value="2 Dingilli Kamyon / 6 Teker (Azami 18 Ton)" data-limit="18000">2 Dingilli Kamyon / 6 Teker (18 Ton)</option>
+              {% else %}
+              <option value="تریلی کفی ۱۸ چرخ (بندیل و میلگرد)" data-limit="40000" selected>تریلی کفی ۱۸ چرخ (بندیل و میلگرد)</option>
+              <option value="تریلی لبه‌دار / ترانزیت" data-limit="40000">تریلی لبه‌دار / ترانزیت چادری</option>
+              <option value="کمپرسی سنگین (فله و شمش)" data-limit="32000">کمپرسی سنگین (فله و شمش)</option>
+              <option value="کامیون جفت (۱۰ چرخ)" data-limit="26000">کامیون جفت (۱۰ چرخ - ۱۵ تن)</option>
+              <option value="کامیون تک (۶ چرخ)" data-limit="18000">کامیون تک (۶ چرخ - ۱۰ تن)</option>
+              {% endif %}
             </select>
           </div>
         </div>
@@ -90,44 +130,61 @@
         <!-- راننده و ناوگان -->
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <label for="driver_name" class="form-label fw-bold">نام و نام خانوادگی راننده <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="driver_name" name="driver_name" required placeholder="مثلاً: محمد صادقی">
+            <label for="driver_name" class="form-label fw-bold">
+              {{ 'Sürücü Adı Soyadı' if is_tr else 'نام و نام خانوادگی راننده' }} <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="driver_name" name="driver_name" required placeholder="{{ 'Örn: Ahmet Yılmaz' if is_tr else 'مثلاً: محمد صادقی' }}">
           </div>
           <div class="col-md-6">
-            <label for="driver_phone" class="form-label fw-bold">شماره تلفن همراه راننده</label>
+            <label for="driver_phone" class="form-label fw-bold">
+              {{ 'Sürücü Cep Telefonu' if is_tr else 'شماره تلفن همراه راننده' }}
+            </label>
             <div class="ir-mobile-wrapper">
-              <input type="text" class="form-control ir-mobile font-monospace" id="driver_phone" name="driver_phone" placeholder="۰۹۱۲-۳۴۵-۶۷۸۹" autocomplete="tel">
+              <input type="text" class="form-control ir-mobile font-monospace" id="driver_phone" name="driver_phone"
+                     placeholder="{{ '0532 123 45 67' if is_tr else '۰۹۱۲-۳۴۵-۶۷۸۹' }}" autocomplete="tel">
               <span class="ir-mobile-status" id="driver_phone_status"></span>
             </div>
-            <div class="form-text text-secondary small" id="driver_phone_hint">فرمت استاندارد موبایل ۱۱ رقمی با پیش‌شماره ۰۹</div>
+            <div class="form-text text-secondary small" id="driver_phone_hint">
+              {{ '05xx ile başlayan 11 haneli geçerli Türkiye cep telefonu' if is_tr else 'فرمت استاندارد موبایل ۱۱ رقمی با پیش‌شماره ۰۹' }}
+            </div>
           </div>
         </div>
 
         <!-- کالا، انبار و نوع توزین -->
         <div class="row g-3 mb-4">
           <div class="col-md-4">
-            <label for="weighing_mode" class="form-label fw-bold">نوع عملیات باسکول <span class="text-danger">*</span></label>
+            <label for="weighing_mode" class="form-label fw-bold">
+              {{ 'Kantar İşlem Tipi' if is_tr else 'نوع عملیات باسکول' }} <span class="text-danger">*</span>
+            </label>
             <select class="form-select" id="weighing_mode" name="weighing_mode" required>
-              <option value="INBOUND">📥 ورود بار به انبار (توزین ۱: پر / توزین ۲: خالی)</option>
-              <option value="OUTBOUND">📤 خروج بار از انبار (توزین ۱: خالی / توزین ۲: پر)</option>
+              <option value="INBOUND">
+                {{ '📥 Mal Kabul / Depo Girişi (1. Tartım: Dolu / 2. Tartım: Boş)' if is_tr else '📥 ورود بار به انبار (توزین ۱: پر / توزین ۲: خالی)' }}
+              </option>
+              <option value="OUTBOUND">
+                {{ '📤 Sevkiyat / Depo Çıkışı (1. Tartım: Boş / 2. Tartım: Dolu)' if is_tr else '📤 خروج بار از انبار (توزین ۱: خالی / توزین ۲: پر)' }}
+              </option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label for="product_id" class="form-label fw-bold">نوع محموله / کالا <span class="text-danger">*</span></label>
+            <label for="product_id" class="form-label fw-bold">
+              {{ 'Taşınan Malzeme / Ürün' if is_tr else 'نوع محموله / کالا' }} <span class="text-danger">*</span>
+            </label>
             <select class="form-select" id="product_id" name="product_id" required>
-              <option value="" selected disabled>انتخاب کالا...</option>
+              <option value="" selected disabled>{{ 'Ürün seçiniz...' if is_tr else 'انتخاب کالا...' }}</option>
               {% for p in products %}
-              <option value="{{ p.id }}">{{ p.name }} ({{ p.uom }})</option>
+              <option value="{{ p.id }}">{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="col-md-4">
-            <label for="warehouse_id" class="form-label fw-bold">انبار محل تخلیه / بارگیری <span class="text-danger">*</span></label>
+            <label for="warehouse_id" class="form-label fw-bold">
+              {{ 'Yükleme / Boşaltma Deposu' if is_tr else 'انبار محل تخلیه / بارگیری' }} <span class="text-danger">*</span>
+            </label>
             <select class="form-select" id="warehouse_id" name="warehouse_id" required>
               {% for w in warehouses %}
-              <option value="{{ w.id }}">{{ w.name }}</option>
+              <option value="{{ w.id }}">{{ w.name | tr_loc(is_tr) }}</option>
               {% endfor %}
             </select>
           </div>
@@ -136,60 +193,77 @@
         <!-- طرف‌های تجاری -->
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <label for="supplier_id" class="form-label">تأمین‌کننده / کارخانه مبدأ بار</label>
+            <label for="supplier_id" class="form-label">
+              {{ 'Tedarikçi / Menşe Fabrika' if is_tr else 'تأمین‌کننده / کارخانه مبدأ بار' }}
+            </label>
             <select class="form-select" id="supplier_id" name="supplier_id">
-              <option value="">-- بدون انتساب / مبدأ عمومی --</option>
+              <option value="">{{ '-- Genel / Belirtilmemiş --' if is_tr else '-- بدون انتساب / مبدأ عمومی --' }}</option>
               {% for s in suppliers %}
-              <option value="{{ s.id }}">{{ s.name }}</option>
+              <option value="{{ s.id }}">{{ s.name | tr_loc(is_tr) }}</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="col-md-6">
-            <label for="customer_id" class="form-label">مشتری / پروژه مقصد بار</label>
+            <label for="customer_id" class="form-label">
+              {{ 'Müşteri / Sevk Projesi' if is_tr else 'مشتری / پروژه مقصد بار' }}
+            </label>
             <select class="form-select" id="customer_id" name="customer_id">
-              <option value="">-- بدون انتساب / مقصد عمومی --</option>
+              <option value="">{{ '-- Genel / Belirtilmemiş --' if is_tr else '-- بدون انتساب / مقصد عمومی --' }}</option>
               {% for c in customers %}
-              <option value="{{ c.id }}">{{ c.name }}</option>
+              <option value="{{ c.id }}">{{ c.name | tr_loc(is_tr) }}</option>
               {% endfor %}
             </select>
           </div>
         </div>
 
-        <!-- اندیکاتور وزن و هشدار راهداری -->
+        <!-- اندیکاتور وزن و هشدار راهداری / KGM -->
         <div class="p-4 rounded-3 mb-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);">
           <div class="row g-3 align-items-center">
             <div class="col-md-6">
               <label for="initial_weight" class="form-label fw-bold fs-6 text-light">
-                <i class="bi bi-speedometer2 text-teal me-1"></i>وزن ثبت‌شده روی باسکول (کیلوگرم) <span class="text-danger">*</span>
+                <i class="bi bi-speedometer2 text-teal me-1"></i>
+                {{ 'Kantarda Okunan Ağırlık (kg)' if is_tr else 'وزن ثبت‌شده روی باسکول (کیلوگرم)' }} <span class="text-danger">*</span>
               </label>
               <div class="input-group input-group-lg">
                 <input type="number" step="10" min="500" class="form-control font-monospace text-teal fw-bold fs-4"
-                       id="initial_weight" name="initial_weight" placeholder="مثلاً: 38500" required>
-                <span class="input-group-text bg-dark text-secondary border-secondary">کیلوگرم</span>
+                       id="initial_weight" name="initial_weight" placeholder="{{ 'Örn: 38500' if is_tr else 'مثلاً: 38500' }}" required>
+                <span class="input-group-text bg-dark text-secondary border-secondary">kg</span>
               </div>
-              <div class="small text-secondary mt-1" id="tonDisplay">معادل: ۰.۰۰ تن</div>
+              <div class="small text-secondary mt-1" id="tonDisplay">
+                {{ 'Karşılığı: 0.000 ton' if is_tr else 'معادل: ۰.۰۰ تن' }}
+              </div>
             </div>
 
             <div class="col-md-6">
-              <label for="max_allowed_weight" class="form-label small text-secondary">سقف وزن ناخالص مجاز پلیس‌راه (کیلوگرم)</label>
+              <label for="max_allowed_weight" class="form-label small text-secondary">
+                {{ 'KGM Azami Yüklü Ağırlık Sınırı (kg)' if is_tr else 'سقف وزن ناخالص مجاز پلیس‌راه (کیلوگرم)' }}
+              </label>
               <input type="number" step="500" class="form-control font-monospace" id="max_allowed_weight" name="max_allowed_weight" value="40000">
               <div id="overweightWarning" class="alert alert-danger py-2 px-3 small mt-2 d-none">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i>هشدار: وزن کل بیش از سقف مجاز پلیس‌راه است (ریسک جریمه اضافه تناژ راهداری)!
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                {% if is_tr %}
+                DİKKAT: KGM azami yasal yüklü ağırlık sınırı aşıldı! Aşırı tonaj cezası riski bulunmaktadır.
+                {% else %}
+                هشدار: وزن کل بیش از سقف مجاز پلیس‌راه است (ریسک جریمه اضافه تناژ راهداری)!
+                {% endif %}
               </div>
             </div>
           </div>
         </div>
 
         <div class="mb-4">
-          <label for="notes" class="form-label">یادداشت متصدی باسکول</label>
-          <input type="text" class="form-control" id="notes" name="notes" placeholder="شماره بارنامه کارخانه، شماره توزین مبدأ، وضعیت باربندی و چادر...">
+          <label for="notes" class="form-label">
+            {{ 'Kantar Operatör Notları' if is_tr else 'یادداشت متصدی باسکول' }}
+          </label>
+          <input type="text" class="form-control" id="notes" name="notes"
+                 placeholder="{{ 'Sevk irsaliyesi no, fabrika tartım fişi, araç/branda durumu...' if is_tr else 'شماره بارنامه کارخانه، شماره توزین مبدأ، وضعیت باربندی و چادر...' }}">
         </div>
 
         <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
-          <a href="/weighbridge" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <a href="/weighbridge" class="btn btn-outline-secondary px-4 py-2">{{ 'Vazgeç' if is_tr else 'انصراف' }}</a>
           <button type="submit" class="btn btn-teal px-5 py-2">
-            <i class="bi bi-check2-circle me-1"></i>ثبت نوبت توزین اول
+            <i class="bi bi-check2-circle me-1"></i>{{ '1. Tartımı Kaydet' if is_tr else 'ثبت نوبت توزین اول' }}
           </button>
         </div>
       </form>
@@ -201,15 +275,31 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const isTr = {{ 'true' if is_tr else 'false' }};
     const weightInput = document.getElementById('initial_weight');
     const tonDisplay = document.getElementById('tonDisplay');
     const maxWeightInput = document.getElementById('max_allowed_weight');
     const warning = document.getElementById('overweightWarning');
+    const truckTypeSelect = document.getElementById('truck_type');
+    const platePreviewDisplay = document.getElementById('platePreviewDisplay');
+
+    // به‌روزرسانی سقف وزن با تغییر نوع ناوگان
+    if (truckTypeSelect) {
+        truckTypeSelect.addEventListener('change', function() {
+            const selectedOpt = this.options[this.selectedIndex];
+            const limit = selectedOpt.getAttribute('data-limit');
+            if (limit) {
+                maxWeightInput.value = limit;
+                checkWeight();
+            }
+        });
+    }
 
     function checkWeight() {
         const val = parseFloat(weightInput.value) || 0;
         const maxVal = parseFloat(maxWeightInput.value) || 40000;
-        tonDisplay.textContent = `معادل: ${(val / 1000).toLocaleString('fa-IR', {maximumFractionDigits: 3})} تن`;
+        const tonVal = (val / 1000).toFixed(3);
+        tonDisplay.textContent = isTr ? `Karşılığı: ${tonVal} ton` : `معادل: ${(val / 1000).toLocaleString('fa-IR', {maximumFractionDigits: 3})} تن`;
 
         if (val > maxVal) {
             warning.classList.remove('d-none');
@@ -218,23 +308,107 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    weightInput.addEventListener('input', checkWeight);
-    maxWeightInput.addEventListener('input', checkWeight);
+    if (weightInput) weightInput.addEventListener('input', checkWeight);
+    if (maxWeightInput) maxWeightInput.addEventListener('input', checkWeight);
 
-    const wbForm = document.querySelector('form[action="/weighbridge/new"]');
-    if (wbForm) {
-        wbForm.addEventListener('submit', function(e) {
-            const d2 = document.getElementById('plate_d2').value.trim();
-            const d3 = document.getElementById('plate_d3').value.trim();
-            const city = document.getElementById('plate_city').value.trim();
-            const letter = document.getElementById('plate_letter').value.trim();
-            if (!d2 || !d3 || !city) {
-                e.preventDefault();
-                alert('لطفاً کلیه بخش‌های پلاک انتظامی ناوگان (۲ رقم، حرف، ۳ رقم، کد شهر) را وارد نمایید.');
-                document.getElementById('plate_d2').focus();
-                return false;
+    // مدیریت پیش‌نمایش و اعتبارسنجی پلاک
+    if (isTr) {
+        const trCity = document.getElementById('tr_plate_city');
+        const trLetters = document.getElementById('tr_plate_letters');
+        const trDigits = document.getElementById('tr_plate_digits');
+
+        function updateTrPlate() {
+            const city = (trCity.value || '').trim();
+            const letters = (trLetters.value || '').trim().toUpperCase();
+            const digits = (trDigits.value || '').trim();
+            if (city || letters || digits) {
+                const formatted = `${city} ${letters} ${digits}`.trim();
+                platePreviewDisplay.textContent = formatted;
+                document.getElementById('truck_plate').value = formatted;
+            } else {
+                platePreviewDisplay.textContent = '---';
+                document.getElementById('truck_plate').value = '';
             }
-            document.getElementById('truck_plate').value = `${d2} ${letter} ${d3} ایران ${city}`;
+        }
+
+        if (trCity && trLetters && trDigits) {
+            trCity.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length === 2) trLetters.focus();
+                updateTrPlate();
+            });
+            trLetters.addEventListener('input', function() {
+                this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+                updateTrPlate();
+            });
+            trDigits.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                updateTrPlate();
+            });
+        }
+    } else {
+        const d2 = document.getElementById('plate_d2');
+        const letter = document.getElementById('plate_letter');
+        const d3 = document.getElementById('plate_d3');
+        const city = document.getElementById('plate_city');
+
+        function updateIrPlate() {
+            const v2 = (d2.value || '').trim();
+            const vl = (letter.value || '').trim();
+            const v3 = (d3.value || '').trim();
+            const vc = (city.value || '').trim();
+            if (v2 || v3 || vc) {
+                const formatted = `${v2} ${vl} ${v3} ایران ${vc}`;
+                platePreviewDisplay.textContent = formatted;
+                document.getElementById('truck_plate').value = formatted;
+            } else {
+                platePreviewDisplay.textContent = '---';
+                document.getElementById('truck_plate').value = '';
+            }
+        }
+
+        if (d2 && letter && d3 && city) {
+            d2.addEventListener('input', updateIrPlate);
+            letter.addEventListener('change', updateIrPlate);
+            d3.addEventListener('input', updateIrPlate);
+            city.addEventListener('input', updateIrPlate);
+        }
+    }
+
+    const weighForm = document.getElementById('weighForm');
+    if (weighForm) {
+        weighForm.addEventListener('submit', function(e) {
+            if (isTr) {
+                const c = document.getElementById('tr_plate_city').value.trim();
+                const l = document.getElementById('tr_plate_letters').value.trim();
+                const d = document.getElementById('tr_plate_digits').value.trim();
+                if (!c || !l || !d) {
+                    e.preventDefault();
+                    alert('Lütfen Türkiye araç plakasını eksiksiz giriniz (İl kodu: 01-81, Harfler: A-Z, Rakamlar).');
+                    document.getElementById('tr_plate_city').focus();
+                    return false;
+                }
+                const ilNum = parseInt(c, 10);
+                if (isNaN(ilNum) || ilNum < 1 || ilNum > 81) {
+                    e.preventDefault();
+                    alert('Geçersiz Türkiye il plaka kodu (01 ile 81 arasında olmalıdır).');
+                    document.getElementById('tr_plate_city').focus();
+                    return false;
+                }
+                document.getElementById('truck_plate').value = `${c.padStart(2, '0')} ${l.toUpperCase()} ${d}`;
+            } else {
+                const d2 = document.getElementById('plate_d2').value.trim();
+                const d3 = document.getElementById('plate_d3').value.trim();
+                const city = document.getElementById('plate_city').value.trim();
+                const letVal = document.getElementById('plate_letter').value.trim();
+                if (!d2 || !d3 || !city) {
+                    e.preventDefault();
+                    alert('لطفاً کلیه بخش‌های پلاک انتظامی ناوگان (۲ رقم، حرف، ۳ رقم، کد شهر) را وارد نمایید.');
+                    document.getElementById('plate_d2').focus();
+                    return false;
+                }
+                document.getElementById('truck_plate').value = `${d2} ${letVal} ${d3} ایران ${city}`;
+            }
         });
     }
 });

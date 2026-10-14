@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}کاردکس ریالی و قیمت‌گذاری کالا: {{ product.name }} | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Mali Stok Değerleme Kardeksi: ' ~ (product.name | tr_loc(is_tr)) ~ ' | NexusPour ERP' if is_tr else 'کاردکس ریالی و قیمت‌گذاری کالا: ' ~ product.name ~ ' | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h3 class="fw-bold mb-1">
-            <i class="bi bi-cash-stack text-teal me-2"></i>کاردکس ریالی و ارزش‌گذاری موجودی: <span class="text-info">{{ product.name }}</span>
+            <i class="bi bi-cash-stack text-teal me-2"></i>{{ 'Mali Stok Değerleme Kardeksi: ' if is_tr else 'کاردکس ریالی و ارزش‌گذاری موجودی: ' }}<span class="text-info">{{ product.name | tr_loc(is_tr) }}</span>
         </h3>
-        <p class="text-secondary small mb-0">محاسبه قیمت تمام‌شده به روش میانگین موزون (Weighted Average) و ارزش ریالی لحظه‌ای</p>
+        <p class="text-secondary small mb-0">{{ 'Ağırlıklı Ortalama Maliyet (WAC) yöntemiyle anlık stok değerleme hesabı' if is_tr else 'محاسبه قیمت تمام‌شده به روش میانگین موزون (Weighted Average) و ارزش ریالی لحظه‌ای' }}</p>
     </div>
     <div class="d-flex gap-2">
         <a href="/inventory/kardex/{{ product.id }}" class="btn btn-outline-info">
-            <i class="bi bi-receipt me-1"></i>کاردکس مقداری
+            <i class="bi bi-receipt me-1"></i>{{ 'Miktarsal Kardeks' if is_tr else 'کاردکس مقداری' }}
         </a>
         <button onclick="window.print()" class="btn btn-outline-secondary">
-            <i class="bi bi-printer me-1"></i>چاپ کاردکس ریالی
+            <i class="bi bi-printer me-1"></i>{{ 'Mali Kardeksi Yazdır' if is_tr else 'چاپ کاردکس ریالی' }}
         </button>
     </div>
 </div>
@@ -24,20 +24,20 @@
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="stat-card">
-            <div class="stat-number" style="color: var(--accent-teal);">{{ "{:,.2f}".format(total_qty) }} <span class="fs-6 fw-normal text-secondary">{{ product.uom }}</span></div>
-            <div class="stat-label">موجودی مقداری فعلی</div>
+            <div class="stat-number" style="color: var(--accent-teal);">{{ "{:,.2f}".format(total_qty) }} <span class="fs-6 fw-normal text-secondary">{{ product.uom | tr_loc(is_tr) }}</span></div>
+            <div class="stat-label">{{ 'Fiili Stok Miktarı' if is_tr else 'موجودی مقداری فعلی' }}</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="stat-card">
-            <div class="stat-number" style="color: var(--accent-purple);">{{ "{:,.0f}".format(avg_unit_price) }} <span class="fs-6 fw-normal text-secondary">ریال</span></div>
-            <div class="stat-label">میانگین موزون نرخ هر واحد (فی)</div>
+            <div class="stat-number" style="color: var(--accent-purple);">{{ "{:,.0f}".format(avg_unit_price) }} <span class="fs-6 fw-normal text-secondary">{{ '₺' if is_tr else 'ریال' }}</span></div>
+            <div class="stat-label">{{ 'Ağırlıklı Ortalama Birim Fiyat (WAC)' if is_tr else 'میانگین موزون نرخ هر واحد (فی)' }}</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="stat-card">
-            <div class="stat-number" style="color: var(--accent-green);">{{ "{:,.0f}".format(total_financial_value) }} <span class="fs-6 fw-normal text-secondary">ریال</span></div>
-            <div class="stat-label">ارزش ریالی کل موجودی در انبار</div>
+            <div class="stat-number" style="color: var(--accent-green);">{{ "{:,.0f}".format(total_financial_value) }} <span class="fs-6 fw-normal text-secondary">{{ '₺' if is_tr else 'ریال' }}</span></div>
+            <div class="stat-label">{{ 'Toplam Envanter Parasal Değeri' if is_tr else 'ارزش ریالی کل موجودی در انبار' }}</div>
         </div>
     </div>
 </div>
@@ -46,19 +46,19 @@
 <div class="glass-card p-3 mb-4">
     <form method="get" class="row g-3 align-items-end">
         <div class="col-md-5">
-            <label class="form-label small text-secondary">انتخاب کالای دیگر:</label>
+            <label class="form-label small text-secondary">{{ 'Başka Ürün Seç:' if is_tr else 'انتخاب کالای دیگر:' }}</label>
             <select class="form-select bg-dark border-secondary text-light" onchange="if(this.value) window.location.href='/inventory/financial-kardex/' + this.value;">
                 {% for p in all_products %}
-                <option value="{{ p.id }}" {% if p.id == product.id %}selected{% endif %}>{{ p.name }} ({{ p.uom }})</option>
+                <option value="{{ p.id }}" {% if p.id == product.id %}selected{% endif %}>{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-md-4">
-            <label class="form-label small text-secondary">فیلتر انبار خاص:</label>
+            <label class="form-label small text-secondary">{{ 'Depo Filtresi:' if is_tr else 'فیلتر انبار خاص:' }}</label>
             <select name="warehouse_id" class="form-select bg-dark border-secondary text-light" onchange="this.form.submit()">
-                <option value="">تمام انبارها (ارزش کل)</option>
+                <option value="">{{ 'Tüm Depolar (Toplam Değer)' if is_tr else 'تمام انبارها (ارزش کل)' }}</option>
                 {% for w in warehouses %}
-                <option value="{{ w.id }}" {% if selected_warehouse_id == w.id %}selected{% endif %}>{{ w.name }}</option>
+                <option value="{{ w.id }}" {% if selected_warehouse_id == w.id %}selected{% endif %}>{{ w.name | tr_loc(is_tr) }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -72,22 +72,22 @@
             <thead style="background: rgba(255, 255, 255, 0.05);">
                 <tr>
                     <th rowspan="2" class="align-middle px-3">#</th>
-                    <th rowspan="2" class="align-middle">تاریخ</th>
-                    <th rowspan="2" class="align-middle">سند</th>
-                    <th colspan="3" class="border-bottom border-secondary text-success">وارده (خرید / ورود)</th>
-                    <th colspan="3" class="border-bottom border-secondary text-danger">صادره (مصرف / فروش)</th>
-                    <th colspan="3" class="border-bottom border-secondary text-info">مانده تجمعی (موجودی)</th>
+                    <th rowspan="2" class="align-middle">{{ 'Tarih' if is_tr else 'تاریخ' }}</th>
+                    <th rowspan="2" class="align-middle">{{ 'Belge' if is_tr else 'سند' }}</th>
+                    <th colspan="3" class="border-bottom border-secondary text-success">{{ 'Giriş (Satın Alma)' if is_tr else 'وارده (خرید / ورود)' }}</th>
+                    <th colspan="3" class="border-bottom border-secondary text-danger">{{ 'Çıkış (Sarf / Satış)' if is_tr else 'صادره (مصرف / فروش)' }}</th>
+                    <th colspan="3" class="border-bottom border-secondary text-info">{{ 'Kümülatif Kalan Stok' if is_tr else 'مانده تجمعی (موجودی)' }}</th>
                 </tr>
                 <tr style="font-size: 0.82rem;" class="text-secondary">
-                    <th>تعداد</th>
-                    <th>نرخ واحد</th>
-                    <th>مبلغ کل</th>
-                    <th>تعداد</th>
-                    <th>نرخ میانگین</th>
-                    <th>مبلغ کل</th>
-                    <th>تعداد</th>
-                    <th>نرخ میانگین</th>
-                    <th>ارزش ریالی مانده</th>
+                    <th>{{ 'Miktar' if is_tr else 'تعداد' }}</th>
+                    <th>{{ 'Birim Fiyat' if is_tr else 'نرخ واحد' }}</th>
+                    <th>{{ 'Tutar' if is_tr else 'مبلغ کل' }}</th>
+                    <th>{{ 'Miktar' if is_tr else 'تعداد' }}</th>
+                    <th>{{ 'Ort. Fiyat' if is_tr else 'نرخ میانگین' }}</th>
+                    <th>{{ 'Tutar' if is_tr else 'مبلغ کل' }}</th>
+                    <th>{{ 'Miktar' if is_tr else 'تعداد' }}</th>
+                    <th>{{ 'Ort. Fiyat' if is_tr else 'نرخ میانگین' }}</th>
+                    <th>{{ 'Kalan Değer' if is_tr else 'ارزش ریالی مانده' }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -136,7 +136,7 @@
                     <tr>
                         <td colspan="12" class="text-center py-5 text-secondary">
                             <i class="bi bi-wallet2 fs-2 d-block mb-2"></i>
-                            هیچ رکوردی در کاردکس ریالی این کالا ثبت نشده است.
+                            {{ 'Bu ürün için mali kardeks kaydı bulunmamaktadır.' if is_tr else 'هیچ رکوردی در کاردکس ریالی این کالا ثبت نشده است.' }}
                         </td>
                     </tr>
                 {% endif %}

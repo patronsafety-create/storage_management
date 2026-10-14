@@ -1,27 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}جزئیات سفارش خرید {{ order.po_number }} | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Sipariş Detayı ' ~ order.po_number ~ ' | Enterprise ERP' if is_tr else 'جزئیات سفارش خرید ' ~ order.po_number ~ ' | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div>
     <div class="d-flex align-items-center gap-2 mb-1">
-      <h3 class="fw-bold mb-0 text-light">سفارش خرید: <span class="text-teal font-monospace">{{ order.po_number }}</span></h3>
+      <h3 class="fw-bold mb-0 text-light">
+        {{ 'Satın Alma Siparişi: ' if is_tr else 'سفارش خرید: ' }}
+        <span class="text-teal font-monospace">{{ order.po_number }}</span>
+      </h3>
       {% if order.status.value == 'COMPLETED' %}
-        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">تکمیل‌شده</span>
+        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">{{ 'Tamamlandı' if is_tr else 'تکمیل‌شده' }}</span>
       {% elif order.status.value == 'PARTIALLY_RECEIVED' %}
-        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50">دریافت ناقص</span>
+        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50">{{ 'Kısmi Teslim' if is_tr else 'دریافت ناقص' }}</span>
       {% elif order.status.value == 'CONFIRMED' %}
-        <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50">تأیید شده / جاری</span>
+        <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50">{{ 'Onaylandı / Yolda' if is_tr else 'تأیید شده / جاری' }}</span>
       {% elif order.status.value == 'CANCELLED' %}
-        <span class="badge bg-danger bg-opacity-25 text-danger">باطل‌شده</span>
+        <span class="badge bg-danger bg-opacity-25 text-danger">{{ 'İptal Edildi' if is_tr else 'باطل‌شده' }}</span>
       {% endif %}
     </div>
-    <p class="text-secondary small mb-0">مشاهده مشخصات سفارش، اقلام خریداری‌شده و تبدیل به رسید انبار</p>
+    <p class="text-secondary small mb-0">
+      {{ 'Sipariş detayları, satın alınan kalemler ve fiili depo kabul işlemi' if is_tr else 'مشاهده مشخصات سفارش، اقلام خریداری‌شده و تبدیل به رسید انبار' }}
+    </p>
   </div>
   <div class="d-flex gap-2">
     <a href="/purchases" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-right me-1"></i>بازگشت به لیست
+      <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+      {{ 'Listeye Dön' if is_tr else 'بازگشت به لیست' }}
     </a>
   </div>
 </div>
@@ -31,28 +37,28 @@
   <div class="col-lg-4">
     <div class="glass-card p-4 h-100">
       <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25 text-light">
-        <i class="bi bi-building text-teal me-2"></i>مشخصات تأمین‌کننده و سفارش
+        <i class="bi bi-building text-teal me-2"></i>{{ 'Tedarikçi ve Sipariş Bilgileri' if is_tr else 'مشخصات تأمین‌کننده و سفارش' }}
       </h5>
       <div class="d-flex flex-column gap-3 small">
         <div>
-          <span class="text-secondary d-block">تأمین‌کننده:</span>
-          <strong class="text-light fs-6">{{ order.supplier.name if order.supplier else '-' }}</strong>
+          <span class="text-secondary d-block">{{ 'Tedarikçi:' if is_tr else 'تأمین‌کننده:' }}</span>
+          <strong class="text-light fs-6">{{ (order.supplier.name | tr_loc(is_tr)) if order.supplier else '-' }}</strong>
         </div>
         <div>
-          <span class="text-secondary d-block">کد تأمین‌کننده / شخص رابط:</span>
+          <span class="text-secondary d-block">{{ 'Kod / Yetkili:' if is_tr else 'کد تأمین‌کننده / شخص رابط:' }}</span>
           <span class="text-light">{{ order.supplier.code or '-' }} | {{ order.supplier.contact_person or '-' }}</span>
         </div>
         <div>
-          <span class="text-secondary d-block">تلفن / تماس:</span>
+          <span class="text-secondary d-block">{{ 'İletişim Tel:' if is_tr else 'تلفن / تماس:' }}</span>
           <span class="text-light font-monospace">{{ order.supplier.phone or '-' }}</span>
         </div>
         <div>
-          <span class="text-secondary d-block">تاریخ ثبت سفارش:</span>
+          <span class="text-secondary d-block">{{ 'Kayıt Tarihi:' if is_tr else 'تاریخ ثبت سفارش:' }}</span>
           <span class="text-light font-monospace">{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else '-' }}</span>
         </div>
         <div>
-          <span class="text-secondary d-block">مهلت تحویل بار:</span>
-          <span class="text-warning">{{ order.delivery_due_date or 'تعیین نشده' }}</span>
+          <span class="text-secondary d-block">{{ 'Teslim Tarihi:' if is_tr else 'مهلت تحویل بار:' }}</span>
+          <span class="text-warning">{{ order.delivery_due_date or ('Belirtilmemiş' if is_tr else 'تعیین نشده') }}</span>
         </div>
         <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
           <div class="d-flex justify-content-between mb-1 small">
@@ -83,7 +89,7 @@
         </div>
         {% if order.notes %}
         <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-          <span class="text-secondary d-block mb-1">یادداشت و شرایط:</span>
+          <span class="text-secondary d-block mb-1">{{ 'Notlar ve Koşullar:' if is_tr else 'یادداشت و شرایط:' }}</span>
           <span class="text-light">{{ order.notes }}</span>
         </div>
         {% endif %}
@@ -116,14 +122,14 @@
             {% for it in order.items %}
             {% set rem = it.quantity - it.received_quantity %}
             <tr>
-              <td class="fw-bold text-light">{{ it.product.name }} ({{ it.product.uom }})</td>
+              <td class="fw-bold text-light">{{ (it.product.name | tr_loc(is_tr)) if it.product else '-' }} ({{ (it.product.uom | tr_loc(is_tr)) if it.product else '' }})</td>
               <td class="font-monospace">{{ "{:,.2f}".format(it.quantity) }}</td>
               <td class="font-monospace text-success">{{ "{:,.2f}".format(it.received_quantity) }}</td>
               <td class="font-monospace {% if rem > 0 %}text-warning fw-bold{% else %}text-muted{% endif %}">
                 {{ "{:,.2f}".format(rem) }}
               </td>
-              <td class="font-monospace small">{{ "{:,.0f}".format(it.unit_price) }}</td>
-              <td class="font-monospace small text-teal">{{ "{:,.0f}".format(it.total_price) }}</td>
+              <td class="font-monospace small">{{ "{:,.2f}".format(it.unit_price) if is_tr else "{:,.0f}".format(it.unit_price) }}</td>
+              <td class="font-monospace small text-teal">{{ "{:,.2f}".format(it.total_price) if is_tr else "{:,.0f}".format(it.total_price) }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -134,15 +140,18 @@
       {% if order.status.value in ('CONFIRMED', 'PARTIALLY_RECEIVED') %}
       <div class="p-3 rounded-3" style="background: rgba(0, 212, 200, 0.05); border: 1px dashed rgba(0, 212, 200, 0.3);">
         <h6 class="fw-bold text-teal mb-3">
-          <i class="bi bi-box-arrow-in-down me-1"></i>ثبت دریافت بار و صدور رسید انبار (Inbound Receipt Matching)
+          <i class="bi bi-box-arrow-in-down me-1"></i>
+          {{ 'Mal Kabulü ve Depo Giriş Fişi Kes (Inbound Receipt Matching)' if is_tr else 'ثبت دریافت بار و صدور رسید انبار (Inbound Receipt Matching)' }}
         </h6>
         <form action="/purchases/{{ order.id }}/receive" method="post">
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label for="warehouse_id" class="form-label small fw-bold text-light">انبار مقصد تحویل بار <span class="text-danger">*</span></label>
+              <label for="warehouse_id" class="form-label small fw-bold text-light">
+                {{ 'Teslim Alınacak Hedef Depo' if is_tr else 'انبار مقصد تحویل بار' }} <span class="text-danger">*</span>
+              </label>
               <select name="warehouse_id" id="warehouse_id" class="form-select bg-dark border-secondary text-light" required>
                 {% for w in warehouses %}
-                <option value="{{ w.id }}">{{ w.name }}</option>
+                <option value="{{ w.id }}">{{ w.name | tr_loc(is_tr) }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -152,17 +161,17 @@
             <table class="table table-sm table-dark mb-0 align-middle">
               <thead>
                 <tr>
-                  <th>کالا</th>
-                  <th>باقیمانده سفارش</th>
-                  <th style="width: 200px;">مقدار وارده به انبار در این پارت</th>
+                  <th>{{ 'Malzeme' if is_tr else 'کالا' }}</th>
+                  <th>{{ 'Kalan Miktar' if is_tr else 'باقیمانده سفارش' }}</th>
+                  <th style="width: 200px;">{{ 'Bu Partide Kabul Edilen Miktar' if is_tr else 'مقدار وارده به انبار در این پارت' }}</th>
                 </tr>
               </thead>
               <tbody>
                 {% for it in order.items %}
                 {% set rem = it.quantity - it.received_quantity %}
                 <tr>
-                  <td class="small text-light">{{ it.product.name }}</td>
-                  <td class="small font-monospace text-warning">{{ "{:,.2f}".format(rem) }} {{ it.product.uom }}</td>
+                  <td class="small text-light">{{ (it.product.name | tr_loc(is_tr)) if it.product else '-' }}</td>
+                  <td class="small font-monospace text-warning">{{ "{:,.2f}".format(rem) }} {{ (it.product.uom | tr_loc(is_tr)) if it.product else '' }}</td>
                   <td>
                     <input type="hidden" name="item_id" value="{{ it.id }}">
                     <input type="number" step="0.001" min="0" max="{{ rem }}" name="receive_qty"
@@ -177,14 +186,17 @@
           </div>
 
           <button type="submit" class="btn btn-teal w-100 py-2">
-            <i class="bi bi-check2-circle me-1"></i>صدور رسید انبار و افزایش موجودی
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ 'Depo Giriş Fişini Kes ve Stoğa Ekle' if is_tr else 'صدور رسید انبار و افزایش موجودی' }}
           </button>
         </form>
       </div>
       {% else %}
       <div class="alert alert-glass-success d-flex align-items-center mb-0">
         <i class="bi bi-check-circle-fill fs-5 me-2"></i>
-        <div>کلیه اقلام این سفارش به طور کامل تحویل انبار شده و سفارش مختومه است.</div>
+        <div>
+          {{ 'Bu siparişteki tüm kalemler eksiksiz teslim alınmış ve sipariş kapatılmıştır.' if is_tr else 'کلیه اقلام این سفارش به طور کامل تحویل انبار شده و سفارش مختومه است.' }}
+        </div>
       </div>
       {% endif %}
     </div>

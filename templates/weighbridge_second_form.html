@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}ثبت مرحله دوم توزین قبض {{ ticket.ticket_number }} | Enterprise ERP{% endblock %}
+{% block title %}{{ '2. Tartım Kaydı - Fiş No: ' ~ ticket.ticket_number ~ ' | Enterprise ERP' if is_tr else 'ثبت مرحله دوم توزین قبض ' ~ ticket.ticket_number ~ ' | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -9,12 +9,17 @@
       <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
         <div>
           <h4 class="fw-bold mb-1 text-light">
-            <i class="bi bi-speedometer2 text-warning me-2"></i>ثبت توزین دوم قبض: <span class="text-teal font-monospace">{{ ticket.ticket_number }}</span>
+            <i class="bi bi-speedometer2 text-warning me-2"></i>
+            {{ '2. Tartım Kaydı: ' if is_tr else 'ثبت توزین دوم قبض: ' }}
+            <span class="text-teal font-monospace">{{ ticket.ticket_number }}</span>
           </h4>
-          <p class="text-secondary small mb-0">توزین متقابل تریلی پس از تخلیه یا بارگیری در محوطه و محاسبه وزن خالص خالص</p>
+          <p class="text-secondary small mb-0">
+            {{ 'Sahada yükleme veya boşaltma sonrası ikinci tartım ve net ağırlık hesaplama' if is_tr else 'توزین متقابل تریلی پس از تخلیه یا بارگیری در محوطه و محاسبه وزن خالص' }}
+          </p>
         </div>
         <a href="/weighbridge" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-right me-1"></i>بازگشت
+          <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+          {{ 'Geri' if is_tr else 'بازگشت' }}
         </a>
       </div>
 
@@ -22,26 +27,32 @@
       <div class="p-3 rounded-3 mb-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);">
         <div class="row g-3 small">
           <div class="col-sm-4">
-            <span class="text-secondary d-block">پلاک ناوگان:</span>
+            <span class="text-secondary d-block">{{ 'Araç Plakası:' if is_tr else 'پلاک ناوگان:' }}</span>
             <strong class="text-warning font-monospace fs-6">{{ ticket.truck_plate }}</strong>
           </div>
           <div class="col-sm-4">
-            <span class="text-secondary d-block">راننده:</span>
+            <span class="text-secondary d-block">{{ 'Sürücü:' if is_tr else 'راننده:' }}</span>
             <strong class="text-light">{{ ticket.driver_name }}</strong>
           </div>
           <div class="col-sm-4">
-            <span class="text-secondary d-block">کالا / انبار:</span>
-            <strong class="text-light">{{ ticket.product.name }} | {{ ticket.warehouse.name }}</strong>
+            <span class="text-secondary d-block">{{ 'Malzeme / Depo:' if is_tr else 'کالا / انبار:' }}</span>
+            <strong class="text-light">{{ (ticket.product.name | tr_loc(is_tr)) if ticket.product else '-' }} | {{ (ticket.warehouse.name | tr_loc(is_tr)) if ticket.warehouse else '-' }}</strong>
           </div>
           <div class="col-sm-6">
-            <span class="text-secondary d-block">وزن ثبت‌شده مرحله اول:</span>
+            <span class="text-secondary d-block">{{ '1. Tartım Ağırlığı:' if is_tr else 'وزن ثبت‌شده مرحله اول:' }}</span>
             <strong class="text-teal font-monospace fs-5">
-              {{ "{:,.0f}".format(ticket.gross_weight or ticket.tare_weight) }} کیلوگرم
+              {{ "{:,.0f}".format(ticket.gross_weight or ticket.tare_weight) }} kg
             </strong>
-            <span class="badge bg-secondary ms-2">{% if ticket.gross_weight %}وزن ناخالص (پر){% else %}وزن خالی (تار){% endif %}</span>
+            <span class="badge bg-secondary ms-2">
+              {% if ticket.gross_weight %}
+                {{ 'Brüt Ağırlık (Dolu)' if is_tr else 'وزن ناخالص (پر)' }}
+              {% else %}
+                {{ 'Dara Ağırlığı (Boş)' if is_tr else 'وزن خالی (تار)' }}
+              {% endif %}
+            </span>
           </div>
           <div class="col-sm-6">
-            <span class="text-secondary d-block">زمان ورود:</span>
+            <span class="text-secondary d-block">{{ 'Giriş Zamanı:' if is_tr else 'زمان ورود:' }}</span>
             <span class="font-monospace text-secondary">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') if ticket.created_at else '-' }}</span>
           </div>
         </div>
@@ -50,21 +61,22 @@
       <form action="/weighbridge/{{ ticket.id }}/complete" method="post" id="secondWeighForm">
         <div class="p-4 rounded-3 mb-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);">
           <label for="second_weight" class="form-label fw-bold fs-6 text-light">
-            <i class="bi bi-speedometer text-warning me-1"></i>وزن مرحله دوم باسکول (کیلوگرم) <span class="text-danger">*</span>
+            <i class="bi bi-speedometer text-warning me-1"></i>
+            {{ '2. Aşama Kantar Ağırlığı (kg)' if is_tr else 'وزن مرحله دوم باسکول (کیلوگرم)' }} <span class="text-danger">*</span>
           </label>
           <div class="input-group input-group-lg mb-3">
             <input type="number" step="10" min="500" class="form-control font-monospace text-warning fw-bold fs-4"
-                   id="second_weight" name="second_weight" placeholder="مثلاً: 14200" required>
-            <span class="input-group-text bg-dark text-secondary border-secondary">کیلوگرم</span>
+                   id="second_weight" name="second_weight" placeholder="{{ 'Örn: 14200' if is_tr else 'مثلاً: 14200' }}" required>
+            <span class="input-group-text bg-dark text-secondary border-secondary">kg</span>
           </div>
 
           <!-- باکس محاسبه زنده وزن خالص -->
           <div class="p-3 rounded-2 bg-dark border border-secondary border-opacity-50">
             <div class="d-flex justify-content-between align-items-center">
-              <span class="text-secondary small">وزن خالص محاسبه‌شده (Net Weight):</span>
+              <span class="text-secondary small">{{ 'Hesaplanan Net Ağırlık (Net Weight):' if is_tr else 'وزن خالص محاسبه‌شده (Net Weight):' }}</span>
               <div class="text-end">
-                <span id="netWeightDisplay" class="fs-4 fw-bold font-monospace text-success">--- کیلوگرم</span>
-                <div id="netTonDisplay" class="small text-teal">معادل: --- تن</div>
+                <span id="netWeightDisplay" class="fs-4 fw-bold font-monospace text-success">--- kg</span>
+                <div id="netTonDisplay" class="small text-teal">{{ 'Karşılığı: --- ton' if is_tr else 'معادل: --- تن' }}</div>
               </div>
             </div>
           </div>
@@ -74,15 +86,19 @@
         <div class="form-check form-switch mb-4 p-3 rounded glass-card border-teal border-opacity-25">
           <input class="form-check-input ms-2" type="checkbox" role="switch" id="auto_create_transaction" name="auto_create_transaction" value="true" checked>
           <label class="form-check-label fw-semibold text-light" for="auto_create_transaction">
-            <i class="bi bi-box-seam text-teal me-1"></i>صدور خودکار سند رسید/حواله انبار بر اساس تناژ خالص باسکول
+            <i class="bi bi-box-seam text-teal me-1"></i>
+            {{ 'Kantar net tonajına göre otomatik depo irsaliyesi / fişi oluştur' if is_tr else 'صدور خودکار سند رسید/حواله انبار بر اساس تناژ خالص باسکول' }}
           </label>
-          <div class="text-secondary small mt-1">با انتخاب این گزینه، موجودی کالا در انبار به صورت آنی بر مبنای وزن قطعی باسکول به‌روزرسانی می‌شود.</div>
+          <div class="text-secondary small mt-1">
+            {{ 'Bu seçenek işaretlendiğinde, depo stok miktarı kantar net ağırlığı üzerinden anında güncellenir.' if is_tr else 'با انتخاب این گزینه، موجودی کالا در انبار به صورت آنی بر مبنای وزن قطعی باسکول به‌روزرسانی می‌شود.' }}
+          </div>
         </div>
 
         <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
-          <a href="/weighbridge" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+          <a href="/weighbridge" class="btn btn-outline-secondary px-4 py-2">{{ 'Vazgeç' if is_tr else 'انصراف' }}</a>
           <button type="submit" class="btn btn-teal px-5 py-2">
-            <i class="bi bi-check2-circle me-1"></i>تکمیل قطعی توزین و صدور قبض
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ 'Tartımı Kesinleştir ve Fiş Bas' if is_tr else 'تکمیل قطعی توزین و صدور قبض' }}
           </button>
         </div>
       </form>
@@ -94,6 +110,7 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const isTr = {{ 'true' if is_tr else 'false' }};
     const firstWeight = {{ (ticket.gross_weight or ticket.tare_weight) | float }};
     const secondInput = document.getElementById('second_weight');
     const netDisplay = document.getElementById('netWeightDisplay');
@@ -103,11 +120,17 @@ document.addEventListener("DOMContentLoaded", function() {
         const secVal = parseFloat(this.value) || 0;
         if (secVal > 0) {
             const net = Math.abs(firstWeight - secVal);
-            netDisplay.textContent = `${net.toLocaleString('fa-IR')} کیلوگرم`;
-            tonDisplay.textContent = `معادل: ${(net / 1000).toLocaleString('fa-IR', {maximumFractionDigits: 3})} تن خالص`;
+            const netTon = (net / 1000).toFixed(3);
+            if (isTr) {
+                netDisplay.textContent = `${net.toLocaleString('tr-TR')} kg`;
+                tonDisplay.textContent = `Karşılığı: ${netTon} ton net`;
+            } else {
+                netDisplay.textContent = `${net.toLocaleString('fa-IR')} کیلوگرم`;
+                tonDisplay.textContent = `معادل: ${(net / 1000).toLocaleString('fa-IR', {maximumFractionDigits: 3})} تن خالص`;
+            }
         } else {
-            netDisplay.textContent = '--- کیلوگرم';
-            tonDisplay.textContent = 'معادل: --- تن';
+            netDisplay.textContent = isTr ? '--- kg' : '--- کیلوگرم';
+            tonDisplay.textContent = isTr ? 'Karşılığı: --- ton' : 'معادل: --- تن';
         }
     });
 });

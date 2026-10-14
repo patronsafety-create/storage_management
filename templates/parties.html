@@ -427,7 +427,7 @@
       <form action="/master-data/supplier" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addSupplierModalLabel">
-                <i class="bi bi-building-add text-success me-2"></i>تعریف تأمین‌کننده / Yeni Tedarikçi Kaydı
+                <i class="bi bi-building-add text-success me-2"></i>{% if is_tr %}Yeni Tedarikçi Kaydı{% else %}تعریف تأمین‌کننده جدید{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -435,27 +435,27 @@
             <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label">نام شرکت / کارخانه / تأمین‌کننده <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت فولاد مبارکه یا Erdemir Çelik">
-                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد)</div>
+                    <label class="form-label">{% if is_tr %}Firma / Tedarikçi Adı{% else %}نام شرکت / کارخانه / تأمین‌کننده{% endif %} <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="{% if is_tr %}Örn: Erdemir Çelik veya İskenderun Demir Çelik{% else %}مثلاً: شرکت فولاد مبارکه یا ذوب‌آهن اصفهان{% endif %}">
+                    <div class="form-text text-secondary small">{% if is_tr %}En az 3 karakter, geçerli şirket veya kişi adı (sadece rakam olamaz){% else %}حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد){% endif %}</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <label class="form-label">{% if is_tr %}Ülke ve Vergi Mevzuatı{% else %}کشور و مقررات مالیاتی{% endif %}</label>
                     <select class="form-select country-select" name="country_code" onchange="handleCountryChange(this.closest('form'))">
                         <option value="IR" {% if not is_tr %}selected{% endif %}>🇮🇷 ایران (کد اقتصادی / ملی)</option>
                         <option value="TR" {% if is_tr %}selected{% endif %}>🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کد سیستمی تأمین‌کننده</label>
-                    <input type="text" class="form-control" name="code" placeholder="اختیاری (خودکار: SUP-xxx)">
+                    <label class="form-label">{% if is_tr %}Tedarikçi Kodu (Sistem){% else %}کد سیستمی تأمین‌کننده{% endif %}</label>
+                    <input type="text" class="form-control" name="code" placeholder="{% if is_tr %}İsteğe bağlı (Otomatik: SUP-xxx){% else %}اختیاری (خودکار: SUP-xxx){% endif %}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شخص رابط / مدیر فروش</label>
-                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس رضایی / Ahmet Bey">
+                    <label class="form-label">{% if is_tr %}İlgili Kişi / Satış Müdürü{% else %}شخص رابط / مدیر فروش{% endif %}</label>
+                    <input type="text" class="form-control" name="contact_person" placeholder="{% if is_tr %}Örn: Ahmet Bey / Selim Bey{% else %}مثلاً: مهندس رضایی{% endif %}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شماره تلفن / همراه <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Telefon / GSM No{% else %}شماره تلفن / همراه{% endif %} <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
                         <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="{% if is_tr %}0532 123 4567{% else %}۰۹۱۲-۳۴۵-۶۷۸۹{% endif %}">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
@@ -465,7 +465,7 @@
 
                 <!-- فیلدهای ایران -->
                 <div class="col-md-6 ir-field {% if is_tr %}d-none{% endif %}">
-                    <label class="form-label">شناسه ملی / کد اقتصادی (ایران)</label>
+                    <label class="form-label">{% if is_tr %}Kimlik / Vergi No (İran){% else %}شناسه ملی / کد اقتصادی (ایران){% endif %}</label>
                     <input type="text" class="form-control font-monospace national-id-input" name="national_id" placeholder="۱۰ یا ۱۱ رقم">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
@@ -477,27 +477,27 @@
                     <div class="form-text text-secondary small">10 haneli VKN (Kurumsal) veya 11 haneli TCKN</div>
                 </div>
                 <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
-                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <label class="form-label text-danger">Vergi Dairesi</label>
                     <input type="text" class="form-control" name="tax_office" placeholder="Örn: Karadeniz Ereğli, Kadıköy">
                 </div>
                 <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
-                    <label class="form-label text-danger">MERSİS No (اختیاری)</label>
+                    <label class="form-label text-danger">MERSİS No</label>
                     <input type="text" class="form-control font-monospace" name="mersis_no" placeholder="16 haneli MERSİS">
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">پست الکترونیکی (ایمیل)</label>
+                    <label class="form-label">{% if is_tr %}E-posta Adresi{% else %}پست الکترونیکی (ایمیل){% endif %}</label>
                     <input type="email" class="form-control" name="email" placeholder="sales@company.com">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">آدرس کارخانه / دفتر مرکزی</label>
-                    <textarea class="form-control" name="address" rows="2" placeholder="آدرس کامل پستی..."></textarea>
+                    <label class="form-label">{% if is_tr %}Fabrika / Merkez Ofis Adresi{% else %}آدرس کارخانه / دفتر مرکزی{% endif %}</label>
+                    <textarea class="form-control" name="address" rows="2" placeholder="{% if is_tr %}Tam açık adres...{% else %}آدرس کامل پستی...{% endif %}"></textarea>
                 </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
-            <button type="submit" class="btn btn-teal px-4">ثبت تأمین‌کننده / Kaydet</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Tedarikçiyi Kaydet{% else %}ثبت تأمین‌کننده{% endif %}</button>
           </div>
       </form>
     </div>
@@ -511,7 +511,7 @@
       <form id="editSupplierForm" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="editSupplierModalLabel">
-                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات تأمین‌کننده / Tedarikçi Düzenle
+                <i class="bi bi-pencil-square text-teal me-2"></i>{% if is_tr %}Tedarikçi Bilgilerini Düzenle{% else %}ویرایش مشخصات تأمین‌کننده{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -519,37 +519,37 @@
             <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label">نام شرکت / کارخانه <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Firma / Tedarikçi Adı{% else %}نام شرکت / کارخانه{% endif %} <span class="text-danger">*</span></label>
                     <input type="text" class="form-control party-name-input" id="edit_sup_name" name="name" required minlength="3">
-                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد)</div>
+                    <div class="form-text text-secondary small">{% if is_tr %}En az 3 karakter, geçerli şirket veya kişi adı (sadece rakam olamaz){% else %}حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد){% endif %}</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <label class="form-label">{% if is_tr %}Ülke ve Vergi Mevzuatı{% else %}کشور و مقررات مالیاتی{% endif %}</label>
                     <select class="form-select country-select" id="edit_sup_country" name="country_code" onchange="handleCountryChange(this.closest('form'))">
                         <option value="IR">🇮🇷 ایران (کد اقتصادی / ملی)</option>
                         <option value="TR">🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کد سیستمی</label>
+                    <label class="form-label">{% if is_tr %}Tedarikçi Kodu{% else %}کد سیستمی{% endif %}</label>
                     <input type="text" class="form-control" id="edit_sup_code" name="code">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شخص رابط</label>
+                    <label class="form-label">{% if is_tr %}İlgili Kişi{% else %}شخص رابط{% endif %}</label>
                     <input type="text" class="form-control" id="edit_sup_contact" name="contact_person">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شماره تلفن / همراه <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Telefon / GSM No{% else %}شماره تلفن / همراه{% endif %} <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_sup_phone" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_sup_phone" name="phone" required placeholder="{% if is_tr %}0532 123 4567{% else %}۰۹۱۲-۳۴۵-۶۷۸۹{% endif %}">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
-                    <div class="form-text text-secondary small phone-hint">شماره همراه ۱۱ رقمی (الزامی)</div>
+                    <div class="form-text text-secondary small phone-hint">{% if is_tr %}Telefon numarası (05xx veya 02xx){% else %}شماره همراه ۱۱ رقمی (الزامی){% endif %}</div>
                 </div>
 
                 <!-- فیلدهای ایران -->
                 <div class="col-md-6 ir-field">
-                    <label class="form-label">شناسه ملی / کد اقتصادی</label>
+                    <label class="form-label">{% if is_tr %}Kimlik / Vergi No (İran){% else %}شناسه ملی / کد اقتصادی{% endif %}</label>
                     <input type="text" class="form-control font-monospace national-id-input" id="edit_sup_national_id" name="national_id">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
@@ -561,7 +561,7 @@
                     <div class="form-text text-secondary small">10 haneli VKN veya 11 haneli TCKN</div>
                 </div>
                 <div class="col-md-4 tr-field d-none">
-                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <label class="form-label text-danger">Vergi Dairesi</label>
                     <input type="text" class="form-control" id="edit_sup_tax_office" name="tax_office">
                 </div>
                 <div class="col-md-4 tr-field d-none">
@@ -570,18 +570,18 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">پست الکترونیکی</label>
+                    <label class="form-label">{% if is_tr %}E-posta Adresi{% else %}پست الکترونیکی{% endif %}</label>
                     <input type="email" class="form-control" id="edit_sup_email" name="email">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">آدرس</label>
+                    <label class="form-label">{% if is_tr %}Fabrika / Merkez Ofis Adresi{% else %}آدرس{% endif %}</label>
                     <textarea class="form-control" id="edit_sup_address" name="address" rows="2"></textarea>
                 </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
-            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات / Güncelle</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Değişiklikleri Kaydet{% else %}ذخیره تغییرات{% endif %}</button>
           </div>
       </form>
     </div>
@@ -595,7 +595,7 @@
       <form action="/master-data/customer" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addCustomerModalLabel">
-                <i class="bi bi-person-plus-fill text-teal me-2"></i>تعریف مشتری / پیمانکار پروژه جدید / Yeni Müşteri
+                <i class="bi bi-person-plus-fill text-teal me-2"></i>{% if is_tr %}Yeni Müşteri / Proje Yüklenicisi Kaydı{% else %}تعریف مشتری / پیمانکار پروژه جدید{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -603,27 +603,27 @@
             <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label">نام شخص / نام شرکت خریدار <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت مهندسی آرمان یا ENKA İnşaat">
-                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد)</div>
+                    <label class="form-label">{% if is_tr %}Müşteri / Şirket Adı{% else %}نام شخص / نام شرکت خریدار{% endif %} <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="{% if is_tr %}Örn: ENKA İnşaat veya Rönesans Holding{% else %}مثلاً: شرکت مهندسی آرمان یا فولاد سازه{% endif %}">
+                    <div class="form-text text-secondary small">{% if is_tr %}En az 3 karakter, geçerli kişi veya şirket adı (sadece rakam olamaz){% else %}حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد){% endif %}</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <label class="form-label">{% if is_tr %}Ülke ve Vergi Mevzuatı{% else %}کشور و مقررات مالیاتی{% endif %}</label>
                     <select class="form-select country-select" name="country_code" onchange="handleCountryChange(this.closest('form'))">
                         <option value="IR" {% if not is_tr %}selected{% endif %}>🇮🇷 ایران (کد اقتصادی / ملی)</option>
                         <option value="TR" {% if is_tr %}selected{% endif %}>🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کد مشتری</label>
-                    <input type="text" class="form-control" name="code" placeholder="اختیاری (خودکار: CUST-xxx)">
+                    <label class="form-label">{% if is_tr %}Müşteri Kodu{% else %}کد مشتری{% endif %}</label>
+                    <input type="text" class="form-control" name="code" placeholder="{% if is_tr %}İsteğe bağlı (Otomatik: CUST-xxx){% else %}اختیاری (خودکار: CUST-xxx){% endif %}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شخص تحویل‌گیرنده / رابط</label>
-                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس حسینی / Selim Bey">
+                    <label class="form-label">{% if is_tr %}Teslim Alan / İlgili Kişi{% else %}شخص تحویل‌گیرنده / رابط{% endif %}</label>
+                    <input type="text" class="form-control" name="contact_person" placeholder="{% if is_tr %}Örn: Selim Bey / İnşaat Şefi{% else %}مثلاً: مهندس حسینی{% endif %}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Telefon / GSM No{% else %}شماره تماس / همراه{% endif %} <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
                         <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="{% if is_tr %}0532 123 4567{% else %}۰۹۱۲-۳۴۵-۶۷۸۹{% endif %}">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
@@ -633,7 +633,7 @@
 
                 <!-- فیلدهای ایران -->
                 <div class="col-md-4 ir-field {% if is_tr %}d-none{% endif %}">
-                    <label class="form-label">شناسه ملی / کد ملی</label>
+                    <label class="form-label">{% if is_tr %}Kimlik / Vergi No (İran){% else %}شناسه ملی / کد ملی{% endif %}</label>
                     <input type="text" class="form-control font-monospace national-id-input" name="national_id" placeholder="کد ۱۰ یا ۱۱ رقمی">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
@@ -645,7 +645,7 @@
                     <div class="form-text text-secondary small">10 haneli VKN veya 11 haneli TCKN</div>
                 </div>
                 <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
-                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <label class="form-label text-danger">Vergi Dairesi</label>
                     <input type="text" class="form-control" name="tax_office" placeholder="Örn: Beşiktaş, İskenderun">
                 </div>
                 <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
@@ -654,22 +654,22 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">سقف اعتبار مالی ({{ active_region.currency_label }})</label>
-                    <input type="number" step="1000" class="form-control" name="credit_limit" value="0" placeholder="0 = نامحدود">
+                    <label class="form-label">{% if is_tr %}Kredi Limiti ({{ active_region.currency_label }}){% else %}سقف اعتبار مالی ({{ active_region.currency_label }}){% endif %}</label>
+                    <input type="number" step="1000" class="form-control" name="credit_limit" value="0" placeholder="{% if is_tr %}0 = Sınırsız / Peşin{% else %}0 = نامحدود / نقدی{% endif %}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">پست الکترونیکی</label>
+                    <label class="form-label">{% if is_tr %}E-posta Adresi{% else %}پست الکترونیکی{% endif %}</label>
                     <input type="email" class="form-control" name="email" placeholder="client@domain.com">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">آدرس کارگاه / دفتر خریدار</label>
-                    <textarea class="form-control" name="address" rows="2" placeholder="نشانی دقیق تحویل بار یا دفتر..."></textarea>
+                    <label class="form-label">{% if is_tr %}Şantiye / Müşteri Teslim Adresi{% else %}آدرس کارگاه / دفتر خریدار{% endif %}</label>
+                    <textarea class="form-control" name="address" rows="2" placeholder="{% if is_tr %}Tam teslimat adresi veya şantiye bilgisi...{% else %}نشانی دقیق تحویل بار یا دفتر...{% endif %}"></textarea>
                 </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
-            <button type="submit" class="btn btn-teal px-4">ثبت مشتری / Kaydet</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Müşteriyi Kaydet{% else %}ثبت مشتری{% endif %}</button>
           </div>
       </form>
     </div>
@@ -683,7 +683,7 @@
       <form id="editCustomerForm" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="editCustomerModalLabel">
-                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات مشتری / Müşteri Düzenle
+                <i class="bi bi-pencil-square text-teal me-2"></i>{% if is_tr %}Müşteri Bilgilerini Düzenle{% else %}ویرایش مشخصات مشتری{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -691,37 +691,37 @@
             <div class="alert alert-danger d-none modal-error-alert py-2 px-3 small mb-3 align-items-center gap-2"></div>
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label">نام شخص / نام شرکت <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Müşteri / Şirket Adı{% else %}نام شخص / نام شرکت{% endif %} <span class="text-danger">*</span></label>
                     <input type="text" class="form-control party-name-input" id="edit_cust_name" name="name" required minlength="3">
-                    <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد)</div>
+                    <div class="form-text text-secondary small">{% if is_tr %}En az 3 karakter, geçerli kişi veya شرکت adı (sadece rakam olamaz){% else %}حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد){% endif %}</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <label class="form-label">{% if is_tr %}Ülke ve Vergi Mevzuatı{% else %}کشور و مقررات مالیاتی{% endif %}</label>
                     <select class="form-select country-select" id="edit_cust_country" name="country_code" onchange="handleCountryChange(this.closest('form'))">
                         <option value="IR">🇮🇷 ایران (کد اقتصادی / ملی)</option>
                         <option value="TR">🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">کد مشتری</label>
+                    <label class="form-label">{% if is_tr %}Müşteri Kodu{% else %}کد مشتری{% endif %}</label>
                     <input type="text" class="form-control" id="edit_cust_code" name="code">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شخص رابط</label>
+                    <label class="form-label">{% if is_tr %}İlgili Kişi{% else %}شخص رابط{% endif %}</label>
                     <input type="text" class="form-control" id="edit_cust_contact" name="contact_person">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Telefon / GSM No{% else %}شماره تماس / همراه{% endif %} <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_cust_phone" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" id="edit_cust_phone" name="phone" required placeholder="{% if is_tr %}0532 123 4567{% else %}۰۹۱۲-۳۴۵-۶۷۸۹{% endif %}">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
-                    <div class="form-text text-secondary small phone-hint">شماره همراه ۱۱ رقمی (الزامی)</div>
+                    <div class="form-text text-secondary small phone-hint">{% if is_tr %}Telefon numarası (05xx veya 02xx){% else %}شماره همراه ۱۱ رقمی (الزامی){% endif %}</div>
                 </div>
 
                 <!-- فیلدهای ایران -->
                 <div class="col-md-4 ir-field">
-                    <label class="form-label">شناسه ملی / کد ملی</label>
+                    <label class="form-label">{% if is_tr %}Kimlik / Vergi No (İran){% else %}شناسه ملی / کد ملی{% endif %}</label>
                     <input type="text" class="form-control font-monospace national-id-input" id="edit_cust_national_id" name="national_id">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
@@ -733,7 +733,7 @@
                     <div class="form-text text-secondary small">10 haneli VKN veya 11 haneli TCKN</div>
                 </div>
                 <div class="col-md-4 tr-field d-none">
-                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <label class="form-label text-danger">Vergi Dairesi</label>
                     <input type="text" class="form-control" id="edit_cust_tax_office" name="tax_office">
                 </div>
                 <div class="col-md-4 tr-field d-none">
@@ -742,22 +742,22 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">سقف اعتبار ({{ active_region.currency_label }})</label>
+                    <label class="form-label">{% if is_tr %}Kredi Limiti ({{ active_region.currency_label }}){% else %}سقف اعتبار ({{ active_region.currency_label }}){% endif %}</label>
                     <input type="number" step="1000" class="form-control" id="edit_cust_credit" name="credit_limit">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">پست الکترونیکی</label>
+                    <label class="form-label">{% if is_tr %}E-posta Adresi{% else %}پست الکترونیکی{% endif %}</label>
                     <input type="email" class="form-control" id="edit_cust_email" name="email">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">آدرس</label>
+                    <label class="form-label">{% if is_tr %}Şantiye / Teslim Adresi{% else %}آدرس{% endif %}</label>
                     <textarea class="form-control" id="edit_cust_address" name="address" rows="2"></textarea>
                 </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
-            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات / Güncelle</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Değişiklikleri Kaydet{% else %}ذخیره تغییرات{% endif %}</button>
           </div>
       </form>
     </div>

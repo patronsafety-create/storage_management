@@ -9,8 +9,11 @@ from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import AuditLog
 
+from src.core.localization.regions import localize_display_name, get_active_region
+
 router = APIRouter(prefix="/admin/audit-logs", tags=["Audit Logs"])
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("", response_class=HTMLResponse)
@@ -30,6 +33,8 @@ async def list_audit_logs(
         query = query.filter(AuditLog.entity_name == entity_filter)
 
     logs = query.limit(200).all()
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
 
     return templates.TemplateResponse(
         request=request,
@@ -39,6 +44,8 @@ async def list_audit_logs(
             "logs": logs,
             "action_filter": action_filter,
             "entity_filter": entity_filter,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )

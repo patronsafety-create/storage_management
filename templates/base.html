@@ -323,6 +323,46 @@
     }
     .plate-city { width: 50px; }
 
+    /* ===== TURKISH LICENSE PLATE COMPONENT (TÜRK ARAÇ PLAKASI) ===== */
+    .tr-plate-container {
+      display: inline-flex;
+      align-items: center;
+      background: #ffffff;
+      color: #111;
+      border: 2px solid #222;
+      border-radius: 8px;
+      padding: 5px 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.8);
+      direction: ltr !important;
+      gap: 6px;
+      font-weight: 700;
+      user-select: none;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .tr-plate-flag {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #003399; /* Blue EU/TR band */
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      line-height: 1;
+      text-align: center;
+      height: 42px;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+    }
+    .tr-plate-flag span {
+      display: block;
+    }
+    .tr-plate-city { width: 56px; text-transform: uppercase; }
+    .tr-plate-letters { width: 88px; text-transform: uppercase; }
+    .tr-plate-digits { width: 92px; }
+
     /* ===== SMART MOBILE INPUT ===== */
     .ir-mobile-wrapper {
       position: relative;

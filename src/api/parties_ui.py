@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_
 
 from src.core.dependencies import get_db, require_admin, get_current_user
-from src.core.localization.regions import get_active_region
+from src.core.localization.regions import get_active_region, Region, localize_display_name
 from src.core.localization.tr_rules import validate_turkish_party_data
 from src.domain_model.inventory_models import (
     Supplier, Customer, StockTransaction, TransactionType,
@@ -22,6 +22,7 @@ router = APIRouter(
 )
 
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("/parties", response_class=HTMLResponse)
@@ -37,6 +38,8 @@ async def list_parties(
 ):
     """مدیریت طرف‌های تجاری: تأمین‌کنندگان و مشتریان"""
     is_admin = any(role.name == "Admin" for role in current_user.roles)
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
 
     # کوئری تأمین‌کنندگان و مشتریان
     sup_query = db.query(Supplier)
@@ -134,7 +137,9 @@ async def list_parties(
             "search": search or "",
             "status_filter": status or "all",
             "msg": msg,
-            "error": error
+            "error": error,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 

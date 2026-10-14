@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}انتقال بین انبارها | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Depolar Arası Transfer | NexusPour ERP' if is_tr else 'انتقال بین انبارها | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -9,12 +9,12 @@
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
                 <div>
                     <h4 class="fw-bold mb-1 text-light">
-                        <i class="bi bi-arrow-left-right text-teal me-2"></i>انتقال کالا بین انبارها (Inter-Warehouse Transfer)
+                        <i class="bi bi-arrow-left-right text-teal me-2"></i>{{ 'Depolar Arası Malzeme Transferi (Inter-Warehouse Transfer)' if is_tr else 'انتقال کالا بین انبارها (Inter-Warehouse Transfer)' }}
                     </h4>
-                    <p class="text-secondary small mb-0">جابه‌جایی کالا از یک انبار به انبار دیگر با کسر و افزایش همزمان و ایمن</p>
+                    <p class="text-secondary small mb-0">{{ 'Depolar arasında eşzamanlı ve güvenli stok çıkış ve giriş işlemi' if is_tr else 'جابه‌جایی کالا از یک انبار به انبار دیگر با کسر و افزایش همزمان و ایمن' }}</p>
                 </div>
                 <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-right me-1"></i>بازگشت
+                    <i class="bi bi-arrow-right me-1"></i>{{ 'Geri Dön' if is_tr else 'بازگشت' }}
                 </a>
             </div>
 
@@ -30,12 +30,12 @@
                 <!-- انتخاب کالا -->
                 <div class="mb-4">
                     <label for="product_id" class="form-label fw-bold">
-                        کالای مورد نظر جهت انتقال <span class="text-danger">*</span>
+                        {{ 'Transfer Edilecek Ürün' if is_tr else 'کالای مورد نظر جهت انتقال' }} <span class="text-danger">*</span>
                     </label>
                     <select class="form-select form-select-lg" id="product_id" name="product_id" required>
-                        <option value="" selected disabled>انتخاب کالا...</option>
+                        <option value="" selected disabled>{{ 'Ürün seçiniz...' if is_tr else 'انتخاب کالا...' }}</option>
                         {% for product in products %}
-                        <option value="{{ product.id }}" data-uom="{{ product.uom }}">{{ product.name }} ({{ product.uom }})</option>
+                        <option value="{{ product.id }}" data-uom="{{ product.uom | tr_loc(is_tr) }}">{{ product.name | tr_loc(is_tr) }} ({{ product.uom | tr_loc(is_tr) }})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -44,24 +44,24 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label for="from_warehouse_id" class="form-label fw-bold">
-                            <i class="bi bi-box-arrow-up text-danger me-1"></i>انبار مبدأ (فرستنده) <span class="text-danger">*</span>
+                            <i class="bi bi-box-arrow-up text-danger me-1"></i>{{ 'Kaynak Depo (Çıkış)' if is_tr else 'انبار مبدأ (فرستنده)' }} <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" id="from_warehouse_id" name="from_warehouse_id" required>
-                            <option value="" selected disabled>انتخاب انبار مبدأ...</option>
+                            <option value="" selected disabled>{{ 'Kaynak depo seçiniz...' if is_tr else 'انتخاب انبار مبدأ...' }}</option>
                             {% for warehouse in warehouses %}
-                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            <option value="{{ warehouse.id }}">{{ warehouse.name | tr_loc(is_tr) }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="col-md-6">
                         <label for="to_warehouse_id" class="form-label fw-bold">
-                            <i class="bi bi-box-arrow-in-down text-success me-1"></i>انبار مقصد (گیرنده) <span class="text-danger">*</span>
+                            <i class="bi bi-box-arrow-in-down text-success me-1"></i>{{ 'Hedef Depo (Varış)' if is_tr else 'انبار مقصد (گیرنده)' }} <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" id="to_warehouse_id" name="to_warehouse_id" required>
-                            <option value="" selected disabled>انتخاب انبار مقصد...</option>
+                            <option value="" selected disabled>{{ 'Hedef depo seçiniz...' if is_tr else 'انتخاب انبار مقصد...' }}</option>
                             {% for warehouse in warehouses %}
-                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            <option value="{{ warehouse.id }}">{{ warehouse.name | tr_loc(is_tr) }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -72,10 +72,10 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-info-circle-fill text-info"></i>
-                            <span class="small text-secondary">موجودی در انبار مبدأ:</span>
+                            <span class="small text-secondary">{{ 'Kaynak Depodaki Mevcut Stok:' if is_tr else 'موجودی در انبار مبدأ:' }}</span>
                             <span id="sourceStockVal" class="fw-bold font-monospace fs-6 text-light">---</span>
                         </div>
-                        <span id="sourceStockBadge" class="badge bg-secondary bg-opacity-25 text-light">در حال استعلام...</span>
+                        <span id="sourceStockBadge" class="badge bg-secondary bg-opacity-25 text-light">{{ 'Sorgulanıyor...' if is_tr else 'در حال استعلام...' }}</span>
                     </div>
                 </div>
 
@@ -83,24 +83,24 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label for="quantity" id="qtyLabel" class="form-label fw-bold">
-                            مقدار / تعداد انتقال <span class="text-danger">*</span>
+                            {{ 'Transfer Miktarı' if is_tr else 'مقدار / تعداد انتقال' }} <span class="text-danger">*</span>
                         </label>
-                        <input type="number" step="0.001" min="0.001" class="form-control" id="quantity" name="quantity" required placeholder="مثال: 5">
+                        <input type="number" step="0.001" min="0.001" class="form-control" id="quantity" name="quantity" required placeholder="{{ 'Örnek: 5' if is_tr else 'مثال: 5' }}">
                         <div id="transferWarn" class="text-danger small mt-1 d-none">
-                            <i class="bi bi-exclamation-circle-fill me-1"></i>مقدار انتقال بیشتر از موجودی انبار مبدأ است!
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>{{ 'Transfer miktarı kaynak depo stoğundan fazladır!' if is_tr else 'مقدار انتقال بیشتر از موجودی انبار مبدأ است!' }}
                         </div>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="reference_document" class="form-label">شماره سند / حواله انتقال (اختیاری)</label>
-                        <input type="text" class="form-control" id="reference_document" name="reference_document" placeholder="مثال: TRF-1403-01">
+                        <label for="reference_document" class="form-label">{{ 'Transfer Belge / İrsaliye No (İsteğe bağlı)' if is_tr else 'شماره سند / حواله انتقال (اختیاری)' }}</label>
+                        <input type="text" class="form-control" id="reference_document" name="reference_document" placeholder="{{ 'Örn: TRF-2026-01' if is_tr else 'مثال: TRF-1403-01' }}">
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
-                    <a href="/dashboard" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+                    <a href="/dashboard" class="btn btn-outline-secondary px-4 py-2">{{ 'İptal' if is_tr else 'انصراف' }}</a>
                     <button type="submit" id="submitTransferBtn" class="btn btn-teal px-5 py-2">
-                        <i class="bi bi-check2-circle me-1"></i>ثبت انتقال بین انبارها
+                        <i class="bi bi-check2-circle me-1"></i>{{ 'Transferi Onayla ve Kaydet' if is_tr else 'ثبت انتقال بین انبارها' }}
                     </button>
                 </div>
             </form>
@@ -112,6 +112,7 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const isTr = {{ 'true' if is_tr else 'false' }};
     const productSelect = document.getElementById('product_id');
     const fromSelect = document.getElementById('from_warehouse_id');
     const toSelect = document.getElementById('to_warehouse_id');
@@ -130,7 +131,11 @@ document.addEventListener("DOMContentLoaded", function() {
         const opt = productSelect.options[productSelect.selectedIndex];
         if (opt && opt.getAttribute('data-uom')) {
             uom = opt.getAttribute('data-uom');
-            qtyLabel.innerHTML = `مقدار / تعداد انتقال (${uom}) <span class="text-danger">*</span>`;
+            if (isTr) {
+                qtyLabel.innerHTML = `Transfer Miktarı (${uom}) <span class="text-danger">*</span>`;
+            } else {
+                qtyLabel.innerHTML = `مقدار / تعداد انتقال (${uom}) <span class="text-danger">*</span>`;
+            }
         }
     }
 
@@ -146,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         stockBox.classList.remove('d-none');
         stockBadge.className = 'badge bg-secondary bg-opacity-25 text-light';
-        stockBadge.textContent = 'در حال استعلام...';
+        stockBadge.textContent = isTr ? 'Sorgulanıyor...' : 'در حال استعلام...';
 
         try {
             const resp = await fetch(`/api/stock/${pId}/${fromId}`);
@@ -154,14 +159,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 const data = await resp.json();
                 currentSourceStock = data.current_stock;
                 const unit = data.uom || uom;
-                stockVal.textContent = `${currentSourceStock.toLocaleString('fa-IR')} ${unit}`;
+                stockVal.textContent = isTr 
+                    ? `${currentSourceStock.toLocaleString('tr-TR')} ${unit}`
+                    : `${currentSourceStock.toLocaleString('fa-IR')} ${unit}`;
 
                 if (currentSourceStock > 0) {
                     stockBadge.className = 'badge bg-success bg-opacity-25 text-success border border-success border-opacity-50';
-                    stockBadge.textContent = 'موجودی کافی';
+                    stockBadge.textContent = isTr ? 'Yeterli Stok' : 'موجودی کافی';
                 } else {
                     stockBadge.className = 'badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50';
-                    stockBadge.textContent = 'فاقد موجودی';
+                    stockBadge.textContent = isTr ? 'Stok Yetersiz' : 'فاقد موجودی';
                 }
                 validateQty();
             }
@@ -173,14 +180,14 @@ document.addEventListener("DOMContentLoaded", function() {
         const sameWarehouse = fromSelect.value && toSelect.value && fromSelect.value === toSelect.value;
 
         if (sameWarehouse) {
-            warn.textContent = "انبار مبدأ و مقصد نمی‌توانند یکسان باشند!";
+            warn.textContent = isTr ? "Kaynak ve hedef depo aynı olamaz!" : "انبار مبدأ و مقصد نمی‌توانند یکسان باشند!";
             warn.classList.remove('d-none');
             submitBtn.disabled = true;
             return;
         }
 
         if (currentSourceStock !== null && val > currentSourceStock) {
-            warn.textContent = "مقدار انتقال بیشتر از موجودی انبار مبدأ است!";
+            warn.textContent = isTr ? "Transfer miktarı kaynak depo stoğundan fazladır!" : "مقدار انتقال بیشتر از موجودی انبار مبدأ است!";
             warn.classList.remove('d-none');
             qtyInput.classList.add('border-danger');
             submitBtn.disabled = true;

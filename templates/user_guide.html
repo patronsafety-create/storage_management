@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}راهنمای جامع کاربری و شناسنامه فنی — نکسوس‌پور ERP{% endblock %}
+{% block title %}{{ 'Kullanım Kılavuzu ve Teknik Şartname — NexusPour ERP' if is_tr else 'راهنمای جامع کاربری و شناسنامه فنی — نکسوس‌پور ERP' }}{% endblock %}
 
 {% block content %}
 <div class="row mb-4 align-items-center">
     <div class="col-12 col-md-8">
         <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
             <span class="text-teal"><i class="bi bi-book-half"></i></span>
-            <span>راهنمای جامع کاربری و کاتالوگ فنی سامانه نکسوس‌پور</span>
+            <span>{{ 'Kapsamlı Kullanıcı Kılavuzu ve NexusPour Teknik Kataloğu' if is_tr else 'راهنمای جامع کاربری و کاتالوگ فنی سامانه نکسوس‌پور' }}</span>
         </h2>
         <p class="text-secondary mb-0 small">
-            مستندات گام‌به‌گام کار با کلیه منوها، باسکول تریلی ۶۰ تن، برش آهن‌آلات، کیسه‌گیری اوره و MTC — طراحی: <strong>امید پورمحمود</strong>
+            {{ 'Tüm modüller, 60 tonluk tır kantarı, demir kesimi, üre torbalama ve MTC adımları — Tasarımcı: <strong>Omid Pourmahmoud</strong>' if is_tr else 'مستندات گام‌به‌گام کار با کلیه منوها، باسکول تریلی ۶۰ تن، برش آهن‌آلات، کیسه‌گیری اوره و MTC — طراحی: <strong>امید پورمحمود</strong>' }}
         </p>
     </div>
     <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end flex-wrap">
-        <a href="/static/docs/nexus_pour_executive_presentation.pdf" target="_blank" class="btn btn-teal px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="دانلود خلاصه مدیریتی ۳ صفحه‌ای ویژه جلسات و مدیران">
+        <a href="/static/docs/nexus_pour_executive_presentation.pdf" target="_blank" class="btn btn-teal px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="{{ 'Yönetici Özeti' if is_tr else 'دانلود خلاصه مدیریتی ۳ صفحه‌ای ویژه جلسات و مدیران' }}">
             <i class="bi bi-file-earmark-slides-fill fs-5"></i>
-            <span>خلاصه مدیریتی (۳ صفحه)</span>
+            <span>{{ 'Yönetici Özeti (3 Sayfa)' if is_tr else 'خلاصه مدیریتی (۳ صفحه)' }}</span>
         </a>
-        <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="دانلود دفترچه راهنمای جامع ۱۰ صفحه‌ای">
+        <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="{{ 'Kullanım Kılavuzu' if is_tr else 'دانلود دفترچه راهنمای جامع ۱۰ صفحه‌ای' }}">
             <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
-            <span>دفترچه راهنمای کامل (۱۰ صفحه)</span>
+            <span>{{ 'Kullanım Kılavuzu (10 Sayfa)' if is_tr else 'دفترچه راهنمای کامل (۱۰ صفحه)' }}</span>
         </a>
     </div>
 </div>
@@ -35,15 +35,15 @@
             <div>
                 <h4 class="fw-bold text-light mb-1">NexusPour Enterprise ERP v2.4</h4>
                 <div class="text-secondary small">
-                    <span class="text-info"><i class="bi bi-shield-check me-1"></i>سیستم عامل انبارداری و زنجیره تأمین</span> • 
-                    توسعه‌یافته بر پایه استانداردهای متالورژی ISIRI و سامانه جامع تجارت NTSW
+                    <span class="text-info"><i class="bi bi-shield-check me-1"></i>{{ 'Ağır Sanayi Depo ve Tedarik Zinciri İşletim Sistemi' if is_tr else 'سیستم عامل انبارداری و زنجیره تأمین' }}</span> • 
+                    {{ 'GİB e-İrsaliye, U-ETDS ve EN 10204 3.1 MTC Metalürji Standartları' if is_tr else 'توسعه‌یافته بر پایه استانداردهای متالورژی ISIRI و سامانه جامع تجارت NTSW' }}
                 </div>
             </div>
         </div>
         <div class="d-flex gap-2">
-            <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-2">۱۰ صفحه راهنمای رسمی</span>
-            <span class="badge bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25 px-3 py-2">کیفیت برداری (Vector)</span>
-            <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25 px-3 py-2">دارای واترمارک اصالت</span>
+            <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-2">{{ '10 Sayfa Resmi Kılavuz' if is_tr else '۱۰ صفحه راهنمای رسمی' }}</span>
+            <span class="badge bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25 px-3 py-2">{{ 'Vektörel Kalite' if is_tr else 'کیفیت برداری (Vector)' }}</span>
+            <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25 px-3 py-2">{{ 'Orijinal Damgalı' if is_tr else 'دارای واترمارک اصالت' }}</span>
         </div>
     </div>
 </div>
@@ -53,33 +53,33 @@
     <!-- ستون منوی دسترسی سریع به فصول -->
     <div class="col-12 col-lg-3">
         <div class="glass-card p-3 sticky-top" style="top: 85px;">
-            <div class="text-secondary fw-bold small text-uppercase mb-3 px-2">فهرست سرفصل‌های دفترچه</div>
+            <div class="text-secondary fw-bold small text-uppercase mb-3 px-2">{{ 'İçindekiler Dizini' if is_tr else 'فهرست سرفصل‌های دفترچه' }}</div>
             <div class="nav flex-column nav-pills gap-1" id="guideTabs" role="tablist">
                 <button class="nav-link active text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-overview">
-                    <i class="bi bi-info-circle me-2 text-info"></i>معرفی و مزیت‌های سیستم
+                    <i class="bi bi-info-circle me-2 text-info"></i>{{ 'Sistem Tanıtımı ve Avantajlar' if is_tr else 'معرفی و مزیت‌های سیستم' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-dashboard">
-                    <i class="bi bi-speedometer2 me-2 text-warning"></i>داشبورد و هوش تجاری
+                    <i class="bi bi-speedometer2 me-2 text-warning"></i>{{ 'Kontrol Paneli ve İş Zekası' if is_tr else 'داشبورد و هوش تجاری' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-master">
-                    <i class="bi bi-box-seam me-2 text-success"></i>کاتالوگ و طرف‌های تجاری
+                    <i class="bi bi-box-seam me-2 text-success"></i>{{ 'Katalog ve Ticari Taraflar' if is_tr else 'کاتالوگ و طرف‌های تجاری' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-weighbridge">
-                    <i class="bi bi-truck me-2 text-warning"></i>باسکول تریلی و سفارش خرید
+                    <i class="bi bi-truck me-2 text-warning"></i>{{ 'Tır Kantarı ve Satın Alma' if is_tr else 'باسکول تریلی و سفارش خرید' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-cutting-bagging">
-                    <i class="bi bi-scissors me-2 text-teal"></i>برش آهن و کیسه‌گیری اوره
+                    <i class="bi bi-scissors me-2 text-teal"></i>{{ 'Demir Kesimi ve Torbalama' if is_tr else 'برش آهن و کیسه‌گیری اوره' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-inventory">
-                    <i class="bi bi-arrow-left-right me-2 text-primary"></i>عملیات انبار و کاردکس
+                    <i class="bi bi-arrow-left-right me-2 text-primary"></i>{{ 'Depo Hareketleri ve Kardeks' if is_tr else 'عملیات انبار و کاردکس' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-compliance">
-                    <i class="bi bi-bank2 me-2 text-danger"></i>سرتیفیکیت MTC و سامانه صمت
+                    <i class="bi bi-bank2 me-2 text-danger"></i>{{ 'MTC ve Yasal Mevzuat' if is_tr else 'سرتیفیکیت MTC و سامانه صمت' }}
                 </button>
             </div>
             <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
                 <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info w-100 btn-sm">
-                    <i class="bi bi-download me-1"></i>دانلود مستقیم نسخه PDF
+                    <i class="bi bi-download me-1"></i>{{ 'PDF Olarak İndir' if is_tr else 'دانلود مستقیم نسخه PDF' }}
                 </a>
             </div>
         </div>

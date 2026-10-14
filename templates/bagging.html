@@ -1,18 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}عملیات کیسه‌گیری و بسته‌بندی اوره | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Üre Torbalama ve Paketleme Operasyonları | Enterprise ERP' if is_tr else 'عملیات کیسه‌گیری و بسته‌بندی اوره | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div>
     <h3 class="fw-bold mb-1">
-      <i class="bi bi-box2-fill text-teal me-2"></i>عملیات کیسه‌گیری فله به جامبوبگ اوره
+      <i class="bi bi-box2-fill text-teal me-2"></i>
+      {% if is_tr %}
+      Dökme Üre Torbalama ve Big-Bag Dolum Operasyonları
+      {% else %}
+      عملیات کیسه‌گیری فله به جامبوبگ اوره
+      {% endif %}
     </h3>
-    <p class="text-secondary small mb-0">تبدیل اوره گرانول فله پتروشیمی به کیسه‌های ۵۰ کیلویی یا جامبوبگ‌های ۱ تنی صادراتی و محاسبه بهای تمام‌شده بسته‌بندی</p>
+    <p class="text-secondary small mb-0">
+      {% if is_tr %}
+      Petrokimya dökme granül ürenin 50 kg torba veya 1 tonluk ihraç big-bag paketlerine dönüştürülmesi ve maliyetlendirme
+      {% else %}
+      تبدیل اوره گرانول فله پتروشیمی به کیسه‌های ۵۰ کیلویی یا جامبوبگ‌های ۱ تنی صادراتی و محاسبه بهای تمام‌شده بسته‌بندی
+      {% endif %}
+    </p>
   </div>
   <div class="d-flex gap-2">
     <a href="/bagging/new" class="btn btn-teal">
-      <i class="bi bi-plus-circle me-1"></i>ثبت دستور کیسه‌گیری جدید
+      <i class="bi bi-plus-circle me-1"></i>{{ 'Yeni Torbalama Emri Kaydı' if is_tr else 'ثبت دستور کیسه‌گیری جدید' }}
     </a>
   </div>
 </div>
@@ -23,8 +34,8 @@
     <div class="stat-card">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <div class="text-secondary small mb-1">کل دستورات بسته‌بندی</div>
-          <div class="fs-4 fw-bold text-light">{{ orders | length }} پارت</div>
+          <div class="text-secondary small mb-1">{{ 'Toplam Paketleme Emri' if is_tr else 'کل دستورات بسته‌بندی' }}</div>
+          <div class="fs-4 fw-bold text-light">{{ orders | length }} {{ 'parti' if is_tr else 'پارت' }}</div>
         </div>
         <div class="fs-2 text-teal opacity-75"><i class="bi bi-boxes"></i></div>
       </div>
@@ -34,8 +45,8 @@
     <div class="stat-card border-warning border-opacity-50">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <div class="text-secondary small mb-1">مجموع تناژ فله مصرفی</div>
-          <div class="fs-4 fw-bold text-warning">{{ "{:,.2f}".format(total_bulk_tonnage) }} تن</div>
+          <div class="text-secondary small mb-1">{{ 'Kullanılan Dökme Tonajı' if is_tr else 'مجموع تناژ فله مصرفی' }}</div>
+          <div class="fs-4 fw-bold text-warning">{{ "{:,.2f}".format(total_bulk_tonnage) }} {{ 'ton' if is_tr else 'تن' }}</div>
         </div>
         <div class="fs-2 text-warning opacity-75"><i class="bi bi-layers-fill"></i></div>
       </div>
@@ -45,8 +56,8 @@
     <div class="stat-card border-success border-opacity-50">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <div class="text-secondary small mb-1">مجموع بسته‌های تولیدی</div>
-          <div class="fs-4 fw-bold text-success">{{ "{:,.0f}".format(total_packages) }} کیسه/جامبو</div>
+          <div class="text-secondary small mb-1">{{ 'Üretilen Paket Sayısı' if is_tr else 'مجموع بسته‌های تولیدی' }}</div>
+          <div class="fs-4 fw-bold text-success">{{ "{:,.0f}".format(total_packages) }} {{ 'torba/big-bag' if is_tr else 'کیسه/جامبو' }}</div>
         </div>
         <div class="fs-2 text-success opacity-75"><i class="bi bi-bag-check-fill"></i></div>
       </div>
@@ -57,20 +68,20 @@
 <!-- جدول دستورات کیسه‌گیری -->
 <div class="glass-card p-0 overflow-hidden mb-4">
   <div class="p-3 border-bottom border-secondary border-opacity-25">
-    <h5 class="fw-bold text-light mb-0"><i class="bi bi-clock-history text-teal me-2"></i>تاریخچه عملیات کیسه‌گیری</h5>
+    <h5 class="fw-bold text-light mb-0"><i class="bi bi-clock-history text-teal me-2"></i>{{ 'Torbalama Operasyon Geçmişi' if is_tr else 'تاریخچه عملیات کیسه‌گیری' }}</h5>
   </div>
   <div class="table-responsive">
     <table class="table table-dark table-hover mb-0 align-middle">
       <thead style="background: rgba(255, 255, 255, 0.05);">
         <tr>
-          <th class="py-3 px-3">شماره پارت</th>
-          <th>تاریخ</th>
-          <th>محصول اولیه (فله)</th>
-          <th>تناژ فله مصرفی</th>
-          <th>محصول نهایی بسته‌بندی</th>
-          <th>تعداد بسته‌ها</th>
-          <th>نوع بسته‌بندی</th>
-          <th>وضعیت</th>
+          <th class="py-3 px-3">{{ 'Parti No' if is_tr else 'شماره پارت' }}</th>
+          <th>{{ 'Tarih' if is_tr else 'تاریخ' }}</th>
+          <th>{{ 'Hammadde (Dökme)' if is_tr else 'محصول اولیه (فله)' }}</th>
+          <th>{{ 'Tüketilen Dökme Tonaj' if is_tr else 'تناژ فله مصرفی' }}</th>
+          <th>{{ 'Nihai Paketli Ürün' if is_tr else 'محصول نهایی بسته‌بندی' }}</th>
+          <th>{{ 'Paket Adedi' if is_tr else 'تعداد بسته‌ها' }}</th>
+          <th>{{ 'Paket Tipi' if is_tr else 'نوع بسته‌بندی' }}</th>
+          <th>{{ 'Durum' if is_tr else 'وضعیت' }}</th>
         </tr>
       </thead>
       <tbody>
@@ -79,19 +90,19 @@
           <tr>
             <td class="px-3 fw-bold font-monospace text-teal">{{ o.order_number }}</td>
             <td class="small text-secondary">{{ o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else '-' }}</td>
-            <td class="fw-semibold text-light">{{ o.bulk_product.name }}</td>
-            <td class="font-monospace text-warning">{{ "{:,.2f}".format(o.bulk_tonnage_used) }} تن</td>
-            <td class="fw-semibold text-light">{{ o.packaged_product.name }}</td>
+            <td class="fw-semibold text-light">{{ (o.bulk_product.name | tr_loc(is_tr)) if o.bulk_product else '-' }}</td>
+            <td class="font-monospace text-warning">{{ "{:,.2f}".format(o.bulk_tonnage_used) }} {{ 'ton' if is_tr else 'تن' }}</td>
+            <td class="fw-semibold text-light">{{ (o.packaged_product.name | tr_loc(is_tr)) if o.packaged_product else '-' }}</td>
             <td class="font-monospace fw-bold text-success">{{ "{:,.0f}".format(o.packages_produced) }}</td>
             <td><span class="badge bg-secondary bg-opacity-25">{{ o.package_type }}</span></td>
-            <td><span class="badge bg-success bg-opacity-25 text-success">تکمیل و دپو شده</span></td>
+            <td><span class="badge bg-success bg-opacity-25 text-success">{{ 'Tamamlandı ve Stoklandı' if is_tr else 'تکمیل و دپو شده' }}</span></td>
           </tr>
           {% endfor %}
         {% else %}
           <tr>
             <td colspan="8" class="text-center py-5 text-secondary">
               <i class="bi bi-box2 fs-1 d-block mb-2"></i>
-              هیچ عملیات کیسه‌گیری ثبت نشده است.
+              {{ 'Kayıtlı torbalama operasyonu bulunamadı.' if is_tr else 'هیچ عملیات کیسه‌گیری ثبت نشده است.' }}
             </td>
           </tr>
         {% endif %}

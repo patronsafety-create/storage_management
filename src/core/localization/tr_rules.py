@@ -133,3 +133,89 @@ def format_gtip(gtip: str) -> str:
         return f"{clean[0:4]}.{clean[4:6]}.{clean[6:8]}.{clean[8:10]}.{clean[10:12]}"
     return gtip
 
+
+# ==============================================================================
+# بخش ۵: پلاک انتظامی وسایل نقلیه سنگین ترکیه و استانداردهای راهداری (KGM)
+# ==============================================================================
+
+# ساختار رسمی پلاک ترکیه: ۲ رقم کد استان (۰۱ تا ۸۱) + ۱ تا ۳ حرف بدون حروف Q, W, X + ۲ تا ۴ رقم
+# نمونه‌ها: 34 ABC 123, 06 TR 987, 35 A 4567, 41 K 892
+TURKISH_PLATE_REGEX = re.compile(
+    r"^(0[1-9]|[1-7][0-9]|8[01])\s*([A-PR-VYZ]{1,3})\s*(\d{2,4})$",
+    re.IGNORECASE
+)
+
+def validate_turkish_plate(plate: str) -> bool:
+    """
+    اعتبارسنجی الگوریتم و ساختار پلاک خودروهای ترکیه مطابق استاندارد EGM و پلاک انتظامی
+    - کد استان معتبر بین 01 تا 81
+    - بخش حروفی بین 1 تا 3 حرف
+    - بخش عددی بین 2 تا 4 رقم
+    """
+    if not plate:
+        return False
+    clean = str(plate).strip().upper()
+    return bool(TURKISH_PLATE_REGEX.match(clean))
+
+
+def format_turkish_plate(plate: str) -> str:
+    """
+    فرمت‌بندی خوانا و استاندارد پلاک ترکیه به صورت: [کد استان] [حروف] [اعداد]
+    مثال: 34ABC123 -> 34 ABC 123
+    """
+    if not plate:
+        return ""
+    clean = str(plate).strip().upper()
+    m = TURKISH_PLATE_REGEX.match(clean)
+    if m:
+        il_kodu, harfler, sayilar = m.groups()
+        return f"{il_kodu} {harfler.upper()} {sayilar}"
+    return clean
+
+
+# استانداردهای مصوب سازمان راهداری و بزرگراه‌های ترکیه (Karayolları Genel Müdürlüğü - KGM)
+# بر اساس ماده ۱۲۸ آیین‌نامه راهنمایی و رانندگی ترکیه
+KGM_TRUCK_LIMITS = {
+    # ۵ یا ۶ محور (تریلی کفی و ترانزیت استاندارد)
+    "TIR_5AXIS": 40000.0,
+    # حمل ترکیبی و کانتینری ۴۰ فوت ایزو (محدوده مجاز بنادر و راه‌آهن)
+    "CONTAINER_40FT": 44000.0,
+    # ۴ محور (کامیون‌های سنگین کمپرسی ۴ محور)
+    "TRUCK_4AXIS": 32000.0,
+    # ۳ محور (کامیون جفت ۱۰ چرخ)
+    "TRUCK_3AXIS": 26000.0,
+    # ۲ محور (کامیون تک ۶ چرخ)
+    "TRUCK_2AXIS": 18000.0,
+}
+
+def check_kgm_weight_limit(gross_weight: float, truck_type: Optional[str] = None) -> Tuple[bool, float, str]:
+    """
+    کنترل تطابق وزن ناخالص با سقف قانونی راهداری ترکیه (KGM):
+    خروجی: (آیا اضافه تناژ دارد؟, سقف مجاز قانونی, پیام هشدار رسمی)
+    """
+    default_limit = 40000.0  # ۴۰ تن برای تریلی‌های استاندارد فولادی و کفی
+    if truck_type:
+        t_lower = truck_type.lower()
+        if "konteyner" in t_lower or "44" in t_lower:
+            default_limit = 44000.0
+        elif "4 dingil" in t_lower or "32" in t_lower:
+            default_limit = 32000.0
+        elif "3 dingil" in t_lower or "26" in t_lower or "جفت" in t_lower:
+            default_limit = 26000.0
+        elif "2 dingil" in t_lower or "18" in t_lower or "تک" in t_lower:
+            default_limit = 18000.0
+
+    is_overweight = gross_weight > default_limit
+    if is_overweight:
+        diff = gross_weight - default_limit
+        msg = (
+            f"KGM Azami Yüklü Ağırlık Sınırı Aşıldı! "
+            f"Yasal Sınır: {default_limit:,.0f} kg | Tespit Edilen: {gross_weight:,.0f} kg | "
+            f"Fazla Tonaj: +{diff:,.0f} kg"
+        )
+    else:
+        msg = f"KGM Yasal Tartım Sınırları İçinde ({default_limit:,.0f} kg)"
+
+    return (is_overweight, default_limit, msg)
+
+

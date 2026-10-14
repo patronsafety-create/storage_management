@@ -11,9 +11,11 @@ from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import Product, StockTransaction, Warehouse
 from src.services.inventory_service import InventoryService
+from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/inventory/alerts", tags=["Inventory Alerts"])
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 
 @router.get("", response_class=HTMLResponse)
@@ -23,6 +25,8 @@ async def view_stock_alerts(
     current_user: User = Depends(get_current_user)
 ):
     """داشبورد هوشمند هشدارهای موجودی، نقطه سفارش و تحلیل کالاهای راکد (Dead Stock)"""
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == Region.TR)
     products = db.query(Product).filter_by(is_active=True).all()
     
     out_of_stock = []
@@ -79,7 +83,9 @@ async def view_stock_alerts(
             "over_stock": over_stock,
             "dead_stock": dead_stock,
             "total_alerts": len(out_of_stock) + len(low_stock),
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr
         }
     )
 

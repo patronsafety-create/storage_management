@@ -1,18 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}مدیریت دستورات برش و انبار ته‌شاخه | Enterprise ERP{% endblock %}
+{% block title %}{{ 'Demir Kesim ve Parça Deposu Yönetimi | Enterprise ERP' if is_tr else 'مدیریت دستورات برش و انبار ته‌شاخه | Enterprise ERP' }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div>
     <h3 class="fw-bold mb-1">
-      <i class="bi bi-scissors text-teal me-2"></i>مدیریت دستورات برش، ته‌شاخه و پرتی آهن‌آلات
+      <i class="bi bi-scissors text-teal me-2"></i>
+      {% if is_tr %}
+      Demir Kesim, Kalan Parça ve Hurda Yönetimi
+      {% else %}
+      مدیریت دستورات برش، ته‌شاخه و پرتی آهن‌آلات
+      {% endif %}
     </h3>
-    <p class="text-secondary small mb-0">ثبت برش شاخه‌های ۱۲ متری به قطعات سفارشی مشتریان و انتقال خودکار ته‌شاخه‌ها به انبار جهت جلوگیری از اتلاف سرمایه</p>
+    <p class="text-secondary small mb-0">
+      {% if is_tr %}
+      12 metrelik standart boy profillerin özel ölçülere kesilmesi ve kalan parçaların fireyi önlemek üzere parça deposuna aktarımı
+      {% else %}
+      ثبت برش شاخه‌های ۱۲ متری به قطعات سفارشی مشتریان و انتقال خودکار ته‌شاخه‌ها به انبار جهت جلوگیری از اتلاف سرمایه
+      {% endif %}
+    </p>
   </div>
   <div class="d-flex gap-2">
     <a href="/cutting/new" class="btn btn-teal">
-      <i class="bi bi-plus-circle me-1"></i>ثبت دستور برش جدید
+      <i class="bi bi-plus-circle me-1"></i>{{ 'Yeni Kesim Emri Kaydı' if is_tr else 'ثبت دستور برش جدید' }}
     </a>
   </div>
 </div>
@@ -23,8 +34,8 @@
     <div class="stat-card">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <div class="text-secondary small mb-1">کل دستورات برش انجام‌شده</div>
-          <div class="fs-4 fw-bold text-light">{{ orders | length }} فقره</div>
+          <div class="text-secondary small mb-1">{{ 'Toplam Tamamlanan Kesim' if is_tr else 'کل دستورات برش انجام‌شده' }}</div>
+          <div class="fs-4 fw-bold text-light">{{ orders | length }} {{ 'adet' if is_tr else 'فقره' }}</div>
         </div>
         <div class="fs-2 text-teal opacity-75"><i class="bi bi-scissors"></i></div>
       </div>
@@ -34,8 +45,8 @@
     <div class="stat-card border-success border-opacity-50">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <div class="text-secondary small mb-1">ته‌شاخه‌های قابل مصرف در انبار</div>
-          <div class="fs-4 fw-bold text-success">{{ remnants | length }} قطعه</div>
+          <div class="text-secondary small mb-1">{{ 'Kullanılabilir Parçalar (Depoda)' if is_tr else 'ته‌شاخه‌های قابل مصرف در انبار' }}</div>
+          <div class="fs-4 fw-bold text-success">{{ remnants | length }} {{ 'parça' if is_tr else 'قطعه' }}</div>
         </div>
         <div class="fs-2 text-success opacity-75"><i class="bi bi-recycle"></i></div>
       </div>
@@ -45,8 +56,8 @@
     <div class="stat-card border-secondary border-opacity-50">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <div class="text-secondary small mb-1">قطعات پرتی زیر ۱ متر (ضایعات)</div>
-          <div class="fs-4 fw-bold text-secondary">{{ scraps | length }} مورد</div>
+          <div class="text-secondary small mb-1">{{ '1 Metre Altı Hurda / Fire Parçalar' if is_tr else 'قطعات پرتی زیر ۱ متر (ضایعات)' }}</div>
+          <div class="fs-4 fw-bold text-secondary">{{ scraps | length }} {{ 'adet' if is_tr else 'مورد' }}</div>
         </div>
         <div class="fs-2 text-secondary opacity-75"><i class="bi bi-trash3"></i></div>
       </div>
@@ -57,19 +68,19 @@
 <!-- جدول دستورات برش -->
 <div class="glass-card p-0 overflow-hidden mb-4">
   <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
-    <h5 class="fw-bold text-light mb-0"><i class="bi bi-clock-history text-teal me-2"></i>تاریخچه دستورات برش آهن‌آلات</h5>
+    <h5 class="fw-bold text-light mb-0"><i class="bi bi-clock-history text-teal me-2"></i>{{ 'Demir Kesim İşlem Geçmişi' if is_tr else 'تاریخچه دستورات برش آهن‌آلات' }}</h5>
   </div>
   <div class="table-responsive">
     <table class="table table-dark table-hover mb-0 align-middle">
       <thead style="background: rgba(255, 255, 255, 0.05);">
         <tr>
-          <th class="py-3 px-3">شماره دستور برش</th>
-          <th>تاریخ</th>
-          <th>کالای مادر (شاخه ۱۲ متری)</th>
-          <th>قطعه برش‌خورده تحویلی</th>
-          <th>طول باقیمانده ته‌شاخه</th>
-          <th>محل انتقال قطعه</th>
-          <th>وضعیت</th>
+          <th class="py-3 px-3">{{ 'Kesim Emri No' if is_tr else 'شماره دستور برش' }}</th>
+          <th>{{ 'Tarih' if is_tr else 'تاریخ' }}</th>
+          <th>{{ 'Ana Malzeme (12m Profil)' if is_tr else 'کالای مادر (شاخه ۱۲ متری)' }}</th>
+          <th>{{ 'Kesilen Parça ve Boy' if is_tr else 'قطعه برش‌خورده تحویلی' }}</th>
+          <th>{{ 'Kalan Parça Boyu' if is_tr else 'طول باقیمانده ته‌شاخه' }}</th>
+          <th>{{ 'Aktarılan Depo' if is_tr else 'محل انتقال قطعه' }}</th>
+          <th>{{ 'Durum' if is_tr else 'وضعیت' }}</th>
         </tr>
       </thead>
       <tbody>
@@ -78,29 +89,29 @@
           <tr>
             <td class="px-3 fw-bold font-monospace text-teal">{{ o.order_number }}</td>
             <td class="small text-secondary">{{ o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else '-' }}</td>
-            <td class="fw-semibold text-light">{{ o.product.name }}</td>
+            <td class="fw-semibold text-light">{{ (o.product.name | tr_loc(is_tr)) if o.product else '-' }}</td>
             <td class="font-monospace text-warning">
-              {{ o.pieces_count }} عدد شاخه {{ "{:.2f}".format(o.cut_length) }} متری
+              {{ o.pieces_count }} {{ 'adet' if is_tr else 'عدد شاخه' }} {{ "{:.2f}".format(o.cut_length) }} m
             </td>
             <td class="font-monospace fw-bold text-light">
-              {{ "{:.2f}".format(o.remnant_length) }} متر
+              {{ "{:.2f}".format(o.remnant_length) }} m
               {% if o.remnant_weight %}
                 <span class="small text-secondary">({{ "{:.1f}".format(o.remnant_weight) }} kg)</span>
               {% endif %}
             </td>
             <td>
-              {% if o.destination == 'انبار ته‌شاخه‌ها' %}
+              {% if 'ته‌شاخه' in o.destination or 'Parça' in o.destination %}
                 <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
-                  <i class="bi bi-check-circle me-1"></i>انبار ته‌شاخه‌ها (سرمایه نقدی)
+                  <i class="bi bi-check-circle me-1"></i>{{ 'Parça Deposu (Aktif Stok)' if is_tr else 'انبار ته‌شاخه‌ها (سرمایه نقدی)' }}
                 </span>
               {% else %}
                 <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-50">
-                  <i class="bi bi-trash me-1"></i>انبار ضایعات آهن
+                  <i class="bi bi-trash me-1"></i>{{ 'Hurda Deposu' if is_tr else 'انبار ضایعات آهن' }}
                 </span>
               {% endif %}
             </td>
             <td>
-              <span class="badge bg-teal bg-opacity-25 text-teal border border-teal border-opacity-50">تکمیل‌شده</span>
+              <span class="badge bg-teal bg-opacity-25 text-teal border border-teal border-opacity-50">{{ 'Tamamlandı' if is_tr else 'تکمیل‌شده' }}</span>
             </td>
           </tr>
           {% endfor %}
@@ -108,7 +119,7 @@
           <tr>
             <td colspan="7" class="text-center py-5 text-secondary">
               <i class="bi bi-scissors fs-1 d-block mb-2"></i>
-              هیچ دستور برشی ثبت نشده است.
+              {{ 'Kayıtlı kesim emri bulunamadı.' if is_tr else 'هیچ دستور برشی ثبت نشده است.' }}
             </td>
           </tr>
         {% endif %}

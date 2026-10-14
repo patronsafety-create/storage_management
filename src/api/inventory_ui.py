@@ -16,6 +16,7 @@ from src.services.audit_service import AuditService
 from src.domain_model.inventory_models import Product, Warehouse, StockTransaction, TransactionType, Supplier, Customer
 from src.domain_model.auth_models import User
 from src.domain_model.enums import DocumentStatus
+from src.core.localization.regions import localize_display_name, get_active_region
 
 router = APIRouter(
     prefix="/inventory",
@@ -23,6 +24,7 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["tr_loc"] = localize_display_name
 
 ITEMS_PER_PAGE = 10
 
@@ -41,6 +43,9 @@ async def get_transaction_form(
     suppliers = db.query(Supplier).filter(Supplier.is_active == True).order_by(Supplier.name).all()
     customers = db.query(Customer).filter(Customer.is_active == True).order_by(Customer.name).all()
 
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
     return templates.TemplateResponse(
         request=request,
         name="transaction_form.html",
@@ -50,7 +55,9 @@ async def get_transaction_form(
             "warehouses": warehouses,
             "suppliers": suppliers,
             "customers": customers,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -197,13 +204,17 @@ async def get_stock_balance(
     current_user: User = Depends(get_current_user)
 ):
     stock_balances = InventoryService.calculate_stock_balances(db)
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="stock_balance.html",
         context={
             "request": request,
             "stock_balances": stock_balances,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -243,6 +254,8 @@ async def list_transactions(
     transactions = query.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE).all()
 
     products = db.query(Product).order_by(Product.name).all()
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
 
     return templates.TemplateResponse(
         request=request,
@@ -257,6 +270,8 @@ async def list_transactions(
             "total": total,
             "filter_type": tx_type,
             "filter_product": product_id,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -297,6 +312,9 @@ async def kardex(
             running_balance -= tx.quantity
         kardex_entries.append({"tx": tx, "running_balance": round(running_balance, 3)})
 
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
     return templates.TemplateResponse(
         request=request,
         name="kardex.html",
@@ -307,7 +325,9 @@ async def kardex(
             "warehouses": warehouses,
             "all_products": all_products,
             "selected_warehouse_id": warehouse_id,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -323,6 +343,8 @@ async def get_transfer_form(
 ):
     products = db.query(Product).order_by(Product.name).all()
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="transfer_form.html",
@@ -330,7 +352,9 @@ async def get_transfer_form(
             "request": request,
             "products": products,
             "warehouses": warehouses,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -346,6 +370,9 @@ async def process_transfer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
     def error_response(msg: str):
         return templates.TemplateResponse(
             request=request,
@@ -355,7 +382,9 @@ async def process_transfer(
                 "products": db.query(Product).order_by(Product.name).all(),
                 "warehouses": db.query(Warehouse).order_by(Warehouse.name).all(),
                 "error": msg,
-                "user": current_user
+                "user": current_user,
+                "active_region": active_region,
+                "is_tr": is_tr,
             },
             status_code=400
         )
@@ -414,6 +443,9 @@ async def get_stocktaking_form(
             sys_stock = InventoryService.get_current_stock(db, p.id, selected_warehouse.id)
             items.append({"product": p, "system_stock": sys_stock})
 
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
     return templates.TemplateResponse(
         request=request,
         name="stocktaking.html",
@@ -423,7 +455,9 @@ async def get_stocktaking_form(
             "selected_warehouse": selected_warehouse,
             "items": items,
             "msg": msg,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -537,6 +571,9 @@ async def financial_kardex(
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
     all_products = db.query(Product).order_by(Product.name).all()
 
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
     return templates.TemplateResponse(
         request=request,
         name="financial_kardex.html",
@@ -550,7 +587,9 @@ async def financial_kardex(
             "warehouses": warehouses,
             "all_products": all_products,
             "selected_warehouse_id": warehouse_id,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -568,10 +607,18 @@ async def print_transaction_voucher(
     tx = db.query(StockTransaction).filter_by(id=tx_id).first()
     if not tx:
         return RedirectResponse(url="/inventory/transactions", status_code=303)
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="print_voucher.html",
-        context={"request": request, "tx": tx, "user": current_user}
+        context={
+            "request": request,
+            "tx": tx,
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
+        }
     )
 
 
@@ -720,13 +767,17 @@ async def new_return_form(
         .limit(50)
         .all()
     )
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="return_form.html",
         context={
             "request": request,
             "candidate_transactions": candidates,
-            "user": current_user
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
         }
     )
 
@@ -802,10 +853,18 @@ async def view_mtc_certificate(
     )
     if not tx:
         raise HTTPException(status_code=404, detail="سند یافت نشد")
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="mtc_certificate.html",
-        context={"request": request, "tx": tx, "user": current_user}
+        context={
+            "request": request,
+            "tx": tx,
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
+        }
     )
 
 
@@ -823,8 +882,16 @@ async def view_barcode_label(
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="کالا یافت نشد")
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
     return templates.TemplateResponse(
         request=request,
         name="barcode_label.html",
-        context={"request": request, "product": product, "user": current_user}
+        context={
+            "request": request,
+            "product": product,
+            "user": current_user,
+            "active_region": active_region,
+            "is_tr": is_tr,
+        }
     )

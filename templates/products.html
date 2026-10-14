@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}کاتالوگ و مدیریت کالاها | NexusPour ERP{% endblock %}
+{% block title %}{{ 'Endüstriyel Ürün Kataloğu ve Tanımları | NexusPour ERP' if is_tr else 'کاتالوگ و مدیریت کالاها | NexusPour ERP' }}{% endblock %}
 
 {% block content %}
 <!-- هدر صفحه و دکمه‌های عملیاتی -->
@@ -10,21 +10,21 @@
             <span class="p-2 rounded-3 bg-teal bg-opacity-10 text-teal">
                 <i class="bi bi-box-seam-fill"></i>
             </span>
-            <span>کاتالوگ جامع کالاها و مشخصات صنعتی</span>
+            <span>{% if is_tr %}Kapsamlı Ürün Kataloğu ve Endüstriyel Özellikler{% else %}کاتالوگ جامع کالاها و مشخصات صنعتی{% endif %}</span>
         </h3>
-        <p class="text-secondary small mb-0">کدینگ اقلام، رده‌بندی سلسله‌مراتبی، ویژگی‌های متالورژی، خطوط نورد کارخانجات و پارامترهای کنترل موجودی</p>
+        <p class="text-secondary small mb-0">{% if is_tr %}Ürün kodlama, hiyerarşik sınıflandırma, metalürjik özellikler, haddehane hatları ve stok kontrol parametreleri{% else %}کدینگ اقلام، رده‌بندی سلسله‌مراتبی، ویژگی‌های متالورژی، خطوط نورد کارخانجات و پارامترهای کنترل موجودی{% endif %}</p>
     </div>
     
     <div class="d-flex gap-2 flex-wrap">
         <button onclick="window.print()" class="btn btn-outline-secondary">
-            <i class="bi bi-printer me-1"></i>چاپ لیست
+            <i class="bi bi-printer me-1"></i>{% if is_tr %}Listeyi Yazdır{% else %}چاپ لیست{% endif %}
         </button>
         {% if is_admin %}
         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-            <i class="bi bi-tags me-1"></i>تعریف گروه کالایی
+            <i class="bi bi-tags me-1"></i>{% if is_tr %}Yeni Kategori Tanımla{% else %}تعریف گروه کالایی{% endif %}
         </button>
         <button type="button" class="btn btn-teal px-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="bi bi-plus-circle-fill me-1"></i>تعریف کالای جدید
+            <i class="bi bi-plus-circle-fill me-1"></i>{% if is_tr %}Yeni Ürün Ekle{% else %}تعریف کالای جدید{% endif %}
         </button>
         {% endif %}
     </div>
@@ -52,9 +52,9 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-label">تعداد کل اقلام</div>
+                    <div class="stat-label">{% if is_tr %}Toplam Ürün Sayısı{% else %}تعداد کل اقلام{% endif %}</div>
                     <div class="stat-number text-light">{{ stats.total_products }}</div>
-                    <div class="stat-hint"><i class="bi bi-boxes me-1 text-teal"></i>کالاهای ثبت‌شده در پایگاه‌داده</div>
+                    <div class="stat-hint"><i class="bi bi-boxes me-1 text-teal"></i>{% if is_tr %}Veritabanında kayıtlı ürünler{% else %}کالاهای ثبت‌شده در پایگاه‌داده{% endif %}</div>
                 </div>
                 <div class="stat-icon-wrapper" style="background: rgba(0, 212, 200, 0.12); color: var(--accent-teal);">
                     <i class="bi bi-box-seam"></i>
@@ -66,9 +66,9 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-label">دسته‌بندی‌ها و رده‌ها</div>
+                    <div class="stat-label">{% if is_tr %}Kategoriler ve Gruplar{% else %}دسته‌بندی‌ها و رده‌ها{% endif %}</div>
                     <div class="stat-number text-info">{{ stats.total_categories }}</div>
-                    <div class="stat-hint"><i class="bi bi-diagram-3 me-1 text-info"></i>ساختار طبقه‌بندی درختی</div>
+                    <div class="stat-hint"><i class="bi bi-diagram-3 me-1 text-info"></i>{% if is_tr %}Hiyerarşik sınıflandırma yapısı{% else %}ساختار طبقه‌بندی درختی{% endif %}</div>
                 </div>
                 <div class="stat-icon-wrapper" style="background: rgba(14, 165, 233, 0.12); color: #38bdf8;">
                     <i class="bi bi-folder2-open"></i>
@@ -80,9 +80,9 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-label">کارخانجات و برندها</div>
+                    <div class="stat-label">{% if is_tr %}Üreticiler ve Markalar{% else %}کارخانجات و برندها{% endif %}</div>
                     <div class="stat-number text-primary">{{ stats.total_brands }}</div>
-                    <div class="stat-hint"><i class="bi bi-building me-1 text-primary"></i>تولیدکنندگان فولادی و پتروشیمی</div>
+                    <div class="stat-hint"><i class="bi bi-building me-1 text-primary"></i>{% if is_tr %}Çelik ve petrokimya üreticileri{% else %}تولیدکنندگان فولادی و پتروشیمی{% endif %}</div>
                 </div>
                 <div class="stat-icon-wrapper" style="background: rgba(99, 102, 241, 0.12); color: #818cf8;">
                     <i class="bi bi-buildings"></i>
@@ -94,15 +94,15 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-label">هشدار کسری موجودی</div>
+                    <div class="stat-label">{% if is_tr %}Kritik Stok Uyarısı{% else %}هشدار کسری موجودی{% endif %}</div>
                     <div class="stat-number {% if stats.low_stock_count > 0 %}text-warning{% else %}text-success{% endif %}">
                         {{ stats.low_stock_count }}
                     </div>
                     <div class="stat-hint">
                         {% if stats.low_stock_count > 0 %}
-                            <i class="bi bi-exclamation-circle me-1 text-warning"></i>زیر نقطه سفارش امن
+                            <i class="bi bi-exclamation-circle me-1 text-warning"></i>{% if is_tr %}Güvenli sipariş noktasının altında{% else %}زیر نقطه سفارش امن{% endif %}
                         {% else %}
-                            <i class="bi bi-shield-check me-1 text-success"></i>کلیه اقلام در محدوده امن
+                            <i class="bi bi-shield-check me-1 text-success"></i>{% if is_tr %}Tüm ürünler güvenli stok seviyesinde{% else %}کلیه اقلام در محدوده امن{% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -127,28 +127,28 @@
         </div>
         <div class="col-6 col-md-3">
             <select name="category_id" class="form-select">
-                <option value="">همه گروه‌های کالایی</option>
+                <option value="">{% if is_tr %}Tüm Ürün Kategorileri{% else %}همه گروه‌های کالایی{% endif %}</option>
                 {% for cat in categories %}
                 <option value="{{ cat.id }}" {% if selected_category_id == cat.id %}selected{% endif %}>
-                    {{ cat.name }} {% if cat.code %}({{ cat.code }}){% endif %}
+                    {{ cat.name | tr_loc(is_tr) }} {% if cat.code %}({{ cat.code }}){% endif %}
                 </option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-6 col-md-3">
             <select name="brand" class="form-select">
-                <option value="">همه کارخانجات و برندها</option>
+                <option value="">{% if is_tr %}Tüm Üreticiler ve Markalar{% else %}همه کارخانجات و برندها{% endif %}</option>
                 {% for b in available_brands %}
-                <option value="{{ b }}" {% if selected_brand == b %}selected{% endif %}>{{ b }}</option>
+                <option value="{{ b }}" {% if selected_brand == b %}selected{% endif %}>{{ b | tr_loc(is_tr) }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-12 col-md-2 d-flex gap-2">
             <button type="submit" class="btn btn-outline-info flex-grow-1">
-                <i class="bi bi-funnel me-1"></i>فیلتر
+                <i class="bi bi-funnel me-1"></i>{% if is_tr %}Filtrele{% else %}فیلتر{% endif %}
             </button>
             {% if search or selected_category_id or selected_brand %}
-            <a href="/master-data/products" class="btn btn-outline-secondary" title="پاک کردن فیلترها">
+            <a href="/master-data/products" class="btn btn-outline-secondary" title="{% if is_tr %}Filtreleri Temizle{% else %}پاک کردن فیلترها{% endif %}">
                 <i class="bi bi-x-lg"></i>
             </a>
             {% endif %}
@@ -163,16 +163,16 @@
             <thead style="background: rgba(255, 255, 255, 0.05);">
                 <tr>
                     <th class="py-3 px-3">#</th>
-                    <th>کد کالا (SKU)</th>
-                    <th>نام کالا</th>
-                    <th>دسته‌بندی</th>
-                    <th>برند / کارخانه</th>
-                    <th>مشخصات فنی و متالورژی</th>
-                    <th>واحد</th>
-                    <th class="text-teal">موجودی کل</th>
-                    <th>نقطه سفارش</th>
-                    <th>وضعیت</th>
-                    <th class="text-center">عملیات</th>
+                    <th>{% if is_tr %}Ürün Kodu (SKU){% else %}کد کالا (SKU){% endif %}</th>
+                    <th>{% if is_tr %}Ürün Adı{% else %}نام کالا{% endif %}</th>
+                    <th>{% if is_tr %}Kategori{% else %}دسته‌بندی{% endif %}</th>
+                    <th>{% if is_tr %}Marka / Fabrika{% else %}برند / کارخانه{% endif %}</th>
+                    <th>{% if is_tr %}Teknik ve Metalürjik Özellikler{% else %}مشخصات فنی و متالورژی{% endif %}</th>
+                    <th>{% if is_tr %}Birim{% else %}واحد{% endif %}</th>
+                    <th class="text-teal">{% if is_tr %}Toplam Stok{% else %}موجودی کل{% endif %}</th>
+                    <th>{% if is_tr %}Sipariş Noktası{% else %}نقطه سفارش{% endif %}</th>
+                    <th>{% if is_tr %}Durum{% else %}وضعیت{% endif %}</th>
+                    <th class="text-center">{% if is_tr %}İşlemler{% else %}عملیات{% endif %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -187,28 +187,28 @@
                                 {{ p.sku }}
                             </span>
                             {% else %}
-                            <span class="text-secondary small fst-italic">بدون کد</span>
+                            <span class="text-secondary small fst-italic">{% if is_tr %}Kodsuz{% else %}بدون کد{% endif %}</span>
                             {% endif %}
                         </td>
                         <td>
-                            <div class="fw-bold text-light fs-6">{{ p.name }}</div>
+                            <div class="fw-bold text-light fs-6">{{ item.display_name or (p.name | tr_loc(is_tr)) or p.name }}</div>
                             {% if p.description %}
-                            <small class="text-secondary d-block text-truncate" style="max-width: 200px;">{{ p.description }}</small>
+                            <small class="text-secondary d-block text-truncate" style="max-width: 220px;">{{ p.description }}</small>
                             {% endif %}
                         </td>
                         <td>
                             {% if p.category %}
                             <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
-                                <i class="bi bi-folder2 me-1"></i>{{ p.category.name }}
+                                <i class="bi bi-folder2 me-1"></i>{{ p.category.name | tr_loc(is_tr) }}
                             </span>
                             {% else %}
-                            <span class="text-secondary small">عمومی</span>
+                            <span class="text-secondary small">{% if is_tr %}Genel{% else %}عمومی{% endif %}</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if p.brand %}
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
-                                <i class="bi bi-building me-1"></i>{{ p.brand }}
+                                <i class="bi bi-building me-1"></i>{{ item.display_brand or (p.brand | tr_loc(is_tr)) or p.brand }}
                             </span>
                             {% else %}
                             <span class="text-secondary small">-</span>
@@ -217,22 +217,22 @@
                         <td>
                             <div class="d-flex flex-wrap gap-1 small">
                                 {% if p.size %}
-                                <span class="badge bg-dark border border-secondary border-opacity-50 text-light">سایز: {{ p.size }}</span>
+                                <span class="badge bg-dark border border-secondary border-opacity-50 text-light">{% if is_tr %}Ebat: {% else %}سایز: {% endif %}{{ p.size }}</span>
                                 {% endif %}
                                 {% if p.grade %}
-                                <span class="badge bg-dark border border-teal border-opacity-50 text-teal">گرید: {{ p.grade }}</span>
+                                <span class="badge bg-dark border border-teal border-opacity-50 text-teal">{% if is_tr %}Kalite: {% else %}گرید: {% endif %}{{ p.grade }}</span>
                                 {% endif %}
                                 {% if p.tse_standard %}
-                                <span class="badge bg-dark border border-warning border-opacity-50 text-warning" title="استاندارد ملی ترکیه (TSE)"><i class="bi bi-patch-check-fill me-1"></i>{{ p.tse_standard }}</span>
+                                <span class="badge bg-dark border border-warning border-opacity-50 text-warning" title="{% if is_tr %}TSE Türk Standardı Uygunluk Belgesi{% else %}استاندارد ملی ترکیه (TSE){% endif %}"><i class="bi bi-patch-check-fill me-1"></i>{{ p.tse_standard }}</span>
                                 {% endif %}
                                 {% if p.gtip_code %}
-                                <span class="badge bg-dark border border-danger border-opacity-50 text-danger" title="کد تعرفه گمرکی ترکیه (GTİP)"><i class="bi bi-upc me-1"></i>GTİP: {{ p.gtip_code }}</span>
+                                <span class="badge bg-dark border border-danger border-opacity-50 text-danger" title="{% if is_tr %}GTİP Gümrük Tarife İstatistik Pozisyonu{% else %}کد تعرفه گمرکی ترکیه (GTİP){% endif %}"><i class="bi bi-upc me-1"></i>GTİP: {{ p.gtip_code }}</span>
                                 {% endif %}
                                 {% if p.length %}
-                                <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary">طول: {{ p.length }}m</span>
+                                <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary">{% if is_tr %}Boy: {% else %}طول: {% endif %}{{ p.length }}m</span>
                                 {% endif %}
                                 {% if p.thickness %}
-                                <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary">ضخامت: {{ p.thickness }}mm</span>
+                                <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary">{% if is_tr %}Kalınlık: {% else %}ضخامت: {% endif %}{{ p.thickness }}mm</span>
                                 {% endif %}
                                 {% if not p.size and not p.grade and not p.length and not p.thickness and not p.tse_standard and not p.gtip_code %}
                                 <span class="text-secondary">-</span>
@@ -240,7 +240,7 @@
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-secondary bg-opacity-25 text-light">{{ p.uom }}</span>
+                            <span class="badge bg-secondary bg-opacity-25 text-light">{{ item.display_uom or (p.uom | tr_loc(is_tr)) or p.uom }}</span>
                         </td>
                         <td class="fw-bold font-monospace fs-6 {% if item.total_stock > 0 %}text-teal{% else %}text-secondary{% endif %}">
                             {{ "{:,.2f}".format(item.total_stock) }}
@@ -250,7 +250,7 @@
                                 <div class="d-flex align-items-center gap-1">
                                     <span class="font-monospace text-secondary">{{ "{:,.2f}".format(p.reorder_point) }}</span>
                                     {% if item.is_low %}
-                                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 p-1" title="موجودی زیر نقطه سفارش است!">
+                                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 p-1" title="{% if is_tr %}Stok güvenlik seviyesinin altında!{% else %}موجودی زیر نقطه سفارش است!{% endif %}">
                                         <i class="bi bi-exclamation-triangle-fill"></i>
                                     </span>
                                     {% endif %}
@@ -261,30 +261,30 @@
                         </td>
                         <td>
                             {% if p.is_active %}
-                            <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">فعال</span>
+                            <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">{% if is_tr %}Aktif{% else %}فعال{% endif %}</span>
                             {% else %}
-                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">غیرفعال</span>
+                            <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">{% if is_tr %}Pasif{% else %}غیرفعال{% endif %}</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-glass dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    عملیات
+                                    {% if is_tr %}İşlemler{% else %}عملیات{% endif %}
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary border-opacity-25">
                                     <li>
                                         <a class="dropdown-item py-2" href="/inventory/kardex/{{ p.id }}">
-                                            <i class="bi bi-receipt text-info me-2"></i>کاردکس مقداری
+                                            <i class="bi bi-receipt text-info me-2"></i>{% if is_tr %}Miktar Stok Kartı{% else %}کاردکس مقداری{% endif %}
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item py-2" href="/inventory/financial-kardex/{{ p.id }}">
-                                            <i class="bi bi-cash-stack text-warning me-2"></i>کاردکس ریالی
+                                            <i class="bi bi-cash-stack text-warning me-2"></i>{% if is_tr %}Mali Stok Kartı{% else %}کاردکس ریالی{% endif %}
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item py-2 text-info" href="/inventory/products/{{ p.id }}/label" target="_blank">
-                                            <i class="bi bi-upc-scan me-2"></i>چاپ برچسب بارکد و اتیکت بندیل
+                                            <i class="bi bi-upc-scan me-2"></i>{% if is_tr %}Barkod ve Bağ Etiketi Yazdır{% else %}چاپ برچسب بارکد و اتیکت بندیل{% endif %}
                                         </a>
                                     </li>
                                     {% if is_admin %}
@@ -310,14 +310,14 @@
                                                 "reorder_point": p.reorder_point or 0,
                                                 "description": p.description or ""
                                             } | tojson }})'>
-                                            <i class="bi bi-pencil-square me-2"></i>ویرایش مشخصات
+                                            <i class="bi bi-pencil-square me-2"></i>{% if is_tr %}Düzenle{% else %}ویرایش مشخصات{% endif %}
                                         </button>
                                     </li>
                                     <li>
                                         <form action="/master-data/product/{{ p.id }}/toggle-status" method="post" class="m-0">
                                             <button type="submit" class="dropdown-item py-2 {% if p.is_active %}text-danger{% else %}text-success{% endif %}">
                                                 <i class="bi {% if p.is_active %}bi-slash-circle{% else %}bi-check-circle{% endif %} me-2"></i>
-                                                {% if p.is_active %}غیرفعال‌سازی{% else %}فعال‌سازی مجدد{% endif %}
+                                                {% if p.is_active %}{% if is_tr %}Pasife Al{% else %}غیرفعال‌سازی{% endif %}{% else %}{% if is_tr %}Yeniden Aktifleştir{% else %}فعال‌سازی مجدد{% endif %}{% endif %}
                                             </button>
                                         </form>
                                     </li>
@@ -331,7 +331,7 @@
                     <tr>
                         <td colspan="11" class="text-center py-5 text-secondary">
                             <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                            هیچ کالایی با معیارهای انتخابی یافت نشد.
+                            {% if is_tr %}Seçilen kriterlere uygun hiçbir ürün bulunamadı.{% else %}هیچ کالایی با معیارهای انتخابی یافت نشد.{% endif %}
                         </td>
                     </tr>
                 {% endif %}
@@ -351,119 +351,119 @@
           <input type="hidden" name="return_to" value="/master-data/products">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addProductModalLabel">
-                <i class="bi bi-box-seam-fill text-teal me-2"></i>تعریف کالای جدید صنعتی
+                <i class="bi bi-box-seam-fill text-teal me-2"></i>{% if is_tr %}Yeni Endüstriyel Ürün Tanımla{% else %}تعریف کالای جدید صنعتی{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
             <!-- بخش ۱: اطلاعات پایه کالا -->
             <h6 class="text-teal fw-bold mb-3 border-bottom border-secondary border-opacity-25 pb-2">
-                <i class="bi bi-info-circle me-1"></i>۱. مشخصات هویتی و عمومی
+                <i class="bi bi-info-circle me-1"></i>{% if is_tr %}1. Kimlik ve Genel Bilgiler{% else %}۱. مشخصات هویتی و عمومی{% endif %}
             </h6>
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
-                    <label class="form-label">نام کالا <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="name" required placeholder="مثلاً: میلگرد ۱۶ آجدار A3">
+                    <label class="form-label">{% if is_tr %}Ürün Adı{% else %}نام کالا{% endif %} <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" required placeholder="{% if is_tr %}Örn: Nervürlü İnşaat Demiri Ø16mm B420B{% else %}مثلاً: میلگرد ۱۶ آجدار A3{% endif %}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">واحد سنجش <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Ölçü Birimi{% else %}واحد سنجش{% endif %} <span class="text-danger">*</span></label>
                     <select class="form-select" name="uom" required>
-                        <option value="کیلوگرم">کیلوگرم</option>
-                        <option value="تن">تن</option>
-                        <option value="شاخه">شاخه</option>
-                        <option value="بندیل">بندیل</option>
-                        <option value="عدد">عدد</option>
-                        <option value="متر">متر</option>
-                        <option value="جامبوبگ">جامبوبگ</option>
-                        <option value="کیسه">کیسه</option>
+                        <option value="kg">kg ({{ 'Kilogram' if is_tr else 'کیلوگرم' }})</option>
+                        <option value="ton" selected>ton ({{ 'Ton' if is_tr else 'تن' }})</option>
+                        <option value="çubuk">çubuk ({{ 'Çubuk' if is_tr else 'شاخه' }})</option>
+                        <option value="bağ">bağ ({{ 'Bağ / Demet' if is_tr else 'بندیل' }})</option>
+                        <option value="adet">adet ({{ 'Adet' if is_tr else 'عدد' }})</option>
+                        <option value="metre">metre ({{ 'Metre' if is_tr else 'متر' }})</option>
+                        <option value="big-bag">big-bag ({{ 'Big-Bag' if is_tr else 'جامبوبگ' }})</option>
+                        <option value="torba">torba ({{ 'Torba' if is_tr else 'کیسه' }})</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">کد کالا (SKU)</label>
-                    <input type="text" class="form-control" name="sku" placeholder="اختیاری (خودکار)">
+                    <label class="form-label">{% if is_tr %}Ürün Kodu (SKU){% else %}کد کالا (SKU){% endif %}</label>
+                    <input type="text" class="form-control" name="sku" placeholder="{% if is_tr %}İsteğe bağlı (Otomatik){% else %}اختیاری (خودکار){% endif %}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">دسته‌بندی کالا</label>
+                    <label class="form-label">{% if is_tr %}Ürün Kategorisi{% else %}دسته‌بندی کالا{% endif %}</label>
                     <select class="form-select" name="category_id">
-                        <option value="">-- بدون دسته‌بندی خاص --</option>
+                        <option value="">{% if is_tr %}-- Kategori Seçilmedi --{% else %}-- بدون دسته‌بندی خاص --{% endif %}</option>
                         {% for cat in categories %}
-                        <option value="{{ cat.id }}">{{ cat.name }} {% if cat.code %}({{ cat.code }}){% endif %}</option>
+                        <option value="{{ cat.id }}">{{ cat.name | tr_loc(is_tr) }} {% if cat.code %}({{ cat.code }}){% endif %}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">کارخانه / برند سازنده</label>
-                    <input type="text" class="form-control" name="brand" placeholder="مثلاً: ذوب‌آهن اصفهان، فولاد مبارکه، پردیس">
+                    <label class="form-label">{% if is_tr %}Üretici / Marka Fabrikası{% else %}کارخانه / برند سازنده{% endif %}</label>
+                    <input type="text" class="form-control" name="brand" placeholder="{% if is_tr %}Örn: İsdemir, Kardemir, Erdemir, Toros Gübre{% else %}مثلاً: ذوب‌آهن اصفهان، فولاد مبارکه، پردیس{% endif %}">
                 </div>
             </div>
 
             <!-- بخش ۲: مشخصات متالورژی و صنعتی -->
             <h6 class="text-teal fw-bold mb-3 border-bottom border-secondary border-opacity-25 pb-2">
-                <i class="bi bi-tools me-1"></i>۲. مشخصات فنی، متالورژی و ابعادی
+                <i class="bi bi-tools me-1"></i>{% if is_tr %}2. Teknik, Metalürjik ve Ebat Bilgileri{% else %}۲. مشخصات فنی، متالورژی و ابعادی{% endif %}
             </h6>
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
-                    <label class="form-label">سایز / مقطع</label>
-                    <input type="text" class="form-control" name="size" placeholder="مثلاً: 16 یا IPE 20">
+                    <label class="form-label">{% if is_tr %}Ebat / Kesit{% else %}سایز / مقطع{% endif %}</label>
+                    <input type="text" class="form-control" name="size" placeholder="16, 150x150, IPE 20">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">گرید آلیاژی</label>
-                    <input type="text" class="form-control" name="grade" placeholder="A3, 3SP, 5SP, Gr46">
+                    <label class="form-label">{% if is_tr %}Çelik Kalitesi / Alaşım{% else %}گرید آلیاژی{% endif %}</label>
+                    <input type="text" class="form-control" name="grade" placeholder="B420B, S235JR, 5SP, Gr46">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">طول شاخه (متر)</label>
+                    <label class="form-label">{% if is_tr %}Çubuk Boyu (metre){% else %}طول شاخه (متر){% endif %}</label>
                     <input type="number" step="0.1" class="form-control" name="length" placeholder="12.0">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">ضخامت (میلی‌متر)</label>
+                    <label class="form-label">{% if is_tr %}Kalınlık (mm){% else %}ضخامت (میلی‌متر){% endif %}</label>
                     <input type="number" step="0.01" class="form-control" name="thickness" placeholder="2.5">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">استاندارد تولید</label>
-                    <input type="text" class="form-control" name="standard" placeholder="ISIRI 3132, DIN 488, ASTM">
+                    <label class="form-label">{% if is_tr %}Üretim Standardı{% else %}استاندارد تولید{% endif %}</label>
+                    <input type="text" class="form-control" name="standard" placeholder="TS 708, TS EN 10025, DIN 488">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label d-flex justify-content-between align-items-center">
-                        <span>کد تعرفه گمرکی ترکیه (GTİP)</span>
+                        <span>{% if is_tr %}GTİP Gümrük Tarife Kodu{% else %}کد تعرفه گمرکی ترکیه (GTİP){% endif %}</span>
                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 small font-monospace">12-Digit</span>
                     </label>
                     <input type="text" class="form-control font-monospace" name="gtip_code" placeholder="7214.20.00.00.00">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label d-flex justify-content-between align-items-center">
-                        <span>استاندارد ملی ترکیه (TSE)</span>
+                        <span>{% if is_tr %}Türk Standardı (TSE Belgesi){% else %}استاندارد ملی ترکیه (TSE){% endif %}</span>
                         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 small">TS 708 / TS EN</span>
                     </label>
-                    <input type="text" class="form-control" name="tse_standard" placeholder="TS 708 یا TS EN 10025-2">
+                    <input type="text" class="form-control" name="tse_standard" placeholder="TS 708 veya TS EN 10025-2">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">توضیحات و کاربرد</label>
-                    <input type="text" class="form-control" name="description" placeholder="توضیحات اختیاری">
+                    <label class="form-label">{% if is_tr %}Açıklama ve Kullanım Alanı{% else %}توضیحات و کاربرد{% endif %}</label>
+                    <input type="text" class="form-control" name="description" placeholder="{% if is_tr %}İsteğe bağlı açıklama...{% else %}توضیحات اختیاری...{% endif %}">
                 </div>
             </div>
 
             <!-- بخش ۳: کنترل انبارداری و سفارش -->
             <h6 class="text-teal fw-bold mb-3 border-bottom border-secondary border-opacity-25 pb-2">
-                <i class="bi bi-shield-check me-1"></i>۳. پارامترهای کنترل موجودی و سفارش
+                <i class="bi bi-shield-check me-1"></i>{% if is_tr %}3. Stok ve Sipariş Kontrol Parametreleri{% else %}۳. پارامترهای کنترل موجودی و سفارش{% endif %}
             </h6>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">حداقل موجودی امن</label>
+                    <label class="form-label">{% if is_tr %}Minimum Emniyet Stoku{% else %}حداقل موجودی امن{% endif %}</label>
                     <input type="number" step="0.01" class="form-control" name="min_stock" value="0.0">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">نقطه سفارش مجدد</label>
+                    <label class="form-label">{% if is_tr %}Yeniden Sipariş Noktası{% else %}نقطه سفارش مجدد{% endif %}</label>
                     <input type="number" step="0.01" class="form-control" name="reorder_point" value="0.0">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">سقف انبارداری (حداکثر)</label>
+                    <label class="form-label">{% if is_tr %}Maksimum Depolama Sınırı{% else %}سقف انبارداری (حداکثر){% endif %}</label>
                     <input type="number" step="0.01" class="form-control" name="max_stock" value="0.0">
                 </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">ذخیره کالا در کاتالوگ</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Ürünü Kataloğa Kaydet{% else %}ذخیره کالا در کاتالوگ{% endif %}</button>
           </div>
       </form>
     </div>
@@ -477,101 +477,101 @@
       <form id="editProductForm" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="editProductModalLabel">
-                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات کالا
+                <i class="bi bi-pencil-square text-teal me-2"></i>{% if is_tr %}Ürün Bilgilerini Düzenle{% else %}ویرایش مشخصات کالا{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">نام کالا <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Ürün Adı{% else %}نام کالا{% endif %} <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="edit_name" name="name" required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">واحد سنجش <span class="text-danger">*</span></label>
+                    <label class="form-label">{% if is_tr %}Ölçü Birimi{% else %}واحد سنجش{% endif %} <span class="text-danger">*</span></label>
                     <select class="form-select" id="edit_uom" name="uom" required>
-                        <option value="کیلوگرم">کیلوگرم</option>
-                        <option value="تن">تن</option>
-                        <option value="شاخه">شاخه</option>
-                        <option value="بندیل">بندیل</option>
-                        <option value="عدد">عدد</option>
-                        <option value="متر">متر</option>
-                        <option value="جامبوبگ">جامبوبگ</option>
-                        <option value="کیسه">کیسه</option>
+                        <option value="kg">kg ({{ 'Kilogram' if is_tr else 'کیلوگرم' }})</option>
+                        <option value="ton">ton ({{ 'Ton' if is_tr else 'تن' }})</option>
+                        <option value="çubuk">çubuk ({{ 'Çubuk' if is_tr else 'شاخه' }})</option>
+                        <option value="bağ">bağ ({{ 'Bağ' if is_tr else 'بندیل' }})</option>
+                        <option value="adet">adet ({{ 'Adet' if is_tr else 'عدد' }})</option>
+                        <option value="metre">metre ({{ 'Metre' if is_tr else 'متر' }})</option>
+                        <option value="big-bag">big-bag ({{ 'Big-Bag' if is_tr else 'جامبوبگ' }})</option>
+                        <option value="torba">torba ({{ 'Torba' if is_tr else 'کیسه' }})</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">کد کالا (SKU)</label>
+                    <label class="form-label">{% if is_tr %}Ürün Kodu (SKU){% else %}کد کالا (SKU){% endif %}</label>
                     <input type="text" class="form-control" id="edit_sku" name="sku">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">دسته‌بندی کالا</label>
+                    <label class="form-label">{% if is_tr %}Ürün Kategorisi{% else %}دسته‌بندی کالا{% endif %}</label>
                     <select class="form-select" id="edit_category_id" name="category_id">
-                        <option value="">-- بدون دسته‌بندی خاص --</option>
+                        <option value="">{% if is_tr %}-- Kategori Seçilmedi --{% else %}-- بدون دسته‌بندی خاص --{% endif %}</option>
                         {% for cat in categories %}
-                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        <option value="{{ cat.id }}">{{ cat.name | tr_loc(is_tr) }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">کارخانه / برند سازنده</label>
+                    <label class="form-label">{% if is_tr %}Üretici / Marka{% else %}کارخانه / برند سازنده{% endif %}</label>
                     <input type="text" class="form-control" id="edit_brand" name="brand">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">سایز / مقطع</label>
+                    <label class="form-label">{% if is_tr %}Ebat / Kesit{% else %}سایز / مقطع{% endif %}</label>
                     <input type="text" class="form-control" id="edit_size" name="size">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">گرید آلیاژی</label>
+                    <label class="form-label">{% if is_tr %}Çelik Kalitesi / Alaşım{% else %}گرید آلیاژی{% endif %}</label>
                     <input type="text" class="form-control" id="edit_grade" name="grade">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">طول شاخه (متر)</label>
+                    <label class="form-label">{% if is_tr %}Çubuk Boyu (metre){% else %}طول شاخه (متر){% endif %}</label>
                     <input type="number" step="0.1" class="form-control" id="edit_length" name="length">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">ضخامت (mm)</label>
+                    <label class="form-label">{% if is_tr %}Kalınlık (mm){% else %}ضخامت (mm){% endif %}</label>
                     <input type="number" step="0.01" class="form-control" id="edit_thickness" name="thickness">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">استاندارد تولید</label>
+                    <label class="form-label">{% if is_tr %}Üretim Standardı{% else %}استاندارد تولید{% endif %}</label>
                     <input type="text" class="form-control" id="edit_standard" name="standard">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label d-flex justify-content-between align-items-center">
-                        <span>کد تعرفه گمرکی ترکیه (GTİP)</span>
+                        <span>{% if is_tr %}GTİP Gümrük Tarife Kodu{% else %}کد تعرفه گمرکی ترکیه (GTİP){% endif %}</span>
                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 small font-monospace">12-Digit</span>
                     </label>
                     <input type="text" class="form-control font-monospace" id="edit_gtip_code" name="gtip_code" placeholder="7214.20.00.00.00">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label d-flex justify-content-between align-items-center">
-                        <span>استاندارد ملی ترکیه (TSE)</span>
+                        <span>{% if is_tr %}Türk Standardı (TSE Belgesi){% else %}استاندارد ملی ترکیه (TSE){% endif %}</span>
                         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 small">TS 708 / TS EN</span>
                     </label>
                     <input type="text" class="form-control" id="edit_tse_standard" name="tse_standard" placeholder="TS 708">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">توضیحات</label>
+                    <label class="form-label">{% if is_tr %}Açıklama{% else %}توضیحات{% endif %}</label>
                     <input type="text" class="form-control" id="edit_description" name="description">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">حداقل موجودی</label>
+                    <label class="form-label">{% if is_tr %}Minimum Emniyet Stoku{% else %}حداقل موجودی{% endif %}</label>
                     <input type="number" step="0.01" class="form-control" id="edit_min_stock" name="min_stock">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">نقطه سفارش</label>
+                    <label class="form-label">{% if is_tr %}Yeniden Sipariş Noktası{% else %}نقطه سفارش{% endif %}</label>
                     <input type="number" step="0.01" class="form-control" id="edit_reorder_point" name="reorder_point">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">حداکثر سقف انبار</label>
+                    <label class="form-label">{% if is_tr %}Maksimum Depolama Sınırı{% else %}حداکثر سقف انبار{% endif %}</label>
                     <input type="number" step="0.01" class="form-control" id="edit_max_stock" name="max_stock">
                 </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">به‌روزرسانی کالا</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Ürünü Güncelle{% else %}به‌روزرسانی کالا{% endif %}</button>
           </div>
       </form>
     </div>
@@ -586,36 +586,36 @@
           <input type="hidden" name="return_to" value="/master-data/products">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addCategoryModalLabel">
-                <i class="bi bi-folder-plus text-teal me-2"></i>تعریف دسته‌بندی کالایی جدید
+                <i class="bi bi-folder-plus text-teal me-2"></i>{% if is_tr %}Yeni Ürün Kategorisi Tanımla{% else %}تعریف دسته‌بندی کالایی جدید{% endif %}
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
             <div class="mb-3">
-                <label class="form-label">نام گروه کالایی <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="name" required placeholder="مثلاً: ورق‌های فولادی سیاه">
+                <label class="form-label">{% if is_tr %}Kategori Adı{% else %}نام گروه کالایی{% endif %} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="name" required placeholder="{% if is_tr %}Örn: Çelik Kütük ve Yassı Ürünler{% else %}مثلاً: ورق‌های فولادی سیاه{% endif %}">
             </div>
             <div class="mb-3">
-                <label class="form-label">کد اختصاری رده</label>
-                <input type="text" class="form-control" name="code" placeholder="مثلاً: STL-SHT">
+                <label class="form-label">{% if is_tr %}Kategori Kodu{% else %}کد اختصاری رده{% endif %}</label>
+                <input type="text" class="form-control" name="code" placeholder="Örn: STL-SHT">
             </div>
             <div class="mb-3">
-                <label class="form-label">گروه والد (در صورت زیرمجموعه بودن)</label>
+                <label class="form-label">{% if is_tr %}Üst Kategori (Varsa){% else %}گروه والد (در صورت زیرمجموعه بودن){% endif %}</label>
                 <select class="form-select" name="parent_id">
-                    <option value="">-- دسته ریشه / اصلی --</option>
+                    <option value="">{% if is_tr %}-- Ana Kategori --{% else %}-- دسته ریشه / اصلی --{% endif %}</option>
                     {% for cat in categories %}
-                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    <option value="{{ cat.id }}">{{ cat.name | tr_loc(is_tr) }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label">شرح و توضیحات دسته</label>
-                <textarea class="form-control" name="description" rows="2" placeholder="توضیحات اختیاری..."></textarea>
+                <label class="form-label">{% if is_tr %}Kategori Açıklaması{% else %}شرح و توضیحات دسته{% endif %}</label>
+                <textarea class="form-control" name="description" rows="2" placeholder="{% if is_tr %}İsteğe bağlı açıklama...{% else %}توضیحات اختیاری...{% endif %}"></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">ثبت دسته‌بندی</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+            <button type="submit" class="btn btn-teal px-4">{% if is_tr %}Kategoriyi Kaydet{% else %}ثبت دسته‌بندی{% endif %}</button>
           </div>
       </form>
     </div>
@@ -626,7 +626,7 @@
 function openEditProductModal(prod) {
     document.getElementById('editProductForm').action = '/master-data/product/' + prod.id + '/edit';
     document.getElementById('edit_name').value = prod.name || '';
-    document.getElementById('edit_uom').value = prod.uom || 'کیلوگرم';
+    document.getElementById('edit_uom').value = prod.uom || 'kg';
     document.getElementById('edit_sku').value = prod.sku || '';
     document.getElementById('edit_category_id').value = prod.category_id || '';
     document.getElementById('edit_brand').value = prod.brand || '';
@@ -648,3 +648,4 @@ function openEditProductModal(prod) {
 </script>
 {% endif %}
 {% endblock %}
+
