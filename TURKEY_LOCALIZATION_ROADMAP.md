@@ -75,9 +75,9 @@ graph TD
 - [x] **۳.۳** تولید اتیکت و بارکد استاندارد کالا با فرمت استاندارد ترکیه و اصطلاحات ترکی.
 
 ### 📦 پارت ۴: موتور مالیات، عوارض و توقیف مالیات آهن‌آلات (Tax & Tevkifat)
-- [ ] **۴.۱** ماژول محاسبه خودکار مالیات بر ارزش افزوده (KDV) با نرخ‌های ۲۰٪، ۱۰٪ و ۱٪.
-- [ ] **۴.۲** ماژول تخصصی توقیف ارزش افزوده آهن و فولاد (Demir-Çelik KDV Tevkifatı) با تفکیک سهم فروشنده و خریدار.
-- [ ] **۴.۳** درج مبالغ پایه، مالیات کسر شده و مالیات قابل پرداخت در فاکتورها و رسیدها.
+- [x] **۴.۱** ماژول محاسبه خودکار مالیات بر ارزش افزوده (KDV) با نرخ‌های ۲۰٪، ۱۰٪ و ۱٪.
+- [x] **۴.۲** ماژول تخصصی توقیف ارزش افزوده آهن و فولاد (Demir-Çelik KDV Tevkifatı) با تفکیک سهم فروشنده و خریدار.
+- [x] **۴.۳** درج مبالغ پایه، مالیات کسر شده و مالیات قابل پرداخت در فاکتورها و رسیدها.
 
 ### 📦 پارت ۵: باسکول تریلی، ناوگان و پلاک خودرو ترکیه (Kantar & Transport)
 - [ ] **۵.۱** طراحی ویجت پلاک اختصاصی ترکیه با کد استان و حروف استاندارد (مانند `34 ABC 123`).
@@ -103,7 +103,7 @@ graph TD
 | **پارت ۱** | زیرساخت دوگانه، چندزبانه و صفحه ورود | 🟢 تکمیل و فعال شده | `src/api/auth.py`, `src/core/localization/`, `templates/login.html`, `templates/base.html` | ۱۴۰۵/۰۷/۲۲ |
 | **پارت ۲** | طرف‌های تجاری و شناسه‌های هویتی ترکیه | 🟢 تکمیل و فعال شده | `src/domain_model/inventory_models.py`, `src/api/parties_ui.py`, `templates/parties.html`, `scripts/test_part2.py` | ۱۴۰۵/۰۷/۲۲ |
 | **پارت ۳** | کدینگ کالا و استانداردهای TSE و GTİP | 🟢 تکمیل و فعال شده | `src/domain_model/inventory_models.py`, `src/api/master_data_ui.py`, `templates/products.html`, `templates/barcode_label.html`, `scripts/test_part3.py` | ۱۴۰۵/۰۷/۲۲ |
-| **پارت ۴** | مالیات KDV و توقیف مالیاتی آهن‌آلات | ⚪ در انتظار | `src/services/tax_service.py`, `templates/purchases.html` | - |
+| **پارت ۴** | مالیات KDV و توقیف مالیاتی آهن‌آلات | 🟢 تکمیل و فعال شده | `src/services/tax_service.py`, `src/domain_model/inventory_models.py`, `src/api/purchases_ui.py`, `templates/purchase_detail.html`, `scripts/test_part4.py` | ۱۴۰۵/۰۷/۲۲ |
 | **پارت ۵** | باسکول تریلی و پلاک خودرو ترکیه | ⚪ در انتظار | `src/api/weighbridge_ui.py`, `templates/weighbridge.html` | - |
 | **پارت ۶** | بارنامه e-İrsaliye و سامانه ترابری U-ETDS | ⚪ در انتظار | `src/api/compliance_ui.py`, `templates/compliance.html` | - |
 | **پارت ۷** | گزارش‌ها و اسناد رسمی دوزبانه | ⚪ در انتظار | `templates/reports.html`, `templates/mtc_certificate.html` | - |

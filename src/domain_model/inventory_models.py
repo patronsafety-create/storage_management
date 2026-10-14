@@ -221,6 +221,16 @@ class PurchaseOrder(Base):
     delivery_due_date = Column(String, nullable=True)
     status = Column(Enum(PurchaseOrderStatus), default=PurchaseOrderStatus.CONFIRMED, nullable=False)
     notes = Column(String, nullable=True)
+
+    # 💰 اطلاعات مالی و مالیاتی (Tax & Tevkifat)
+    subtotal_amount = Column(Float, default=0.0)      # مبلغ پایه بدون مالیات (Matrah)
+    vat_rate = Column(Float, default=0.10)            # نرخ مالیات بر ارزش افزوده (۱۰٪ ایران یا ۲۰٪ ترکیه)
+    vat_amount = Column(Float, default=0.0)           # کل مالیات بر ارزش افزوده (Hesaplanan KDV)
+    tevkifat_rate = Column(String, nullable=True)     # نسبت توقیف مالیات آهن‌آلات ترکیه (مانند 4/10)
+    tevkifat_amount = Column(Float, default=0.0)      # مبلغ توقیف مالیات (Tevkifat Tutarı)
+    total_amount = Column(Float, default=0.0)         # کل مبلغ قابل پرداخت به فروشنده (Genel Toplam)
+    currency = Column(String, default="IRR")          # واحد پولی (IRR یا TRY)
+
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

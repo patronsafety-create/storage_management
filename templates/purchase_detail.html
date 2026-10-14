@@ -54,9 +54,32 @@
           <span class="text-secondary d-block">مهلت تحویل بار:</span>
           <span class="text-warning">{{ order.delivery_due_date or 'تعیین نشده' }}</span>
         </div>
-        <div>
-          <span class="text-secondary d-block">ارزش ریالی کل سفارش:</span>
-          <span class="text-teal fw-bold fs-6 font-monospace">{{ "{:,.0f}".format(total_amount) }} ریال</span>
+        <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between mb-1 small">
+            <span class="text-secondary">{% if is_tr %}Matrah (Net Tutar):{% else %}مبلغ خالص پایه:{% endif %}</span>
+            <span class="font-monospace text-light">{{ "{:,.2f}".format(tax_info.base_amount) if is_tr else "{:,.0f}".format(tax_info.base_amount) }} {{ tax_info.currency_symbol }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1 small">
+            <span class="text-secondary">{% if is_tr %}Hesaplanan KDV (%{{ (tax_info.vat_rate * 100)|int }}):{% else %}مالیات بر ارزش افزوده ({{ (tax_info.vat_rate * 100)|int }}٪):{% endif %}</span>
+            <span class="font-monospace text-warning">+{{ "{:,.2f}".format(tax_info.vat_amount) if is_tr else "{:,.0f}".format(tax_info.vat_amount) }} {{ tax_info.currency_symbol }}</span>
+          </div>
+          {% if tax_info.has_tevkifat %}
+          <div class="d-flex justify-content-between mb-1 small text-danger">
+            <span>Demir-Çelik Tevkifatı ({{ tax_info.tevkifat_rate_str }}):</span>
+            <span class="font-monospace">-{{ "{:,.2f}".format(tax_info.tevkifat_amount) }} ₺</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1 small text-info">
+            <span>Tahsil Edilecek KDV:</span>
+            <span class="font-monospace">+{{ "{:,.2f}".format(tax_info.payable_vat) }} ₺</span>
+          </div>
+          <div class="small text-secondary border-top border-secondary border-opacity-25 pt-1 mt-1 font-monospace" style="font-size: 0.75rem;">
+            * 2 Nolu KDV ile devlete beyan: {{ "{:,.2f}".format(tax_info.buyer_tax_liability) }} ₺
+          </div>
+          {% endif %}
+          <div class="d-flex justify-content-between border-top border-secondary border-opacity-50 pt-2 mt-2">
+            <span class="fw-bold text-light">{% if is_tr %}Toplam Ödenecek:{% else %}مبلغ نهایی فاکتور:{% endif %}</span>
+            <span class="text-teal fw-bold fs-6 font-monospace">{{ "{:,.2f}".format(tax_info.total_payable) if is_tr else "{:,.0f}".format(tax_info.total_payable) }} {{ tax_info.currency_symbol }}</span>
+          </div>
         </div>
         {% if order.notes %}
         <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
@@ -72,8 +95,8 @@
   <div class="col-lg-8">
     <div class="glass-card p-4 h-100">
       <h5 class="fw-bold mb-3 pb-2 border-bottom border-secondary border-opacity-25 text-light d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-boxes text-info me-2"></i>اقلام سفارش و پیشرفت دریافت</span>
-        <span class="badge bg-secondary bg-opacity-25 small">{{ order.items | length }} قلم</span>
+        <span><i class="bi bi-boxes text-info me-2"></i>{% if is_tr %}Sipariş Kalemleri ve Mal Kabul{% else %}اقلام سفارش و پیشرفت دریافت{% endif %}</span>
+        <span class="badge bg-secondary bg-opacity-25 small">{{ order.items | length }} {% if is_tr %}Kalem{% else %}قلم{% endif %}</span>
       </h5>
 
       <!-- جدول اقلام -->
@@ -81,12 +104,12 @@
         <table class="table table-dark table-hover mb-0 align-middle">
           <thead style="background: rgba(255,255,255,0.05);">
             <tr>
-              <th>کالا</th>
-              <th>مقدار سفارش</th>
-              <th>دریافت شده</th>
-              <th>باقیمانده</th>
-              <th>نرخ واحد (ریال)</th>
-              <th>مبلغ کل (ریال)</th>
+              <th>{% if is_tr %}Ürün Adı{% else %}کالا{% endif %}</th>
+              <th>{% if is_tr %}Sipariş Miktarı{% else %}مقدار سفارش{% endif %}</th>
+              <th>{% if is_tr %}Teslim Alınan{% else %}دریافت شده{% endif %}</th>
+              <th>{% if is_tr %}Kalan{% else %}باقیمانده{% endif %}</th>
+              <th>{% if is_tr %}Birim Fiyat (₺){% else %}نرخ واحد (ریال){% endif %}</th>
+              <th>{% if is_tr %}Toplam Tutar (₺){% else %}مبلغ کل (ریال){% endif %}</th>
             </tr>
           </thead>
           <tbody>

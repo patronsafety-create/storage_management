@@ -23,6 +23,7 @@ from src.domain_model.inventory_models import (
 )
 from src.domain_model.enums import PurchaseOrderStatus, DocumentStatus
 from src.services.audit_service import AuditService
+from src.services.tax_service import TaxService
 
 router = APIRouter(prefix="/purchases", tags=["Purchase Orders"])
 templates = Jinja2Templates(directory="templates")
@@ -123,37 +124,73 @@ async def create_purchase_order(
     quantity: list[float] = Form(...),
     unit_price: list[float] = Form(...)
 ):
-    """ذخیره سفارش خرید و اقلام مربوطه"""
+    """ذخیره سفارش خرید و اقلام مربوطه با محاسبه خودکار مالیات و توقیف آهن‌آلات"""
     try:
+        # تشخیص منطقه جغرافیایی سفارش (ایران یا ترکیه)
+        supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+        is_tr = (supplier and supplier.country_code == "TR") or (request.cookies.get("nexus_region", "IR").upper() == "TR")
+        region_code = "TR" if is_tr else "IR"
+
+        # بررسی اقلام، محاسبه مبلغ خالص پایه و بررسی مشمولیت توقیف آهن و فولاد
+        subtotal = 0.0
+        has_steel = False
+        valid_items_data = []
+
+        for pid, qty, price in zip(product_id, quantity, unit_price):
+            if qty > 0:
+                line_total = qty * price
+                subtotal += line_total
+                p = db.query(Product).options(joinedload(Product.category)).filter(Product.id == pid).first()
+                if p and TaxService.is_steel_tevkifat_eligible(
+                    gtip_code=p.gtip_code,
+                    category_code=p.category.code if p.category else None,
+                    product_name=p.name
+                ):
+                    has_steel = True
+                valid_items_data.append((pid, qty, price, line_total))
+
+        # اجرای موتور محاسبه مالیات و توقیف آهن‌آلات
+        tax_res = TaxService.calculate_tax(
+            base_amount=subtotal,
+            region_code=region_code,
+            is_steel=has_steel
+        )
+
         po = PurchaseOrder(
             po_number=po_number.strip(),
             supplier_id=supplier_id,
             delivery_due_date=delivery_due_date.strip() if delivery_due_date else None,
             status=PurchaseOrderStatus.CONFIRMED,
             notes=notes.strip() if notes else None,
+            subtotal_amount=tax_res.base_amount,
+            vat_rate=tax_res.vat_rate,
+            vat_amount=tax_res.vat_amount,
+            tevkifat_rate=tax_res.tevkifat_rate_str,
+            tevkifat_amount=tax_res.tevkifat_amount,
+            total_amount=tax_res.total_payable,
+            currency="TRY" if is_tr else "IRR",
             created_by_id=current_user.id
         )
         db.add(po)
         db.flush()
 
-        for pid, qty, price in zip(product_id, quantity, unit_price):
-            if qty > 0:
-                item = PurchaseOrderItem(
-                    purchase_order_id=po.id,
-                    product_id=pid,
-                    quantity=qty,
-                    received_quantity=0.0,
-                    unit_price=price,
-                    total_price=qty * price
-                )
-                db.add(item)
+        for pid, qty, price, line_total in valid_items_data:
+            item = PurchaseOrderItem(
+                purchase_order_id=po.id,
+                product_id=pid,
+                quantity=qty,
+                received_quantity=0.0,
+                unit_price=price,
+                total_price=line_total
+            )
+            db.add(item)
 
         db.commit()
 
         AuditService.log(
             db, action="CREATE", entity_name="PurchaseOrder",
             entity_id=str(po.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
-            details=f"ثبت سفارش خرید {po.po_number} برای تأمین‌کننده کد {supplier_id}"
+            details=f"ثبت سفارش خرید {po.po_number} (پایه: {tax_res.base_amount} {tax_res.currency_symbol} - توقیف: {tax_res.tevkifat_amount} - نهایی: {tax_res.total_payable})"
         )
 
         return RedirectResponse(
@@ -186,7 +223,7 @@ async def view_purchase_order(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """مشاهده جزئیات سفارش خرید و وضعیت دریافت اقلام"""
+    """مشاهده جزئیات سفارش خرید و وضعیت دریافت اقلام با گزارش تفصیلی مالیاتی"""
     po = (
         db.query(PurchaseOrder)
         .options(
@@ -202,8 +239,23 @@ async def view_purchase_order(
 
     warehouses = db.query(Warehouse).all()
 
-    # کل مبلغ سفارش
-    total_amount = sum(item.total_price for item in po.items)
+    # محاسبه مجدد مشخصات مالیاتی در صورت نیاز
+    subtotal = po.subtotal_amount or sum(item.total_price for item in po.items)
+    is_tr = (po.currency == "TRY") or (po.supplier and po.supplier.country_code == "TR") or (request.cookies.get("nexus_region") == "TR")
+    has_steel = any(
+        TaxService.is_steel_tevkifat_eligible(
+            gtip_code=it.product.gtip_code if it.product else None,
+            category_code=it.product.category.code if it.product and it.product.category else None,
+            product_name=it.product.name if it.product else None
+        ) for it in po.items
+    )
+    tax_info = TaxService.calculate_tax(
+        base_amount=subtotal,
+        region_code="TR" if is_tr else "IR",
+        is_steel=has_steel,
+        custom_vat_rate=po.vat_rate if po.vat_rate else None,
+        tevkifat_ratio=po.tevkifat_rate
+    )
 
     return templates.TemplateResponse(
         request=request,
@@ -212,7 +264,9 @@ async def view_purchase_order(
             "request": request,
             "order": po,
             "warehouses": warehouses,
-            "total_amount": total_amount,
+            "total_amount": tax_info.total_payable,
+            "tax_info": tax_info,
+            "is_tr": is_tr,
             "user": current_user
         }
     )

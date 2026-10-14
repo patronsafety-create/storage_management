@@ -166,6 +166,14 @@ async def lifespan(app: FastAPI):
                 CREATE INDEX IF NOT EXISTS ix_purchase_orders_id ON purchase_orders(id);
                 CREATE INDEX IF NOT EXISTS ix_purchase_orders_po_number ON purchase_orders(po_number);
 
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS subtotal_amount FLOAT DEFAULT 0.0;
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS vat_rate FLOAT DEFAULT 0.10;
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS vat_amount FLOAT DEFAULT 0.0;
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS tevkifat_rate VARCHAR;
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS tevkifat_amount FLOAT DEFAULT 0.0;
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS total_amount FLOAT DEFAULT 0.0;
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'IRR';
+
                 CREATE TABLE IF NOT EXISTS purchase_order_items (
                     id SERIAL PRIMARY KEY,
                     purchase_order_id INTEGER REFERENCES purchase_orders(id) ON DELETE CASCADE,
