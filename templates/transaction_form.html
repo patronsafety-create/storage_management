@@ -110,28 +110,28 @@
                 <div class="row g-3 mb-4" id="partyContainer">
                     <div class="col-md-12 d-none" id="supplierBox">
                         <label for="supplier_id" class="form-label fw-bold text-success">
-                            <i class="bi bi-building-up me-1"></i>تأمین‌کننده / کارخانه فروشنده (طرف حساب ورود)
+                            <i class="bi bi-building-up me-1"></i>{% if is_tr %}Tedarikçi / Üretici Fabrika (Giriş Muhatabı){% else %}تأمین‌کننده / کارخانه فروشنده (طرف حساب ورود){% endif %}
                         </label>
                         <select class="form-select" id="supplier_id" name="supplier_id">
-                            <option value="">-- بدون انتساب / تأمین عمومی --</option>
+                            <option value="">{% if is_tr %}-- Atamasız / Genel Tedarik --{% else %}-- بدون انتساب / تأمین عمومی --{% endif %}</option>
                             {% for supplier in suppliers %}
-                            <option value="{{ supplier.id }}">{{ supplier.name }} {% if supplier.code %}({{ supplier.code }}){% endif %}</option>
+                            <option value="{{ supplier.id }}">{{ supplier.name | tr_loc(is_tr) }} {% if supplier.code %}({{ supplier.code }}){% endif %}</option>
                             {% endfor %}
                         </select>
-                        <div class="form-text text-secondary small">انتساب رسید به کارخانه تولیدی یا تأمین‌کننده جهت ردیابی خرید و تسهیم بهای تمام‌شده</div>
+                        <div class="form-text text-secondary small">{% if is_tr %}Mal kabul irsaliyesini üretici fabrika veya tedarikçiye bağlayarak maliyet ve parti takibi sağlayın.{% else %}انتساب رسید به کارخانه تولیدی یا تأمین‌کننده جهت ردیابی خرید و تسهیم بهای تمام‌شده{% endif %}</div>
                     </div>
 
                     <div class="col-md-12 d-none" id="customerBox">
                         <label for="customer_id" class="form-label fw-bold text-info">
-                            <i class="bi bi-person-check-fill me-1"></i>مشتری / خریدار پروژه (طرف حساب خروج)
+                            <i class="bi bi-person-check-fill me-1"></i>{% if is_tr %}Müşteri / Şantiye Projesi (Çıkış Muhatabı){% else %}مشتری / خریدار پروژه (طرف حساب خروج){% endif %}
                         </label>
                         <select class="form-select" id="customer_id" name="customer_id">
-                            <option value="">-- بدون انتساب / حواله عمومی --</option>
+                            <option value="">{% if is_tr %}-- Atamasız / Genel Sevkiyat --{% else %}-- بدون انتساب / حواله عمومی --{% endif %}</option>
                             {% for customer in customers %}
-                            <option value="{{ customer.id }}">{{ customer.name }} {% if customer.code %}({{ customer.code }}){% endif %}</option>
+                            <option value="{{ customer.id }}">{{ customer.name | tr_loc(is_tr) }} {% if customer.code %}({{ customer.code }}){% endif %}</option>
                             {% endfor %}
                         </select>
-                        <div class="form-text text-secondary small">انتساب حواله به خریدار یا کارگاه جهت ثبت در کاردکس مشتری و چاپ روی برگه رسمی خروج</div>
+                        <div class="form-text text-secondary small">{% if is_tr %}Sevk irsaliyesini müşteri veya şantiye projesine bağlayarak cari hesap ve sevk belgesine yazdırın.{% else %}انتساب حواله به خریدار یا کارگاه جهت ثبت در کاردکس مشتری و چاپ روی برگه رسمی خروج{% endif %}</div>
                     </div>
                 </div>
 
