@@ -10,9 +10,20 @@
         </h3>
         <p class="text-secondary small mb-0">{{ 'Fiziki mal sayımı, sayım fazlası ve eksiğinin otomatik tespiti ve düzeltme fişleri' if is_tr else 'شمارش فیزیکی اقلام، محاسبه خودکار کسری و اضافی و صدور اسناد مکانیزه تعدیل' }}</p>
     </div>
-    <a href="/dashboard" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-right me-1"></i>{{ 'Geri Dön' if is_tr else 'بازگشت' }}
-    </a>
+    <div class="d-flex gap-2">
+        {% if selected_warehouse %}
+        <a href="/inventory/stocktaking/blind-sheet?warehouse_id={{ selected_warehouse.id }}" target="_blank" class="btn btn-outline-info">
+            <i class="bi bi-printer me-1"></i>{{ 'Kör Sayım Formu Yazdır' if is_tr else '🖨️ چاپ فرم شمارش کور (بدون موجودی سیستم)' }}
+        </a>
+        {% else %}
+        <a href="/inventory/stocktaking/blind-sheet" target="_blank" class="btn btn-outline-info">
+            <i class="bi bi-printer me-1"></i>{{ 'Kör Sayım Formu Yazdır' if is_tr else '🖨️ چاپ فرم شمارش کور' }}
+        </a>
+        {% endif %}
+        <a href="/dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-right me-1"></i>{{ 'Geri Dön' if is_tr else 'بازگشت' }}
+        </a>
+    </div>
 </div>
 
 {% if msg %}
@@ -61,8 +72,9 @@
                         <th class="py-3 px-3">#</th>
                         <th>{{ 'Ürün Adı' if is_tr else 'نام کالا' }}</th>
                         <th>{{ 'Birim' if is_tr else 'واحد' }}</th>
-                        <th>{{ 'Sistem Stoğu' if is_tr else 'موجودی سیستمی' }}</th>
-                        <th style="width: 200px;">{{ 'Fiili Fiziki Sayım' if is_tr else 'شمارش فیزیکی واقعی' }}</th>
+                        <th>{{ 'Sistem Stoğu (Ana / İkinci)' if is_tr else 'موجودی سیستمی (اصلی / فرعی)' }}</th>
+                        <th style="width: 170px;">{{ 'Fiili Sayım (Ana)' if is_tr else 'شمارش واحد اصلی' }}</th>
+                        <th style="width: 170px;">{{ 'Fiili Sayım (İkinci)' if is_tr else 'شمارش فرعی (شاخه/بندیل)' }}</th>
                         <th>{{ 'Fark Durumu' if is_tr else 'وضعیت مغایرت' }}</th>
                     </tr>
                 </thead>
@@ -70,10 +82,20 @@
                     {% for item in items %}
                     <tr>
                         <td class="px-3 text-secondary">{{ loop.index }}</td>
-                        <td class="fw-semibold text-light">{{ item.product.name | tr_loc(is_tr) }}</td>
+                        <td class="fw-semibold text-light">
+                            {{ item.product.name | tr_loc(is_tr) }}
+                            {% if item.product.secondary_uom %}
+                            <span class="badge bg-secondary bg-opacity-25 ms-1 small">{{ item.product.secondary_uom }}</span>
+                            {% endif %}
+                        </td>
                         <td><span class="badge bg-secondary bg-opacity-25">{{ item.product.uom | tr_loc(is_tr) }}</span></td>
                         <td class="fw-bold font-monospace text-info">
                             <span id="sys_{{ item.product.id }}">{{ "{:,.2f}".format(item.system_stock) }}</span>
+                            {% if item.product.secondary_uom %}
+                            <span class="text-secondary small d-block">
+                                {{ "{:,.0f}".format(item.system_secondary_stock) }} {{ item.product.secondary_uom }}
+                            </span>
+                            {% endif %}
                         </td>
                         <td>
                             <input type="number" step="0.001" min="0" 
@@ -82,6 +104,17 @@
                                    data-sys="{{ item.system_stock }}"
                                    class="form-control form-control-sm count-input text-center font-monospace bg-dark border-secondary text-light" 
                                    required>
+                        </td>
+                        <td>
+                            {% if item.product.secondary_uom %}
+                            <input type="number" step="1" min="0" 
+                                   name="sec_count_{{ item.product.id }}" 
+                                   value="{{ item.system_secondary_stock if item.system_secondary_stock > 0 else 0 }}"
+                                   class="form-control form-control-sm text-center font-monospace bg-dark border-secondary text-warning"
+                                   placeholder="{{ item.product.secondary_uom }}">
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
                         </td>
                         <td>
                             <span id="diff_badge_{{ item.product.id }}" class="badge bg-secondary bg-opacity-25 text-secondary">
@@ -116,7 +149,7 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const isTr = {{ 'true' if is_tr else 'false' }};
+    const isTr = (document.documentElement.lang === 'tr');
     const inputs = document.querySelectorAll('.count-input');
 
     function checkDiff(input) {

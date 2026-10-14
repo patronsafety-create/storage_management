@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 
 from src.core.dependencies import get_current_user
 from src.infrastructure.database import get_db
 from src.domain_model.inventory_models import StockTransaction, ProductCategory
 from src.domain_model.auth_models import User
+from src.domain_model.enums import DocumentStatus
 from src.services.inventory_service import InventoryService
 from src.core.localization.regions import localize_display_name, get_active_region
 
@@ -33,6 +34,20 @@ async def dashboard(
         .all()
     )
 
+    pending_transactions = (
+        db.query(StockTransaction)
+        .options(
+            joinedload(StockTransaction.product),
+            joinedload(StockTransaction.warehouse),
+            joinedload(StockTransaction.supplier),
+            joinedload(StockTransaction.customer),
+            joinedload(StockTransaction.created_by)
+        )
+        .filter(StockTransaction.status == DocumentStatus.PENDING_APPROVAL)
+        .order_by(StockTransaction.created_at.desc())
+        .all()
+    )
+
     is_admin = any(role.name == "Admin" for role in current_user.roles)
 
     # داده‌های نمودار: موجودی لحظه‌ای کالاها
@@ -49,6 +64,7 @@ async def dashboard(
             "request": request,
             "tx_count": transaction_count,
             "recent_txs": recent_transactions,
+            "pending_txs": pending_transactions,
             "msg": msg,
             "error": error,
             "user": current_user,

@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -10,14 +10,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from src.infrastructure.number_normalizer import NumberNormalizationMiddleware
+from src.core.localization.regions import register_jinja_filters
+
 from src.api import (
     auth, ui, inventory_ui, master_data_ui, admin_ui, stock_api, parties_ui,
-    purchases_ui, alerts_ui, weighbridge_ui, cutting_ui, bagging_ui, compliance_ui, audit_ui
+    purchases_ui, sales_ui, alerts_ui, weighbridge_ui, cutting_ui, bagging_ui, compliance_ui, audit_ui
 )
 from src.infrastructure.database import engine, SessionLocal, Base
 from src.domain_model import inventory_models, auth_models
 from src.domain_model.enums import PurchaseOrderStatus, WeighbridgeStatus, CuttingStatus, BaggingStatus, DocumentStatus
 from src.infrastructure.security import get_password_hash
+from src.infrastructure.seed_users import seed_enterprise_users
 
 from sqlalchemy import text
 
@@ -25,6 +29,7 @@ from sqlalchemy import text
 Base.metadata.create_all(bind=engine)
 
 templates = Jinja2Templates(directory="templates")
+register_jinja_filters(templates)
 
 
 @asynccontextmanager
@@ -32,8 +37,9 @@ async def lifespan(app: FastAPI):
     """تزریق داده‌های پایه (Seeding) و بررسی سلامت اسکیمای دیتابیس هنگام راه‌اندازی"""
     # ۱. اطمینان از اعمال تغییرات اسکیمای غیرمخرب
     try:
-        with engine.connect() as conn:
-            conn.execute(text("""
+        if engine.dialect.name == "postgresql":
+            with engine.connect() as conn:
+                conn.execute(text("""
                 CREATE TABLE IF NOT EXISTS product_categories (
                     id SERIAL PRIMARY KEY,
                     name VARCHAR NOT NULL UNIQUE,
@@ -112,6 +118,11 @@ async def lifespan(app: FastAPI):
                 ALTER TABLE customers ADD COLUMN IF NOT EXISTS mersis_no VARCHAR;
                 ALTER TABLE customers ADD COLUMN IF NOT EXISTS country_code VARCHAR DEFAULT 'IR';
 
+                ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS country_code VARCHAR DEFAULT 'IR';
+                ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'IRR';
+
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'IRR';
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS exchange_rate FLOAT DEFAULT 1.0;
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS supplier_id INTEGER REFERENCES suppliers(id);
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS customer_id INTEGER REFERENCES customers(id);
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'APPROVED';
@@ -255,6 +266,79 @@ async def lifespan(app: FastAPI):
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 );
                 CREATE INDEX IF NOT EXISTS ix_audit_logs_id ON audit_logs(id);
+
+                -- فاز ۱: ارتقای اسکیمای سال مالی و سفارشات فروش
+                CREATE TABLE IF NOT EXISTS fiscal_years (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR NOT NULL UNIQUE,
+                    start_date VARCHAR NOT NULL,
+                    end_date VARCHAR NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    is_closed BOOLEAN DEFAULT FALSE,
+                    closed_at TIMESTAMPTZ,
+                    closed_by_id INTEGER REFERENCES users(id),
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS ix_fiscal_years_id ON fiscal_years(id);
+
+                CREATE TABLE IF NOT EXISTS sales_orders (
+                    id SERIAL PRIMARY KEY,
+                    so_number VARCHAR NOT NULL UNIQUE,
+                    customer_id INTEGER REFERENCES customers(id),
+                    order_date TIMESTAMPTZ DEFAULT NOW(),
+                    delivery_due_date VARCHAR,
+                    status VARCHAR DEFAULT 'CONFIRMED',
+                    notes VARCHAR,
+                    subtotal_amount FLOAT DEFAULT 0.0,
+                    vat_rate FLOAT DEFAULT 0.10,
+                    vat_amount FLOAT DEFAULT 0.0,
+                    tevkifat_rate VARCHAR,
+                    tevkifat_amount FLOAT DEFAULT 0.0,
+                    total_amount FLOAT DEFAULT 0.0,
+                    currency VARCHAR DEFAULT 'IRR',
+                    created_by_id INTEGER REFERENCES users(id),
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS ix_sales_orders_id ON sales_orders(id);
+                CREATE INDEX IF NOT EXISTS ix_sales_orders_so_number ON sales_orders(so_number);
+
+                CREATE TABLE IF NOT EXISTS sales_order_items (
+                    id SERIAL PRIMARY KEY,
+                    sales_order_id INTEGER REFERENCES sales_orders(id) ON DELETE CASCADE,
+                    product_id INTEGER REFERENCES products(id),
+                    quantity FLOAT NOT NULL,
+                    delivered_quantity FLOAT DEFAULT 0.0,
+                    unit_price FLOAT DEFAULT 0.0,
+                    total_price FLOAT DEFAULT 0.0
+                );
+                CREATE INDEX IF NOT EXISTS ix_sales_order_items_id ON sales_order_items(id);
+
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS fiscal_year_id INTEGER REFERENCES fiscal_years(id);
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS purchase_order_id INTEGER REFERENCES purchase_orders(id);
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS purchase_order_item_id INTEGER REFERENCES purchase_order_items(id);
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS sales_order_id INTEGER REFERENCES sales_orders(id);
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS sales_order_item_id INTEGER REFERENCES sales_order_items(id);
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS weighbridge_ticket_id INTEGER REFERENCES weighbridge_tickets(id);
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS transaction_source VARCHAR;
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS transaction_date TIMESTAMPTZ;
+
+                ALTER TABLE weighbridge_tickets ADD COLUMN IF NOT EXISTS purchase_order_id INTEGER REFERENCES purchase_orders(id);
+                ALTER TABLE weighbridge_tickets ADD COLUMN IF NOT EXISTS sales_order_id INTEGER REFERENCES sales_orders(id);
+
+                CREATE INDEX IF NOT EXISTS ix_stock_transactions_fiscal_year_id ON stock_transactions(fiscal_year_id);
+                CREATE INDEX IF NOT EXISTS ix_stock_transactions_purchase_order_id ON stock_transactions(purchase_order_id);
+                CREATE INDEX IF NOT EXISTS ix_stock_transactions_sales_order_id ON stock_transactions(sales_order_id);
+                CREATE INDEX IF NOT EXISTS ix_stock_transactions_transaction_source ON stock_transactions(transaction_source);
+
+                -- بهینه‌سازی و انعطاف‌پذیری قید مقدار برای اصلاحات ریالی (quantity >= 0)
+                DO $$
+                BEGIN
+                    ALTER TABLE stock_transactions DROP CONSTRAINT IF EXISTS check_quantity_positive;
+                    ALTER TABLE stock_transactions DROP CONSTRAINT IF EXISTS check_quantity_non_negative;
+                    ALTER TABLE stock_transactions ADD CONSTRAINT check_quantity_non_negative CHECK (quantity >= 0);
+                EXCEPTION WHEN OTHERS THEN
+                    NULL;
+                END $$;
             """))
             conn.commit()
     except Exception as e:
@@ -262,6 +346,16 @@ async def lifespan(app: FastAPI):
 
     db = SessionLocal()
     try:
+        # ۱. سال مالی پیش‌فرض
+        if not db.query(inventory_models.FiscalYear).filter(inventory_models.FiscalYear.is_active == True).first():
+            db.add(inventory_models.FiscalYear(
+                name="سال مالی ۱۴۰۳",
+                start_date="1403-01-01",
+                end_date="1403-12-29",
+                is_active=True,
+                is_closed=False
+            ))
+            db.commit()
         # ۲. انبارهای پیش‌فرض
         if not db.query(inventory_models.Warehouse).first():
             db.add_all([
@@ -633,7 +727,7 @@ async def lifespan(app: FastAPI):
                     status=WeighbridgeStatus.COMPLETED,
                     operator_name="متصدی باسکول شیفت صبح",
                     notes="توزین استاندارد بدون مغایرت بارنامه",
-                    completed_at=datetime.now()
+                    completed_at=datetime.now(timezone.utc)
                 ),
                 inventory_models.WeighbridgeTicket(
                     ticket_number="WB-1403-0002",
@@ -689,39 +783,10 @@ async def lifespan(app: FastAPI):
             ))
             db.commit()
 
-        # ۱۱. نقش‌های سیستمی
-        if not db.query(auth_models.Role).first():
-            db.add_all([
-                auth_models.Role(name="Admin", description="مدیر کل سیستم"),
-                auth_models.Role(name="Warehouse_Operator", description="اپراتور انبار")
-            ])
-            db.commit()
-
-        # ۱۱. کاربر Admin
-        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
-        if not db.query(auth_models.User).filter_by(username="admin").first():
-            admin_role = db.query(auth_models.Role).filter_by(name="Admin").first()
-            admin_user = auth_models.User(
-                username="admin",
-                hashed_password=get_password_hash(admin_password),
-                full_name="مدیر کل سیستم (مهندس پورمحمود)",
-                is_active=True
-            )
-            admin_user.roles.append(admin_role)
-            db.add(admin_user)
-
-        # ۱۲. کاربر Operator
-        operator_password = os.getenv("OPERATOR_PASSWORD", "operator123")
-        if not db.query(auth_models.User).filter_by(username="operator").first():
-            operator_role = db.query(auth_models.Role).filter_by(name="Warehouse_Operator").first()
-            operator_user = auth_models.User(
-                username="operator",
-                hashed_password=get_password_hash(operator_password),
-                full_name="کارمند انبار (اپراتور)",
-                is_active=True
-            )
-            operator_user.roles.append(operator_role)
-        # ۱۳. تزریق جامع و خودکار سناریوها و داده‌های نمونه تخصصی آهن‌آلات، میلگردها، تیرآهن، شمش، اوره و طرف‌های تجاری
+        # ۱۱. ایجاد خودکار ۷ نقش و کاربر تستی با رمز عبور ۱۲۳۴ (RBAC Seed)
+        seed_enterprise_users(db)
+        
+        # ۱۲. تزریق جامع و خودکار سناریوها و داده‌های نمونه تخصصی آهن‌آلات، میلگردها، تیرآهن، شمش، اوره و طرف‌های تجاری
         try:
             from scripts.seed_demo_data import seed_database
             seed_database(db)
@@ -740,6 +805,14 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+# میدل‌ویر سراسری نرمال‌سازی اعداد فارسی، عربی و ممیز ترکی
+app.add_middleware(NumberNormalizationMiddleware)
+
+# ثبت سراسری فیلترهای بومی‌سازی دو زبانه (format_date, tr_loc, format_currency) در تمام قالب‌ها
+for router_mod in [auth, ui, inventory_ui, master_data_ui, admin_ui, parties_ui, purchases_ui, sales_ui, alerts_ui, weighbridge_ui, cutting_ui, bagging_ui, compliance_ui, audit_ui]:
+    if hasattr(router_mod, "templates"):
+        register_jinja_filters(router_mod.templates)
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -764,6 +837,7 @@ app.include_router(inventory_ui.router)
 app.include_router(master_data_ui.router)
 app.include_router(parties_ui.router)
 app.include_router(purchases_ui.router)
+app.include_router(sales_ui.router)
 app.include_router(weighbridge_ui.router)
 app.include_router(cutting_ui.router)
 app.include_router(bagging_ui.router)

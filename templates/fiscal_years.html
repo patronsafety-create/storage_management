@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Mali Yıl Yönetimi | Enterprise ERP' if is_tr else 'مدیریت سال مالی و بستن دوره | Enterprise ERP' }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-calendar-check text-teal me-2"></i>
+      {% if is_tr %}Mali Yıl ve Dönem Kapanış Yönetimi{% else %}مدیریت سال‌های مالی و بستن دوره حسابداری انبار{% endif %}
+    </h3>
+    <p class="text-secondary small mb-0">
+      {% if is_tr %}
+      Mali dönemlerin durumu, dönem sonu stok devri ve yeni mali yıl açılış fişleri
+      {% else %}
+      کنترل دوره‌های مالی فعال، انتقال مکانیزه موجودی پایان دوره به اول دوره و صدور سند افتتاحیه
+      {% endif %}
+    </p>
+  </div>
+  {% if active_year %}
+  <a href="/inventory/fiscal-year-close" class="btn btn-teal">
+    <i class="bi bi-lock-fill me-1"></i>
+    {% if is_tr %}Mali Yılı Kapat ve Devret{% else %}بستن سال مالی جاری و انتقال موجودی{% endif %}
+  </a>
+  {% endif %}
+</div>
+
+{% if request.query_params.get('msg') %}
+<div class="alert alert-glass-success alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+  <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+  <div>{{ request.query_params.get('msg') }}</div>
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- کارت سال مالی جاری فعال -->
+{% if active_year %}
+<div class="glass-card p-4 mb-4 border-teal border-opacity-50">
+  <div class="row align-items-center g-3">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 fs-6">
+          <i class="bi bi-record-circle-fill me-1"></i>{{ 'Aktif Mali Yıl' if is_tr else 'سال مالی فعال و جاری' }}
+        </span>
+        <h4 class="fw-bold text-light mb-0 font-monospace">{{ active_year.name }}</h4>
+      </div>
+      <div class="text-secondary small d-flex gap-4">
+        <div><i class="bi bi-calendar-event me-1 text-teal"></i>{{ 'Başlangıç:' if is_tr else 'تاریخ شروع:' }} <strong class="text-light font-monospace">{{ active_year.start_date }}</strong></div>
+        <div><i class="bi bi-calendar-x me-1 text-warning"></i>{{ 'Bitiş:' if is_tr else 'تاریخ پایان:' }} <strong class="text-light font-monospace">{{ active_year.end_date }}</strong></div>
+      </div>
+    </div>
+    <div class="col-md-4 text-md-end">
+      <a href="/inventory/fiscal-year-close" class="btn btn-outline-warning">
+        <i class="bi bi-arrow-right-circle me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+        {{ 'Dönem Sonu Kapanış Kontrolü' if is_tr else 'ورود به فرآیند بستن سال مالی' }}
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- جدول تاریخچه سال‌های مالی -->
+<div class="glass-card p-0 overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th class="py-3 px-3">#</th>
+          <th>{{ 'Mali Yıl Adı' if is_tr else 'عنوان سال مالی' }}</th>
+          <th>{{ 'Başlangıç' if is_tr else 'تاریخ شروع' }}</th>
+          <th>{{ 'Bitiş' if is_tr else 'تاریخ پایان' }}</th>
+          <th>{{ 'Durum' if is_tr else 'وضعیت دوره' }}</th>
+          <th>{{ 'Kapanış Tarihi' if is_tr else 'زمان بسته‌شدن' }}</th>
+          <th>{{ 'Kapatan Kullanıcı' if is_tr else 'مسئول بستن دوره' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for y in years %}
+        <tr>
+          <td class="px-3 text-secondary">{{ y.id }}</td>
+          <td class="fw-bold text-light font-monospace">{{ y.name }}</td>
+          <td class="font-monospace small">{{ y.start_date }}</td>
+          <td class="font-monospace small">{{ y.end_date }}</td>
+          <td>
+            {% if y.is_active and not y.is_closed %}
+              <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
+                <i class="bi bi-check-circle me-1"></i>{{ 'Aktif / Açık' if is_tr else 'جاری و فعال' }}
+              </span>
+            {% elif y.is_closed %}
+              <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-50">
+                <i class="bi bi-lock-fill me-1"></i>{{ 'Kapatıldı' if is_tr else 'مختومه و قفل‌شده' }}
+              </span>
+            {% else %}
+              <span class="badge bg-info bg-opacity-25 text-info">{{ 'Pasif' if is_tr else 'غیرفعال' }}</span>
+            {% endif %}
+          </td>
+          <td class="small text-secondary font-monospace">{{ y.closed_at | format_date(include_time=True) }}</td>
+          <td class="small text-light">{{ y.closed_by.full_name if y.closed_by else '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -14,9 +14,11 @@ from src.domain_model.auth_models import User
 from src.domain_model.enums import (
     DocumentStatus,
     PurchaseOrderStatus,
+    SalesOrderStatus,
     WeighbridgeStatus,
     CuttingStatus,
-    BaggingStatus
+    BaggingStatus,
+    TransactionSource
 )
 
 
@@ -81,6 +83,8 @@ class Warehouse(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True)
+    country_code = Column(String, default="IR", nullable=True)  # کد کشور انبار (IR یا TR)
+    currency = Column(String, default="IRR", nullable=True)      # ارز پایه انبار (IRR یا TRY)
 
     transactions = relationship("StockTransaction", back_populates="warehouse")
 
@@ -130,6 +134,23 @@ class Customer(Base):
     transactions = relationship("StockTransaction", back_populates="customer")
 
 
+class FiscalYear(Base):
+    """سال مالی و دوره انبارداری"""
+    __tablename__ = "fiscal_years"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)  # مثلاً "سال مالی ۱۴۰۳" یا "2024 Mali Yılı"
+    start_date = Column(String, nullable=False)
+    end_date = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_closed = Column(Boolean, default=False)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    closed_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    closed_by = relationship("User", foreign_keys=[closed_by_id])
+    transactions = relationship("StockTransaction", back_populates="fiscal_year")
+
+
 class StockTransaction(Base):
     """سند رسید یا حواله انبار با پشتیبانی از گردش تأیید و محاسبات صنعتی"""
     __tablename__ = "stock_transactions"
@@ -141,8 +162,17 @@ class StockTransaction(Base):
     quantity = Column(Float, nullable=False)
     batch_number = Column(String, nullable=True)
     reference_document = Column(String, nullable=True)
-    unit_price = Column(Float, nullable=True, default=0.0)  # قیمت واحد برای کاردکس ریالی
+    unit_price = Column(Float, nullable=True, default=0.0)  # قیمت واحد برای کاردکس ریالی/ارزی
+    currency = Column(String, default="IRR", nullable=True)     # واحد پولی سند (IRR یا TRY)
+    exchange_rate = Column(Float, default=1.0, nullable=True)   # ضریب تبدیل به ارز پایه انبار
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    transaction_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+
+    # 🏷️ منبع تراکنش (Transaction Source)
+    transaction_source = Column(String, default="INTERNAL_USE", nullable=True)
+
+    # 📅 سال مالی
+    fiscal_year_id = Column(Integer, ForeignKey("fiscal_years.id"), nullable=True)
 
     # 🌟 گردش کار و وضعیت تایید سند (Package 0-C)
     status = Column(Enum(DocumentStatus), default=DocumentStatus.APPROVED, nullable=False)
@@ -193,17 +223,31 @@ class StockTransaction(Base):
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
 
+    # 🔗 اتصالات اسناد بالادستی (PO / SO / باسکول)
+    purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=True)
+    purchase_order_item_id = Column(Integer, ForeignKey("purchase_order_items.id"), nullable=True)
+    sales_order_id = Column(Integer, ForeignKey("sales_orders.id"), nullable=True)
+    sales_order_item_id = Column(Integer, ForeignKey("sales_order_items.id"), nullable=True)
+    weighbridge_ticket_id = Column(Integer, ForeignKey("weighbridge_tickets.id"), nullable=True)
+
     product = relationship("Product", back_populates="transactions")
     warehouse = relationship("Warehouse", back_populates="transactions")
+    fiscal_year = relationship("FiscalYear", back_populates="transactions")
     created_by = relationship("User", foreign_keys=[created_by_id])
     approved_by = relationship("User", foreign_keys=[approved_by_id])
     supplier = relationship("Supplier", back_populates="transactions")
     customer = relationship("Customer", back_populates="transactions")
     parent_transaction = relationship("StockTransaction", remote_side=[id], backref="return_transactions")
+    purchase_order = relationship("PurchaseOrder", foreign_keys=[purchase_order_id])
+    purchase_order_item = relationship("PurchaseOrderItem", foreign_keys=[purchase_order_item_id])
+    sales_order = relationship("SalesOrder", foreign_keys=[sales_order_id])
+    sales_order_item = relationship("SalesOrderItem", foreign_keys=[sales_order_item_id])
+    weighbridge_ticket = relationship("WeighbridgeTicket", foreign_keys=[weighbridge_ticket_id])
 
     __table_args__ = (
-        CheckConstraint('quantity > 0', name='check_quantity_positive'),
+        CheckConstraint('quantity >= 0', name='check_quantity_non_negative'),
     )
+
 
 
 # ========================================================
@@ -256,6 +300,55 @@ class PurchaseOrderItem(Base):
 
 
 # ========================================================
+# 💼 فاز ۱: سفارش فروش (Sales Orders)
+# ========================================================
+
+class SalesOrder(Base):
+    """سفارش فروش کالا به مشتری"""
+    __tablename__ = "sales_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    so_number = Column(String, unique=True, nullable=False, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    order_date = Column(DateTime(timezone=True), server_default=func.now())
+    delivery_due_date = Column(String, nullable=True)
+    status = Column(Enum(SalesOrderStatus), default=SalesOrderStatus.CONFIRMED, nullable=False)
+    notes = Column(String, nullable=True)
+
+    # 💰 اطلاعات مالی و مالیاتی (Tax & Tevkifat)
+    subtotal_amount = Column(Float, default=0.0)      # مبلغ پایه بدون مالیات (Matrah)
+    vat_rate = Column(Float, default=0.10)            # نرخ مالیات بر ارزش افزوده (۱۰٪ ایران یا ۲۰٪ ترکیه)
+    vat_amount = Column(Float, default=0.0)           # کل مالیات بر ارزش افزوده (Hesaplanan KDV)
+    tevkifat_rate = Column(String, nullable=True)     # نسبت توقیف مالیات آهن‌آلات ترکیه (مانند 4/10)
+    tevkifat_amount = Column(Float, default=0.0)      # مبلغ توقیف مالیات (Tevkifat Tutarı)
+    total_amount = Column(Float, default=0.0)         # کل مبلغ قابل دریافت از مشتری (Genel Toplam)
+    currency = Column(String, default="IRR")          # واحد پولی (IRR یا TRY)
+
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    customer = relationship("Customer", backref="sales_orders")
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    items = relationship("SalesOrderItem", back_populates="sales_order", cascade="all, delete-orphan")
+
+
+class SalesOrderItem(Base):
+    """اقلام سفارش فروش"""
+    __tablename__ = "sales_order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sales_order_id = Column(Integer, ForeignKey("sales_orders.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Float, nullable=False)
+    delivered_quantity = Column(Float, default=0.0)
+    unit_price = Column(Float, default=0.0)
+    total_price = Column(Float, default=0.0)
+
+    sales_order = relationship("SalesOrder", back_populates="items")
+    product = relationship("Product")
+
+
+# ========================================================
 # 🚛 فاز ۲: باسکول تریلی (Weighbridge Tickets)
 # ========================================================
 
@@ -273,6 +366,10 @@ class WeighbridgeTicket(Base):
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=False)
+
+    # 🔗 اتصالات به سفارشات
+    purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=True)
+    sales_order_id = Column(Integer, ForeignKey("sales_orders.id"), nullable=True)
     
     gross_weight = Column(Float, nullable=True, default=0.0)               # وزن ناخالص (پر) به کیلوگرم
     tare_weight = Column(Float, nullable=True, default=0.0)                # وزن خالی (تار) به کیلوگرم
@@ -291,7 +388,10 @@ class WeighbridgeTicket(Base):
     customer = relationship("Customer")
     product = relationship("Product")
     warehouse = relationship("Warehouse")
-    stock_transaction = relationship("StockTransaction")
+    stock_transaction = relationship("StockTransaction", foreign_keys=[stock_transaction_id])
+    purchase_order = relationship("PurchaseOrder", foreign_keys=[purchase_order_id])
+    sales_order = relationship("SalesOrder", foreign_keys=[sales_order_id])
+
 
 
 # ========================================================

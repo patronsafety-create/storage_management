@@ -89,7 +89,7 @@
           {% for o in orders %}
           <tr>
             <td class="px-3 fw-bold font-monospace text-teal">{{ o.order_number }}</td>
-            <td class="small text-secondary">{{ o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else '-' }}</td>
+            <td class="small text-secondary font-monospace">{{ o.created_at | format_date(include_time=True) }}</td>
             <td class="fw-semibold text-light">{{ (o.bulk_product.name | tr_loc(is_tr)) if o.bulk_product else '-' }}</td>
             <td class="font-monospace text-warning">{{ "{:,.2f}".format(o.bulk_tonnage_used) }} {{ 'ton' if is_tr else 'تن' }}</td>
             <td class="fw-semibold text-light">{{ (o.packaged_product.name | tr_loc(is_tr)) if o.packaged_product else '-' }}</td>

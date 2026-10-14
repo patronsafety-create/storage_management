@@ -99,7 +99,7 @@
             </div>
             <div class="col-4 text-end">
                 <div>{{ 'Fiş No:' if is_tr else 'شماره سند:' }} <strong class="font-monospace">#{{ tx.id }}</strong></div>
-                <div class="small">{{ 'Tarih:' if is_tr else 'تاریخ ثبت:' }} {{ tx.created_at.strftime('%Y-%m-%d %H:%M') if (is_tr and tx.created_at) else (tx.created_at.strftime('%Y/%m/%d %H:%M') if tx.created_at else '-') }}</div>
+                <div class="small">{{ 'Tarih:' if is_tr else 'تاریخ ثبت:' }} <span class="font-monospace">{{ tx.created_at | format_date(include_time=True) }}</span></div>
             </div>
         </div>
 

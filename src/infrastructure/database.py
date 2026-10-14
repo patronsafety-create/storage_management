@@ -15,11 +15,26 @@ DATABASE_URL = os.getenv(
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300
-)
+try:
+    if "postgresql" in DATABASE_URL:
+        # تست سریع در دسترس بودن سرور پستگرس (timeout = 2 ثانیه)
+        _test_engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            connect_args={"connect_timeout": 2}
+        )
+        with _test_engine.connect() as _conn:
+            pass
+        engine = _test_engine
+    else:
+        engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+except Exception as _db_err:
+    # فال‌بک خودکار به SQLite جهت اطمینان از بالا آمدن بی‌نقص سرور در محیط توسعه لوکال ویندوز بدون داکر
+    print(f"\n[NexusPour ERP] PostgreSQL is not reachable locally: {_db_err}")
+    print("[NexusPour ERP] Active Engine: Local SQLite (storage_erp.db) enabled for seamless local execution.\n")
+    DATABASE_URL = "sqlite:///storage_erp.db"
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 # کارخانه تولید نشست‌های دیتابیس
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

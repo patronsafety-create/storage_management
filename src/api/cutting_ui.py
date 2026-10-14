@@ -1,6 +1,6 @@
 from typing import Optional
 from urllib.parse import quote
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -13,6 +13,7 @@ from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import CuttingOrder, Product, Warehouse, StockTransaction, TransactionType
 from src.domain_model.enums import CuttingStatus, DocumentStatus
 from src.services.audit_service import AuditService
+from src.services.inventory_service import InventoryService
 from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/cutting", tags=["Cutting & Remnants"])
@@ -131,12 +132,79 @@ async def create_cutting_order(
             notes=notes.strip() if notes else None
         )
         db.add(cutting)
+        db.flush()
+
+        # اتصال کارگاه برش به کاردکس انبار (صدور سند خروج شاخه مادر و ورود ته‌شاخه)
+        wh = db.query(Warehouse).first()
+        wh_id = wh.id if wh else 1
+        is_ton = p and p.uom in ('تن', 'Ton', 'ton')
+        mother_qty = ((p.nominal_weight or 1000.0) / 1000.0) if is_ton else (p.nominal_weight or 1.0)
+
+        # کنترل موجودی آزاد شاخه مادر در انبار
+        avail = InventoryService.get_available_stock(db, product_id, wh_id)
+        if mother_qty > avail:
+            detail_msg = f"Ana profil için serbest depo stoku yetersiz! (Mevcut: {avail}, Gerekli: {mother_qty})" if is_tr else f"موجودی آزاد شاخه مادر در انبار کافی نیست! (موجودی آزاد: {avail}، مورد نیاز: {mother_qty})"
+            raise HTTPException(status_code=400, detail=detail_msg)
+
+        active_fy = InventoryService.get_active_fiscal_year(db)
+        fy_id = active_fy.id if active_fy else None
+        avg_cost = InventoryService.get_weighted_average_cost(db, product_id, wh_id)
+
+        wh_obj = db.query(Warehouse).get(wh_id)
+        wh_currency = getattr(wh_obj, "currency", None) or "IRR"
+
+        # خروج شاخه مادر از انبار
+        tx_out = StockTransaction(
+            transaction_type=TransactionType.OUT,
+            transaction_source="CUTTING",
+            product_id=product_id,
+            warehouse_id=wh_id,
+            quantity=round(mother_qty, 3),
+            secondary_quantity=1.0,
+            secondary_uom='شاخه',
+            unit_price=avg_cost,
+            currency=wh_currency,
+            exchange_rate=1.0,
+            status=DocumentStatus.APPROVED,
+            fiscal_year_id=fy_id,
+            reference_document=f"برش شاخه مادر - دستور {cutting.order_number}",
+            created_by_id=current_user.id,
+            approved_by_id=current_user.id,
+            approved_at=datetime.now(timezone.utc)
+        )
+        db.add(tx_out)
+
+        # ورود ته‌شاخه به انبار
+        if remnant_len > 0:
+            remnant_qty = (remnant_weight / 1000.0) if is_ton else remnant_weight
+            if remnant_qty <= 0:
+                remnant_qty = mother_qty * (remnant_len / original_length)
+            tx_in_remnant = StockTransaction(
+                transaction_type=TransactionType.IN,
+                transaction_source="CUTTING",
+                product_id=product_id,
+                warehouse_id=wh_id,
+                quantity=round(remnant_qty, 3),
+                secondary_quantity=1.0,
+                secondary_uom='ته‌شاخه',
+                unit_price=avg_cost,
+                currency=wh_currency,
+                exchange_rate=1.0,
+                status=DocumentStatus.APPROVED,
+                fiscal_year_id=fy_id,
+                reference_document=f"ورود ته‌شاخه برش ({remnant_len:.1f}m) - دستور {cutting.order_number}",
+                created_by_id=current_user.id,
+                approved_by_id=current_user.id,
+                approved_at=datetime.now(timezone.utc)
+            )
+            db.add(tx_in_remnant)
+
         db.commit()
 
         AuditService.log(
             db, action="CREATE", entity_name="CuttingOrder",
             entity_id=str(cutting.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
-            details=f"ثبت دستور برش {cutting.order_number}: برش شاخه ۱۲ متری به {pieces_count} قطعه {cut_length} متری | باقیمانده: {remnant_len} متر ({destination})"
+            details=f"ثبت دستور برش {cutting.order_number} و صدور خودکار حواله خروج شاخه مادر و رسید ورود ته‌شاخه"
         )
 
         success_msg = f"Kesim emri {cutting.order_number} kaydedildi ve kalan kısım {destination} stoğuna aktarıldı" if is_tr else f"دستور برش {cutting.order_number} با موفقیت ثبت شد و ته‌شاخه به {destination} منتقل گردید"

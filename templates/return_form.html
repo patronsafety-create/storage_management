@@ -101,7 +101,7 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const isTr = {{ 'true' if is_tr else 'false' }};
+    const isTr = (document.documentElement.lang === 'tr');
     const parentSelect = document.getElementById('parent_transaction_id');
     const infoCard = document.getElementById('parentInfoCard');
     const returnTypeBadge = document.getElementById('returnTypeBadge');

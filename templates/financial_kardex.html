@@ -95,7 +95,7 @@
                     {% for row in entries %}
                     <tr>
                         <td class="px-3 text-secondary">{{ loop.index }}</td>
-                        <td class="small">{{ row.tx.created_at.strftime('%Y-%m-%d') if row.tx.created_at else '-' }}</td>
+                        <td class="small font-monospace">{{ row.tx.created_at | format_date }}</td>
                         <td class="small font-monospace">{{ row.tx.reference_document or ('#' ~ row.tx.id) }}</td>
                         
                         <!-- وارده -->

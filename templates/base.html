@@ -554,6 +554,25 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  {% if user %}
+    {% set user_role_names = user.roles | map(attribute='name') | list %}
+    {% set is_admin = ('Admin' in user_role_names) or (user.username == 'admin') %}
+    {% set is_finance = ('Finance_Manager' in user_role_names) or (user.username == 'finance') %}
+    {% set is_warehouse = ('Warehouse_Supervisor' in user_role_names) or (user.username == 'warehouse') %}
+    {% set is_buyer = ('Procurement_Officer' in user_role_names) or (user.username == 'buyer') %}
+    {% set is_seller = ('Sales_Officer' in user_role_names) or (user.username == 'seller') %}
+    {% set is_baskool = ('Weighbridge_Operator' in user_role_names) or (user.username == 'baskool') %}
+    {% set is_workshop = ('Production_Operator' in user_role_names) or (user.username == 'workshop') %}
+  {% else %}
+    {% set is_admin = false %}
+    {% set is_finance = false %}
+    {% set is_warehouse = false %}
+    {% set is_buyer = false %}
+    {% set is_seller = false %}
+    {% set is_baskool = false %}
+    {% set is_workshop = false %}
+  {% endif %}
+
   <!-- منوی کشویی سایدبار (Offcanvas Sidebar) -->
   <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarDrawer" aria-labelledby="sidebarDrawerLabel" style="background: rgba(13, 17, 23, 0.98) !important; backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); width: 330px;">
     <div class="offcanvas-header border-bottom border-secondary border-opacity-25 py-3">
@@ -586,12 +605,15 @@
           <a href="/dashboard" class="sidebar-item"><i class="bi bi-speedometer2 text-info me-2"></i>{{ 'Gösterge Paneli' if is_tr else 'داشبورد و نمودار کیکی' }}</a>
           <a href="/guide" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-book-half text-teal me-2"></i>{{ 'Kullanım Kılavuzu' if is_tr else 'راهنمای جامع کاربری' }}</a>
           <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="sidebar-item" style="color: #00d4c8 !important;"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>{{ 'PDF Kılavuz İndir' if is_tr else 'دانلود دفترچه راهنما (PDF)' }}</a>
+          {% if is_admin or is_warehouse or is_finance or is_buyer or is_seller or is_workshop %}
           <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-bar-chart-line text-teal me-2"></i>{{ 'Anlık Stok Durumu' if is_tr else 'گزارش موجودی لحظه‌ای' }}</a>
           <a href="/inventory/transactions" class="sidebar-item"><i class="bi bi-clock-history text-secondary me-2"></i>{{ 'Stok Hareketleri' if is_tr else 'لیست و جستجوی تراکنش‌ها' }}</a>
+          {% endif %}
         </div>
       </div>
 
       <!-- اطلاعات پایه و کاتالوگ کالاها -->
+      {% if is_admin or is_finance or is_warehouse or is_buyer or is_seller %}
       <div class="mb-3">
         <div class="sidebar-category">🏷️ {{ 'Temel Tanımlar ve Kartlar' if is_tr else 'تعاریف پایه و کاتالوگ' }}</div>
         <div class="d-grid gap-1">
@@ -599,23 +621,43 @@
           <a href="/master-data/parties" class="sidebar-item"><i class="bi bi-people text-teal me-2"></i>{{ 'Cari Hesaplar (Tedarikçi/Müşteri)' if is_tr else 'طرف‌های تجاری (تأمین‌کننده / مشتری)' }}</a>
         </div>
       </div>
+      {% endif %}
 
       <!-- عملیات انبارداری و زنجیره تأمین -->
       <div class="mb-3">
         <div class="sidebar-category">🔄 {{ 'Depo Operasyonları ve Lojistik' if is_tr else 'عملیات انبارداری و زنجیره تأمین' }}</div>
         <div class="d-grid gap-1">
+          {% if is_admin or is_warehouse or is_finance %}
           <a href="/inventory/transaction" class="sidebar-item"><i class="bi bi-box-arrow-in-down-right text-success me-2"></i>{{ 'Giriş / Çıkış Fişi' if is_tr else 'ثبت رسید / حواله انبار' }}</a>
+          {% endif %}
+          {% if is_admin or is_finance or is_buyer %}
           <a href="/purchases" class="sidebar-item"><i class="bi bi-cart-check text-teal me-2"></i>{{ 'Satın Alma Siparişleri (PO)' if is_tr else 'سفارشات خرید و رسید کالا (PO)' }}</a>
+          {% endif %}
+          {% if is_admin or is_finance or is_seller %}
+          <a href="/sales" class="sidebar-item"><i class="bi bi-receipt text-success me-2"></i>{{ 'Satış Siparişleri (SO)' if is_tr else 'سفارشات فروش و حواله کالا (SO)' }}</a>
+          {% endif %}
+          {% if is_admin or is_baskool or is_warehouse %}
           <a href="/weighbridge" class="sidebar-item"><i class="bi bi-truck text-warning me-2"></i>{{ 'Elektronik Tır Kantarı' if is_tr else 'باسکول دیجیتال تریلی و قبض' }}</a>
+          {% endif %}
+          {% if is_admin or is_workshop %}
           <a href="/cutting" class="sidebar-item"><i class="bi bi-scissors text-info me-2"></i>{{ 'Demir Kesim ve Parça Deposu' if is_tr else 'دستور برش و انبار ته‌شاخه آهن' }}</a>
           <a href="/bagging" class="sidebar-item"><i class="bi bi-box2 text-success me-2"></i>{{ 'Üre Torbalama ve Paketleme' if is_tr else 'کیسه‌گیری فله به جامبوبگ اوره' }}</a>
+          {% endif %}
+          {% if is_admin or is_warehouse %}
           <a href="/inventory/transfer" class="sidebar-item"><i class="bi bi-arrow-left-right text-warning me-2"></i>{{ 'Depolar Arası Transfer' if is_tr else 'انتقال بین انبارها' }}</a>
           <a href="/inventory/stocktaking" class="sidebar-item"><i class="bi bi-clipboard2-check text-primary me-2"></i>{{ 'Depo Sayım ve Mutabakat' if is_tr else 'انبارگردانی و مغایرت‌گیری' }}</a>
+          {% endif %}
+          {% if is_admin or is_warehouse or is_finance %}
           <a href="/inventory/returns/new" class="sidebar-item"><i class="bi bi-arrow-return-right text-danger me-2"></i>{{ 'Alış / Satış İadeleri' if is_tr else 'برگشت از خرید / برگشت از فروش' }}</a>
+          {% endif %}
+          {% if is_admin or is_finance %}
+          <a href="/inventory/fiscal-years" class="sidebar-item"><i class="bi bi-calendar-check text-info me-2"></i>{{ 'Mali Yıl Yönetimi' if is_tr else 'سال مالی و بستن دوره' }}</a>
+          {% endif %}
         </div>
       </div>
 
       <!-- کنترل موجودی، کاردکس و سامانه‌ها -->
+      {% if is_admin or is_finance or is_warehouse %}
       <div class="mb-3">
         <div class="sidebar-category">💰 {{ 'Ekstreler ve Yasal Uyum' if is_tr else 'کاردکس، هشدارها و سامانه‌ها' }}</div>
         <div class="d-grid gap-1">
@@ -635,11 +677,10 @@
           <a href="/compliance/export/ntsw" class="sidebar-item"><i class="bi bi-file-earmark-arrow-down text-warning me-2"></i>{{ 'e-İrsaliye ve Gümrük Raporu' if is_tr else 'خروجی ویژه سامانه جامع تجارت' }}</a>
         </div>
       </div>
+      {% endif %}
 
       <!-- مدیریت سیستم و حسابرسی -->
-      {% if user %}
-      {% set is_admin_nav = user.roles | selectattr('name', 'equalto', 'Admin') | list | length > 0 %}
-      {% if is_admin_nav %}
+      {% if is_admin %}
       <div class="mb-3">
         <div class="sidebar-category">⚙️ {{ 'Sistem ve Güvenlik' if is_tr else 'مدیریت سیستم و امنیت' }}</div>
         <div class="d-grid gap-1">
@@ -647,7 +688,6 @@
           <a href="/admin/audit-logs" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-shield-lock me-2"></i>{{ 'Güvenlik ve Denetim Kayıtları' if is_tr else 'لاگ جامع حسابرسی و امنیت' }}</a>
         </div>
       </div>
-      {% endif %}
       {% endif %}
     </div>
   </div>
@@ -690,24 +730,49 @@
           <li class="nav-item">
             <a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2 me-1"></i>{{ 'Gösterge' if is_tr else 'داشبورد' }}</a>
           </li>
+          {% if is_admin or is_warehouse or is_finance %}
           <li class="nav-item">
             <a class="nav-link" href="/inventory/transaction"><i class="bi bi-plus-circle me-1"></i>{{ 'Yeni Fiş' if is_tr else 'ثبت تراکنش' }}</a>
           </li>
+          {% endif %}
+          {% if is_admin or is_finance or is_buyer %}
           <li class="nav-item">
             <a class="nav-link" href="/purchases"><i class="bi bi-cart-check me-1"></i>{{ 'Satın Alma' if is_tr else 'سفارشات خرید' }}</a>
           </li>
+          {% endif %}
+          {% if is_admin or is_finance or is_seller %}
+          <li class="nav-item">
+            <a class="nav-link" href="/sales"><i class="bi bi-receipt me-1"></i>{{ 'Satış' if is_tr else 'سفارشات فروش' }}</a>
+          </li>
+          {% endif %}
+          {% if is_admin or is_baskool or is_warehouse %}
           <li class="nav-item">
             <a class="nav-link" href="/weighbridge"><i class="bi bi-truck me-1"></i>{{ 'Kantar' if is_tr else 'باسکول' }}</a>
           </li>
+          {% endif %}
+          {% if is_admin or is_workshop %}
+          <li class="nav-item">
+            <a class="nav-link" href="/cutting"><i class="bi bi-scissors me-1"></i>{{ 'Kesim' if is_tr else 'کارگاه برش' }}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/bagging"><i class="bi bi-box2 me-1"></i>{{ 'Torbalama' if is_tr else 'کیسه‌گیری' }}</a>
+          </li>
+          {% endif %}
+          {% if is_admin or is_warehouse or is_finance or is_workshop %}
           <li class="nav-item">
             <a class="nav-link" href="/inventory/balance"><i class="bi bi-bar-chart-line me-1"></i>{{ 'Anlık Stok' if is_tr else 'موجودی' }}</a>
           </li>
+          {% endif %}
+          {% if is_admin or is_warehouse or is_buyer or is_seller or is_finance %}
           <li class="nav-item">
             <a class="nav-link" href="/master-data/products"><i class="bi bi-box-seam me-1"></i>{{ 'Katalog' if is_tr else 'کاتالوگ' }}</a>
           </li>
+          {% endif %}
+          {% if is_admin or is_buyer or is_seller or is_finance %}
           <li class="nav-item">
             <a class="nav-link" href="/master-data/parties"><i class="bi bi-people me-1"></i>{{ 'Cari Hesaplar' if is_tr else 'طرف‌های تجاری' }}</a>
           </li>
+          {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="/guide"><i class="bi bi-book-half me-1"></i>{{ 'Kılavuz' if is_tr else 'راهنما' }}</a>
           </li>

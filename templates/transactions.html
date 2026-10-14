@@ -23,6 +23,89 @@
   </div>
 </div>
 
+<!-- بخش متمایز و برجسته: کارتابل اسناد در انتظار تایید انباردار -->
+{% set pending_txs = [] %}
+{% for t in transactions %}
+  {% if t.status and t.status.value == 'PENDING_APPROVAL' %}
+    {% set _ = pending_txs.append(t) %}
+  {% endif %}
+{% endfor %}
+
+{% if pending_txs | length > 0 %}
+<div class="card border-warning shadow-lg mb-4" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(13, 17, 23, 0.95)); border: 2px solid #f59e0b !important; border-radius: 16px;">
+  <div class="card-header bg-transparent border-bottom border-warning border-opacity-50 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-4">🔔</span>
+      <h5 class="fw-bold mb-0 text-warning">
+        {{ 'Depo Şefi Onay Kartablesi (Bekleyen Belgeler)' if is_tr else 'کارتابل اسناد در انتظار تایید انباردار (Pending Approval)' }}
+      </h5>
+      <span class="badge bg-danger rounded-pill px-3 py-2 fs-6 shadow-sm">
+        {{ pending_txs | length }} {{ 'Belge Bekliyor' if is_tr else 'سند معلق' }}
+      </span>
+    </div>
+    <span class="text-secondary small">
+      <i class="bi bi-shield-exclamation text-warning me-1"></i>
+      {{ 'Bu belgeler onaylanana kadar ana stoka girmez ve bloke kalır.' if is_tr else 'موجودی این اسناد تا زمان تأیید نهایی، در کاردکس قطعی اعمال نمی‌شود.' }}
+    </span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover mb-0 align-middle">
+        <thead style="background: rgba(245, 158, 11, 0.1);">
+          <tr class="text-warning">
+            <th class="py-2 px-3">#</th>
+            <th>نوع سند</th>
+            <th>منبع سند</th>
+            <th>کالا</th>
+            <th>انبار</th>
+            <th>طرف تجاری</th>
+            <th>مقدار</th>
+            <th>شماره عطف / قبض</th>
+            <th>ثبت‌کننده</th>
+            <th class="text-center" style="min-width: 230px;">اقدام انباردار</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pt in pending_txs %}
+          <tr style="border-bottom: 1px solid rgba(245, 158, 11, 0.2);">
+            <td class="px-3 fw-bold text-warning">#{{ pt.id }}</td>
+            <td>
+              {% if pt.transaction_type.value == 'IN' %}
+                <span class="badge bg-success bg-opacity-25 text-success border border-success">ورود (IN)</span>
+              {% else %}
+                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger">خروج (OUT)</span>
+              {% endif %}
+            </td>
+            <td><span class="badge bg-secondary font-monospace">{{ pt.transaction_source or '---' }}</span></td>
+            <td class="fw-bold text-light">{{ pt.product.name | tr_loc(is_tr) if pt.product else '-' }}</td>
+            <td>{{ pt.warehouse.name | tr_loc(is_tr) if pt.warehouse else '-' }}</td>
+            <td class="small">{{ pt.supplier.name if pt.supplier else (pt.customer.name if pt.customer else '---') }}</td>
+            <td class="fw-bold text-warning font-monospace fs-6">{{ "{:,.3f}".format(pt.quantity) }} {{ pt.product.uom if pt.product else '' }}</td>
+            <td class="font-monospace small text-teal">{{ pt.reference_document or '---' }}</td>
+            <td class="small text-secondary">{{ pt.created_by.full_name or pt.created_by.username if pt.created_by else 'سیستم' }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-2 justify-content-center">
+                <form action="/inventory/transactions/{{ pt.id }}/approve" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-success px-2 py-1 fw-bold shadow-sm d-flex align-items-center gap-1" title="تایید نهایی و ورود به کاردکس">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>تایید نهایی (ورود به کاردکس)</span>
+                  </button>
+                </form>
+                <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1 d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#rejectModal{{ pt.id }}" title="رد سند">
+                  <i class="bi bi-x-circle"></i>
+                  <span>رد سند</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <!-- فیلترها -->
 <div class="glass-card p-3 mb-4">
   <form method="get" action="/inventory/transactions" class="row g-3 align-items-end">
@@ -79,7 +162,7 @@
           {% for t in transactions %}
           <tr>
             <td class="px-3 text-secondary">{{ t.id }}</td>
-            <td class="small">{{ t.created_at.strftime('%Y-%m-%d %H:%M') if t.created_at else '-' }}</td>
+            <td class="small font-monospace">{{ t.created_at | format_date(include_time=True) }}</td>
             <td>
               {% if t.is_return %}
                 <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50" title="{{ t.return_reason or ('İade Fişi' if is_tr else 'سند عودت') }}">
@@ -93,6 +176,13 @@
                 <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">
                   <i class="bi bi-box-arrow-up me-1"></i>{% if is_tr %}Çıkış (OUT){% else %}خروج (OUT){% endif %}
                 </span>
+              {% endif %}
+              {% if t.transaction_source %}
+                <div class="mt-1">
+                  <span class="badge bg-secondary bg-opacity-50 font-monospace" style="font-size: 0.7rem;">
+                    {{ t.transaction_source }}
+                  </span>
+                </div>
               {% endif %}
             </td>
             <td>
@@ -183,6 +273,63 @@
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
                           <button type="submit" class="btn btn-danger btn-sm">{% if is_tr %}Ret Onayla{% else %}تأیید رد سند{% endif %}</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+
+                <!-- دکمه و مودال ثبت سند اصلاحیه (فاز ۳) -->
+                {% if t.status and t.status.value == 'APPROVED' %}
+                <button type="button" class="btn btn-sm btn-outline-teal px-2" data-bs-toggle="modal" data-bs-target="#adjustModal{{ t.id }}" title="{% if is_tr %}Düzeltme Fişi Kes{% else %}ثبت سند اصلاحیه (مقدار/فی){% endif %}">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <div class="modal fade" id="adjustModal{{ t.id }}" tabindex="-1">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-start bg-dark border border-secondary border-opacity-50 text-light shadow-lg">
+                      <form action="/inventory/transactions/{{ t.id }}/adjust" method="post">
+                        <div class="modal-header border-secondary border-opacity-25">
+                          <h5 class="modal-title text-teal">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            {% if is_tr %}Stok Düzeltme Fişi #{{ t.id }}{% else %}ثبت سند اصلاحیه عطف به تراکنش #{{ t.id }}{% endif %}
+                          </h5>
+                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="alert alert-dark border border-secondary border-opacity-25 small mb-3">
+                            <div><strong>{% if is_tr %}Ürün:{% else %}کالا:{% endif %}</strong> {{ t.product.name | tr_loc(is_tr) if t.product else '-' }}</div>
+                            <div><strong>{% if is_tr %}Depo:{% else %}انبار:{% endif %}</strong> {{ t.warehouse.name | tr_loc(is_tr) if t.warehouse else '-' }}</div>
+                            <div><strong>{% if is_tr %}Kayıtlı Miktar:{% else %}مقدار ثبت‌شده فعلی:{% endif %}</strong> {{ "{:,.2f}".format(t.quantity) }} {{ (t.product.uom | tr_loc(is_tr)) if t.product else '' }}</div>
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold text-light">{% if is_tr %}Yeni Doğru Miktar:{% else %}مقدار صحیح جدید:{% endif %} <span class="text-danger">*</span></label>
+                            <input type="number" step="0.001" min="0" name="new_quantity" class="form-control bg-dark border-secondary text-light font-monospace" value="{{ t.quantity }}" required>
+                            <div class="form-text text-secondary small">{% if is_tr %}Fark miktarı (ΔQ) hesaplanıp düzeltme fişi düzenlenecektir.{% else %}سامانه مابه‌التفاوت (ΔQ) را محاسبه و سند اصلاحیه متمم صادر خواهد کرد.{% endif %}</div>
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold text-light">{% if is_tr %}Yeni İkincil Miktar (Adet/Bağ):{% else %}مقدار فرعی جدید (شاخه/بندیل/کیسه):{% endif %}</label>
+                            <input type="number" step="0.01" min="0" name="new_secondary_quantity" class="form-control bg-dark border-secondary text-light font-monospace" value="{{ t.secondary_quantity or '' }}">
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold text-light">{% if is_tr %}Yeni Birim Fiyat ({% if is_tr %}₺{% else %}ریال{% endif %}):{% else %}فی صحیح جدید ({% if is_tr %}₺{% else %}ریال{% endif %}):{% endif %}</label>
+                            <input type="number" step="0.01" min="0" name="new_unit_price" class="form-control bg-dark border-secondary text-light font-monospace" value="{{ t.unit_price or 0 }}">
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold text-light">{% if is_tr %}Düzeltme Gerekçesi:{% else %}علت رسمی اصلاحیه:{% endif %} <span class="text-danger">*</span></label>
+                            <textarea class="form-control bg-dark border-secondary text-light" name="adjustment_reason" rows="2" required placeholder="{% if is_tr %}Kantar tartım hatası, fatura revizyonu, lojistik hasar...{% else %}خطای اپراتور باسکول، اصلاحیه فاکتور رسمی، افت بار...{% endif %}"></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer border-secondary border-opacity-25">
+                          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{% if is_tr %}İptal{% else %}انصراف{% endif %}</button>
+                          <button type="submit" class="btn btn-teal btn-sm px-3">
+                            <i class="bi bi-check2-circle me-1"></i>{% if is_tr %}Düzeltmeyi Kaydet{% else %}ثبت سند اصلاحیه{% endif %}
+                          </button>
                         </div>
                       </form>
                     </div>

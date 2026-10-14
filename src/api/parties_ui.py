@@ -325,7 +325,7 @@ async def edit_supplier(
         err, clean_name, clean_phone, clean_tax_num = validate_turkish_party_data(
             name, phone, tax_num if tax_num else None, "Tedarikçi"
         )
-        clean_nid = supplier.national_id if not national_id else national_id.strip()
+        clean_nid = None
         clean_vkn = clean_tax_num
     else:
         err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
@@ -540,7 +540,7 @@ async def edit_customer(
         err, clean_name, clean_phone, clean_tax_num = validate_turkish_party_data(
             name, phone, tax_num if tax_num else None, "Müşteri"
         )
-        clean_nid = customer.national_id if not national_id else national_id.strip()
+        clean_nid = None
         clean_vkn = clean_tax_num
     else:
         err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")

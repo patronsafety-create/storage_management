@@ -13,6 +13,7 @@ from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import BaggingOrder, Product, Warehouse, StockTransaction, TransactionType
 from src.domain_model.enums import BaggingStatus, DocumentStatus
 from src.services.audit_service import AuditService
+from src.services.inventory_service import InventoryService
 from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/bagging", tags=["Bagging Operations"])
@@ -106,6 +107,25 @@ async def create_bagging_order(
 ):
     """ثبت دستور کیسه‌گیری و کسر خودکار فله و افزایش محصول بسته‌بندی شده در انبار"""
     try:
+        # ۱. کنترل موجودی آزاد کالای فله در انبار
+        avail = InventoryService.get_available_stock(db, bulk_product_id, warehouse_id)
+        if bulk_tonnage_used > avail:
+            raise HTTPException(
+                status_code=400,
+                detail=f"موجودی آزاد کالای فله در انبار ({avail}) کمتر از تناژ درخواستی جهت کیسه‌گیری ({bulk_tonnage_used}) است."
+            )
+
+        # ۲. کنترل توازن جرم
+        if waste_tonnage < 0 or waste_tonnage > bulk_tonnage_used:
+            raise HTTPException(
+                status_code=400,
+                detail="تناژ ضایعات کیسه‌گیری نامعتبر است (نمی‌تواند منفی یا بیشتر از کل تناژ فله مصرفی باشد)."
+            )
+
+        active_fy = InventoryService.get_active_fiscal_year(db)
+        fy_id = active_fy.id if active_fy else None
+        avg_cost = InventoryService.get_weighted_average_cost(db, bulk_product_id, warehouse_id)
+
         bag_order = BaggingOrder(
             order_number=order_number.strip(),
             bulk_product_id=bulk_product_id,
@@ -120,32 +140,38 @@ async def create_bagging_order(
         )
         db.add(bag_order)
 
-        # ۱. کسر اوره فله از انبار (StockTransaction OUT)
+        # ۳. کسر اوره فله از انبار (StockTransaction OUT)
         tx_bulk_out = StockTransaction(
             transaction_type=TransactionType.OUT,
+            transaction_source=TransactionSource.INTERNAL_USE.value,
             product_id=bulk_product_id,
             warehouse_id=warehouse_id,
             quantity=bulk_tonnage_used,
+            unit_price=avg_cost,
             reference_document=order_number.strip(),
             status=DocumentStatus.APPROVED,
+            fiscal_year_id=fy_id,
             created_by_id=current_user.id
         )
         db.add(tx_bulk_out)
 
-        # ۲. افزایش محصول بسته‌بندی‌شده به انبار (StockTransaction IN)
-        # اگر واحد محصول تن باشد، تناژ خالص؛ اگر کیسه باشد، تعداد
+        # ۴. افزایش محصول بسته‌بندی‌شده به انبار (StockTransaction IN)
         target_prod = db.query(Product).filter(Product.id == packaged_product_id).first()
         in_qty = packages_produced if (target_prod and target_prod.uom in ("کیسه", "عدد")) else (bulk_tonnage_used - waste_tonnage)
+        effective_cost = ((avg_cost * bulk_tonnage_used) + (packaging_cost_per_ton * bulk_tonnage_used)) / in_qty if in_qty > 0 else avg_cost
 
         tx_pkg_in = StockTransaction(
             transaction_type=TransactionType.IN,
+            transaction_source=TransactionSource.INTERNAL_USE.value,
             product_id=packaged_product_id,
             warehouse_id=warehouse_id,
             quantity=in_qty,
             secondary_quantity=packages_produced,
             secondary_uom=package_type,
+            unit_price=effective_cost,
             reference_document=order_number.strip(),
             status=DocumentStatus.APPROVED,
+            fiscal_year_id=fy_id,
             created_by_id=current_user.id
         )
         db.add(tx_pkg_in)

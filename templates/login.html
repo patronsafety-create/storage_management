@@ -36,15 +36,16 @@
                 radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.14) 0%, transparent 40%),
                 radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6) 0%, transparent 70%);
             font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-            {% if not is_tr %}
-            font-feature-settings: "ss01" 1 !important;
-            {% endif %}
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
             color: var(--text-primary);
+        }
+
+        html[dir="rtl"] body {
+            font-feature-settings: "ss01" 1 !important;
         }
 
         .login-wrapper {
@@ -84,6 +85,7 @@
             letter-spacing: -0.5px;
             background: linear-gradient(135deg, #ffffff 40%, var(--accent-teal) 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 2px;
         }
@@ -242,19 +244,38 @@
 
                     <div class="mb-3">
                         <label for="username" class="form-label small fw-bold text-secondary mb-1">
-                            <i class="bi bi-person me-1"></i>{{ 'Kullanıcı Adı' if is_tr else 'نام کاربری' }}
+                            <i class="bi bi-person-badge-fill me-1 text-teal"></i>{{ 'Kullanıcı ve Rol Seçimi' if is_tr else 'انتخاب کاربر و سمت سازمانی' }}
                         </label>
-                        <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="{{ 'Örn: admin' if is_tr else 'مثال: admin' }}" autocomplete="username">
+                        <select class="form-select bg-dark border-secondary text-light fw-bold py-2" id="username" name="username" required autofocus>
+                            <option value="admin" selected>👨‍💼 {{ 'admin — Sistem Yöneticisi (Omid Pourmahmoud)' if is_tr else 'مدیر ارشد سیستم (admin) — امید پورمحمود' }}</option>
+                            <option value="finance">💰 {{ 'finance — Mali ve Finans Müdürü' if is_tr else 'مدیر مالی و حسابرسی (finance)' }}</option>
+                            <option value="warehouse">📦 {{ 'warehouse — Merkez Depo Amiri' if is_tr else 'سرپرست انبار مرکزی (warehouse)' }}</option>
+                            <option value="buyer">🛒 {{ 'buyer — Satın Alma ve İthalat Uzmanı' if is_tr else 'کارشناس بازرگانی خرید (buyer)' }}</option>
+                            <option value="seller">📈 {{ 'seller — Satış ve Pazarlama Uzmanı' if is_tr else 'کارشناس بازرگانی فروش (seller)' }}</option>
+                            <option value="baskool">⚖️ {{ 'baskool — Elektronik Kantar Operatörü' if is_tr else 'اپراتور باسکول دیجیتال (baskool)' }}</option>
+                            <option value="workshop">✂️ {{ 'workshop — Kesim ve Torbalama Sorumlusu' if is_tr else 'مسئول کارگاه برش و کیسه‌گیری (workshop)' }}</option>
+                        </select>
+                        <div class="form-text text-secondary small">
+                            {{ 'Yetki seviyenize göre sistem arayüzü dinamik olarak özelleştirilecektir.' if is_tr else 'با انتخاب هر کاربر، منوها و دسترسی‌های متناسب با سمت وی بارگذاری می‌شود.' }}
+                        </div>
                     </div>
                     
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label for="password" class="form-label small fw-bold text-secondary mb-1">
-                            <i class="bi bi-key me-1"></i>{{ 'Şifre' if is_tr else 'رمز عبور' }}
+                            <i class="bi bi-key-fill me-1 text-teal"></i>{{ 'Şifre' if is_tr else 'رمز عبور' }}
                         </label>
-                        <input type="password" class="form-control" id="password" name="password" required placeholder="{{ 'Şifrenizi giriniz' if is_tr else 'رمز عبور خود را وارد کنید' }}" autocomplete="current-password">
+                        <input type="password" class="form-control font-monospace text-teal fw-bold" id="password" name="password" value="1234" required placeholder="{{ 'Şifrenizi giriniz' if is_tr else 'رمز عبور خود را وارد کنید' }}" autocomplete="current-password">
+                    </div>
+
+                    <!-- جعبه راهنمای حالت تست -->
+                    <div class="p-2 mb-4 rounded-3 text-center" style="background: rgba(0, 212, 200, 0.08); border: 1px dashed rgba(0, 212, 200, 0.35);">
+                        <span class="small text-teal fw-bold">
+                            <i class="bi bi-info-circle-fill me-1"></i>
+                            {{ 'Test Modu Aktif: Tüm kullanıcıların varsayılan şifresi 1234\'tür' if is_tr else 'حالت تست فعال است: رمز عبور تمامی کاربران 1234 می‌باشد' }}
+                        </span>
                     </div>
                     
-                    <button type="submit" class="btn btn-login w-100">
+                    <button type="submit" class="btn btn-login w-100 py-2">
                         <i class="bi bi-box-arrow-in-{{ 'right' if is_tr else 'left' }} me-1"></i> {{ 'Giriş Yap' if is_tr else 'ورود به سیستم' }}
                     </button>
                 </form>

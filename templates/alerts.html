@@ -243,7 +243,7 @@
               <td class="font-monospace text-secondary">{{ item.product.sku or '-' }}</td>
               <td class="fw-bold text-light">{{ (item.product.name | tr_loc(is_tr)) if item.product else '-' }}</td>
               <td class="font-monospace text-light">{{ "{:,.2f}".format(item.current_balance) }} {{ (item.product.uom | tr_loc(is_tr)) if item.product else '' }}</td>
-              <td class="small font-monospace">{{ item.last_movement.strftime('%Y-%m-%d') if item.last_movement else ('Hiç hareket yok' if is_tr else 'فاقد هرگونه گردش') }}</td>
+              <td class="small font-monospace">{{ (item.last_movement | format_date) if item.last_movement else ('Hiç hareket yok' if is_tr else 'فاقد هرگونه گردش') }}</td>
               <td>
                 <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">
                   {{ item.days_since_last_tx or ('30+' if is_tr else 'بیش از ۳۰') }} {{ 'gündür hareketsiz' if is_tr else 'روز بدون حرکت' }}

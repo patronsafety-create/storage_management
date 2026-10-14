@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Yeni Satış Siparişi (SO) | Enterprise ERP' if is_tr else 'ثبت سفارش فروش جدید (SO) | Enterprise ERP' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10 col-xl-9">
+    <div class="glass-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+        <div>
+          <h4 class="fw-bold mb-1 text-light">
+            <i class="bi bi-receipt-cutoff text-teal me-2"></i>
+            {% if is_tr %}
+            Yeni Satış Siparişi (Sales Order)
+            {% else %}
+            ثبت سفارش فروش جدید (Sales Order)
+            {% endif %}
+          </h4>
+          <p class="text-secondary small mb-0">
+            {% if is_tr %}
+            Müşteri adına resmi satış siparişi, kalemler ve sevkiyat koşullarının oluşturulması
+            {% else %}
+            صدور سفارش رسمی فروش به نام مشتری همراه با اقلام، قیمت‌ها و شرایط تحویل
+            {% endif %}
+          </p>
+        </div>
+        <a href="/sales" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+          {{ 'Listeye Dön' if is_tr else 'بازگشت به لیست' }}
+        </a>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-glass-danger alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+        <div>{{ error }}</div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+      {% endif %}
+
+      <form action="/sales" method="post" id="soForm">
+        <!-- سربرگ سفارش -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="so_number" class="form-label fw-bold">
+              {{ 'Sipariş Numarası (SO No)' if is_tr else 'شماره سفارش فروش (SO Number)' }} <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control font-monospace" id="so_number" name="so_number" value="{{ generated_so_number }}" required>
+          </div>
+
+          <div class="col-md-5">
+            <label for="customer_id" class="form-label fw-bold">
+              {{ 'Müşteri / Alıcı Firma' if is_tr else 'مشتری / طرف حساب خریدار' }} <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="customer_id" name="customer_id" required>
+              <option value="" selected disabled>{{ 'Müşteri seçiniz...' if is_tr else 'انتخاب مشتری...' }}</option>
+              {% for c in customers %}
+              <option value="{{ c.id }}">{{ c.name | tr_loc(is_tr) }} {% if c.code %}({{ c.code }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="delivery_due_date" class="form-label fw-bold">
+              {{ 'Teslim Tarihi' if is_tr else 'مهلت تحویل بار (تقویم)' }}
+            </label>
+            {% if is_tr %}
+            <input type="date" class="form-control font-monospace" id="delivery_due_date" name="delivery_due_date">
+            <div class="form-text text-secondary small">Beklenen sevkiyat tarihi</div>
+            {% else %}
+            <div class="input-group">
+              <input type="text" class="form-control jalali-datepicker font-monospace" id="delivery_due_date" name="delivery_due_date" placeholder="۱۴۰۳/۰۸/۲۰" autocomplete="off">
+              <button type="button" class="btn btn-outline-teal datepicker-trigger" data-target="delivery_due_date" title="انتخاب تاریخ خورشیدی">
+                <i class="bi bi-calendar3"></i>
+              </button>
+            </div>
+            <div class="form-text text-secondary small">کلیک جهت انتخاب از تقویم خورشیدی</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="notes" class="form-label">
+            {{ 'Sözleşme Notları ve Sevkiyat Koşulları' if is_tr else 'توضیحات و شرایط قرارداد فروش' }}
+          </label>
+          <textarea class="form-control" id="notes" name="notes" rows="2"
+                    placeholder="{{ 'Ödeme vadesi, tolerans şartları, nakliye veya teslim yeri...' if is_tr else 'شرایط تسویه، تلورانس باسکول، هزینه باربری و محل تحویل کالا...' }}"></textarea>
+        </div>
+
+        <!-- اقلام سفارش فروش -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">
+              <i class="bi bi-list-check text-info me-2"></i>{{ 'Sipariş Kalemleri' if is_tr else 'اقلام سفارش فروش' }}
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-info" id="addRowBtn">
+              <i class="bi bi-plus-lg me-1"></i>{{ 'Yeni Kalem Ekle' if is_tr else 'افزودن ردیف کالا' }}
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-dark table-bordered mb-0 align-middle" id="itemsTable">
+              <thead style="background: rgba(255,255,255,0.05);">
+                <tr>
+                  <th style="width: 45%;">{{ 'Malzeme Adı' if is_tr else 'نام کالا' }}</th>
+                  <th style="width: 25%;">{{ 'Miktar / Satış Tonajı' if is_tr else 'مقدار / تناژ فروش' }}</th>
+                  <th style="width: 25%;">{{ 'Birim Fiyat (' ~ ('₺' if is_tr else 'ریال') ~ ')' }}</th>
+                  <th style="width: 5%;" class="text-center">{{ 'Sil' if is_tr else 'حذف' }}</th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody">
+                <tr>
+                  <td>
+                    <select name="product_id" class="form-select product-select" required>
+                      <option value="" selected disabled>{{ 'Malzeme seçiniz...' if is_tr else 'انتخاب کالا...' }}</option>
+                      {% for p in products %}
+                      <option value="{{ p.id }}">{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" step="0.001" min="0.001" name="quantity" class="form-control" required placeholder="{{ 'Örn: 25.0' if is_tr else 'مثلاً: 25.0' }}">
+                  </td>
+                  <td>
+                    <input type="number" step="1" min="0" name="unit_price" class="form-control" value="0" placeholder="{{ 'Birim Fiyat' if is_tr else 'نرخ واحد' }}">
+                  </td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-row" disabled>
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+          <a href="/sales" class="btn btn-outline-secondary px-4 py-2">{{ 'Vazgeç' if is_tr else 'انصراف' }}</a>
+          <button type="submit" class="btn btn-teal px-5 py-2">
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ 'Siparişi Onayla ve Kaydet' if is_tr else 'ثبت نهایی سفارش فروش' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const addRowBtn = document.getElementById('addRowBtn');
+    const itemsBody = document.getElementById('itemsBody');
+
+    addRowBtn.addEventListener('click', function() {
+        const firstRow = itemsBody.querySelector('tr');
+        const newRow = firstRow.cloneNode(true);
+        
+        // پاکسازی مقادیر کپی شده
+        newRow.querySelector('select').selectedIndex = 0;
+        newRow.querySelector('input[name="quantity"]').value = '';
+        newRow.querySelector('input[name="unit_price"]').value = '0';
+        
+        // فعال‌سازی دکمه حذف
+        const removeBtn = newRow.querySelector('.remove-row');
+        removeBtn.disabled = false;
+        removeBtn.addEventListener('click', function() {
+            if (itemsBody.querySelectorAll('tr').length > 1) {
+                newRow.remove();
+            }
+        });
+
+        itemsBody.appendChild(newRow);
+    });
+});
+</script>
+{% endblock %}

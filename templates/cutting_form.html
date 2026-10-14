@@ -110,7 +110,7 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const isTr = {{ 'true' if is_tr else 'false' }};
+    const isTr = (document.documentElement.lang === 'tr');
     const origInput = document.getElementById('original_length');
     const cutInput = document.getElementById('cut_length');
     const countInput = document.getElementById('pieces_count');

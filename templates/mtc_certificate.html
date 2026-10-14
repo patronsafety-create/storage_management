@@ -123,7 +123,7 @@
         </tr>
         <tr>
           <td class="text-muted">تاریخ آزمایش و صدور:</td>
-          <td class="font-monospace">{{ tx.created_at.strftime('%Y/%m/%d') if tx.created_at else '-' }}</td>
+          <td class="font-monospace">{{ tx.created_at | format_date }}</td>
         </tr>
       </table>
     </div>

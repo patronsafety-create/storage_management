@@ -45,23 +45,30 @@ def validate_tc_kimlik(tc: str) -> bool:
     return d[10] == digit_11
 
 
+def normalize_turkish_phone(phone: Optional[str]) -> str:
+    """
+    نرمال‌سازی شماره تماس ترکیه به فرمت استاندارد ۱۱ رقمی با ۰
+    پشتیبانی از +90، پیش‌شماره بدون 0، پرانتز و فاصله‌ها
+    """
+    if not phone:
+        return ""
+    clean = str(phone).strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "").replace(".", "")
+    if clean.startswith("+90"):
+        clean = "0" + clean[3:]
+    elif clean.startswith("90") and len(clean) == 12:
+        clean = "0" + clean[2:]
+    elif len(clean) == 10 and not clean.startswith("0"):
+        clean = "0" + clean
+    return clean
+
+
 def validate_turkish_phone(phone: str) -> bool:
     """
     اعتبارسنجی شماره تلفن و همراه در ترکیه:
     ۱۰ رقم بدون صفر (مثل 5321234567) یا ۱۱ رقم با صفر (مثل 05321234567 یا خط ثابت 02121234567)
     یا با پیش‌شماره بین‌المللی +90
     """
-    if not phone:
-        return False
-    clean = str(phone).strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
-    if clean.startswith("+90"):
-        clean = "0" + clean[3:]
-    elif clean.startswith("90") and len(clean) == 12:
-        clean = "0" + clean[2:]
-
-    if len(clean) == 10 and not clean.startswith("0"):
-        clean = "0" + clean
-
+    clean = normalize_turkish_phone(phone)
     if len(clean) == 11 and clean.isdigit() and clean.startswith("0"):
         # پیش‌شماره معتبر ترکیه (05xx موبایل یا کدهای استانی 02xx, 03xx, 04xx)
         return clean[1] in ("2", "3", "4", "5")
@@ -80,9 +87,9 @@ def validate_turkish_party_data(
     2. شماره تماس ترکیه: معتبر با پیش‌شماره استاندارد
     3. شناسه مالیاتی: VKN ده رقمی یا T.C. Kimlik یازده رقمی با چک‌سام معتبر
     """
-    clean_name = name.strip()
-    clean_phone = phone.strip().replace(" ", "").replace("-", "") if phone else ""
-    clean_nid = national_id.strip().replace(" ", "").replace("-", "") if national_id else None
+    clean_name = name.strip() if name else ""
+    clean_phone = normalize_turkish_phone(phone)
+    clean_nid = str(national_id).strip().replace(" ", "").replace("-", "").replace(".", "") if national_id else None
 
     if len(clean_name) < 3:
         return (f"{party_type_label} adı en az 3 karakter olmalıdır.", clean_name, clean_phone, clean_nid)

@@ -24,11 +24,69 @@
       {{ 'Sipariş detayları, satın alınan kalemler ve fiili depo kabul işlemi' if is_tr else 'مشاهده مشخصات سفارش، اقلام خریداری‌شده و تبدیل به رسید انبار' }}
     </p>
   </div>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 align-items-center">
+    {% if order.status.value in ('CONFIRMED', 'PARTIALLY_RECEIVED') %}
+    <form action="/purchases/{{ order.id }}/close-short" method="post" onsubmit="return confirm('{{ 'Siparişi mevcut teslimat miktarıyla kapatmak istediğinizden emin misiniz?' if is_tr else 'آیا از ختم دستی و بستن نهایی این سفارش با مقادیر دریافتی فعلی اطمینان دارید؟' }}');" class="d-inline">
+      <button type="submit" class="btn btn-outline-warning">
+        <i class="bi bi-door-closed me-1"></i>
+        {{ 'Siparişi Kapat (Close Short)' if is_tr else 'ختم دستی سفارش (Close Short)' }}
+      </button>
+    </form>
+    {% endif %}
     <a href="/purchases" class="btn btn-outline-secondary">
       <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
       {{ 'Listeye Dön' if is_tr else 'بازگشت به لیست' }}
     </a>
+  </div>
+</div>
+
+{% set has_received = order.items | sum(attribute='received_quantity') > 0 %}
+{% set is_completed = (order.status.value == 'COMPLETED') %}
+{% set is_partially = (order.status.value == 'PARTIALLY_RECEIVED') %}
+
+<!-- نوار وضعیت گردش کار ۴ مرحله‌ای (Workflow Stepper) -->
+<div class="glass-card p-3 mb-4">
+  <div class="d-flex justify-content-between align-items-center position-relative px-3 py-2">
+    <!-- background track line -->
+    <div class="position-absolute start-0 end-0 top-50 translate-middle-y" style="height: 4px; background: rgba(255,255,255,0.1); z-index: 0; margin: 0 45px;"></div>
+    <!-- progress fill line -->
+    <div class="position-absolute start-0 top-50 translate-middle-y" style="height: 4px; background: linear-gradient(90deg, #00d4c8, #10b981); z-index: 0; margin: 0 45px; width: {% if is_completed %}calc(100% - 90px){% elif has_received or is_partially %}calc(66% - 50px){% else %}calc(33% - 25px){% endif %}; transition: width 0.4s ease;"></div>
+
+    <!-- Step 1 -->
+    <div class="text-center position-relative" style="z-index: 1;">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; background: #10b981; color: #fff; font-weight: bold; border: 3px solid rgba(16,185,129,0.3);">
+        <i class="bi bi-check-lg fs-5"></i>
+      </div>
+      <div class="mt-2 small fw-bold text-success">{{ '1. Sipariş Kaydı' if is_tr else '۱. ثبت سفارش' }}</div>
+      <div class="text-secondary" style="font-size: 0.72rem;">{{ 'Onaylandı' if is_tr else 'تأیید شده' }}</div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="text-center position-relative" style="z-index: 1;">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; {% if is_completed or has_received %}background: #10b981; color: #fff; border: 3px solid rgba(16,185,129,0.3);{% else %}background: #00d4c8; color: #000; border: 3px solid rgba(0,212,200,0.5); box-shadow: 0 0 15px rgba(0,212,200,0.5);{% endif %} font-weight: bold;">
+        {% if is_completed or has_received %}<i class="bi bi-check-lg fs-5"></i>{% else %}<i class="bi bi-truck fs-6"></i>{% endif %}
+      </div>
+      <div class="mt-2 small fw-bold {% if is_completed or has_received %}text-success{% else %}text-teal{% endif %}">{{ '2. Kantar / Sevk' if is_tr else '۲. توزین باسکول / ارسال به کارتابل' }}</div>
+      <div class="text-secondary" style="font-size: 0.72rem;">{% if is_completed or has_received %}{{ 'İşlendi' if is_tr else 'انجام شد' }}{% else %}{{ 'Süreçte' if is_tr else 'در جریان' }}{% endif %}</div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="text-center position-relative" style="z-index: 1;">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; {% if is_completed %}background: #10b981; color: #fff; border: 3px solid rgba(16,185,129,0.3);{% elif has_received or is_partially %}background: #f59e0b; color: #000; border: 3px solid rgba(245,158,11,0.5); box-shadow: 0 0 15px rgba(245,158,11,0.5);{% else %}background: #1e293b; color: #64748b; border: 3px solid rgba(255,255,255,0.1);{% endif %} font-weight: bold;">
+        {% if is_completed %}<i class="bi bi-check-lg fs-5"></i>{% elif has_received or is_partially %}<i class="bi bi-hourglass-split fs-6"></i>{% else %}3{% endif %}
+      </div>
+      <div class="mt-2 small fw-bold {% if is_completed %}text-success{% elif has_received or is_partially %}text-warning{% else %}text-secondary{% endif %}">{{ '3. Depo Onayı' if is_tr else '۳. تایید کارتابل انبار' }}</div>
+      <div class="text-secondary" style="font-size: 0.72rem;">{% if is_completed %}{{ 'Onaylandı' if is_tr else 'ورود به کاردکس' }}{% elif has_received or is_partially %}{{ 'Kısmi Kabul' if is_tr else 'دریافت بخشی از بار' }}{% else %}{{ 'Bekliyor' if is_tr else 'در انتظار دریافت' }}{% endif %}</div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="text-center position-relative" style="z-index: 1;">
+      <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; {% if is_completed %}background: #10b981; color: #fff; border: 3px solid rgba(16,185,129,0.3); box-shadow: 0 0 15px rgba(16,185,129,0.5);{% else %}background: #1e293b; color: #64748b; border: 3px solid rgba(255,255,255,0.1);{% endif %} font-weight: bold;">
+        {% if is_completed %}<i class="bi bi-trophy-fill fs-6"></i>{% else %}4{% endif %}
+      </div>
+      <div class="mt-2 small fw-bold {% if is_completed %}text-success{% else %}text-secondary{% endif %}">{{ '4. Tamamlanma' if is_tr else '۴. تکمیل نهایی' }}</div>
+      <div class="text-secondary" style="font-size: 0.72rem;">{% if is_completed %}{{ 'Sipariş Kapatıldı' if is_tr else 'مختومه شده' }}{% else %}{{ 'Kapanış' if is_tr else 'بستن پرونده' }}{% endif %}</div>
+    </div>
   </div>
 </div>
 
@@ -54,7 +112,7 @@
         </div>
         <div>
           <span class="text-secondary d-block">{{ 'Kayıt Tarihi:' if is_tr else 'تاریخ ثبت سفارش:' }}</span>
-          <span class="text-light font-monospace">{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else '-' }}</span>
+          <span class="text-light font-monospace">{{ order.created_at | format_date(include_time=True) }}</span>
         </div>
         <div>
           <span class="text-secondary d-block">{{ 'Teslim Tarihi:' if is_tr else 'مهلت تحویل بار:' }}</span>

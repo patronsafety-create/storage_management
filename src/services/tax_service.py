@@ -106,10 +106,12 @@ class TaxService:
         region_code: str = "IR",
         is_steel: bool = False,
         custom_vat_rate: Optional[float] = None,
-        tevkifat_ratio: Optional[str] = None
+        tevkifat_ratio: Optional[str] = None,
+        steel_base_amount: Optional[float] = None
     ) -> TaxCalculationResult:
         """
-        محاسبه دقیق مالیات بر اساس قوانین کشور، تفکیک ارزش افزوده و سهم توقیف مالیاتی
+        محاسبه دقیق مالیات بر اساس قوانین کشور، تفکیک ارزش افزوده و سهم توقیف مالیاتی.
+        در سفارشات ترکیبی (حاوی کالای فولادی و غیرفولادی)، توقیف فقط روی بخش فولادی اعمال می‌شود.
         """
         base = max(0.0, float(base_amount or 0.0))
         region = (region_code or "IR").upper().strip()
@@ -119,13 +121,20 @@ class TaxService:
             vat_rate = custom_vat_rate if custom_vat_rate is not None else cls.DEFAULT_VAT_RATE_TR
             vat_amount = base * vat_rate
 
-            # تعیین نرخ توقیف برای ترکیه
-            apply_tevkifat = is_steel
+            # تعیین مبلغ پایه فولادی مشمول توقیف
+            if steel_base_amount is not None:
+                effective_steel_base = min(base, max(0.0, float(steel_base_amount)))
+                apply_tevkifat = (effective_steel_base > 0)
+            else:
+                effective_steel_base = base if is_steel else 0.0
+                apply_tevkifat = is_steel
+
             ratio_str = tevkifat_ratio if tevkifat_ratio else (cls.TEVKIFAT_STEEL_STANDARD if apply_tevkifat else None)
 
-            if ratio_str:
+            if ratio_str and apply_tevkifat and effective_steel_base > 0:
                 num, den = cls.parse_tevkifat_ratio(ratio_str)
-                tevkifat_amount = vat_amount * (num / den)
+                steel_vat = effective_steel_base * vat_rate
+                tevkifat_amount = steel_vat * (num / den)
                 payable_vat = vat_amount - tevkifat_amount
                 total_payable = base + payable_vat
                 buyer_liability = tevkifat_amount
@@ -137,6 +146,7 @@ class TaxService:
                 total_payable = base + vat_amount
                 buyer_liability = 0.0
                 has_tevkifat = False
+
 
             return TaxCalculationResult(
                 base_amount=base,

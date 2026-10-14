@@ -1,8 +1,10 @@
 import os
 import json
+from datetime import datetime, date
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from fastapi import Request
+from jinja2 import pass_context
 
 @dataclass
 class RegionConfig:
@@ -142,6 +144,104 @@ def format_currency(amount: float, region_code: str = "IR") -> str:
     if cfg.code == Region.TR:
         return f"{formatted_num} {cfg.currency_symbol}"
     return f"{formatted_num} {cfg.currency_symbol}"
+
+
+def gregorian_to_jalali(gy: int, gm: int, gd: int) -> Tuple[int, int, int]:
+    """
+    الگوریتم دقیق و خالص ریاضی بدون وابستگی خارجی جهت تبدیل تقویم میلادی به خورشیدی (شمسی)
+    """
+    g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+    gy2 = gy if gm > 2 else gy - 1
+    days = 355666 + (365 * gy) + ((gy2 + 3) // 4) - ((gy2 + 99) // 100) + ((gy2 + 399) // 400) + gd + g_d_m[gm - 1]
+    jy = -1595 + (33 * (days // 12053))
+    days %= 12053
+    jy += 4 * (days // 1461)
+    days %= 1461
+    if days > 365:
+        jy += (days - 1) // 365
+        days = (days - 1) % 365
+    if days < 186:
+        jm = 1 + (days // 31)
+        jd = 1 + (days % 31)
+    else:
+        jm = 7 + ((days - 186) // 30)
+        jd = 1 + ((days - 186) % 30)
+    return (jy, jm, jd)
+
+
+def format_date_localized(dt_val: Any, region_code: str = "IR", include_time: bool = False) -> str:
+    """
+    فرمت‌بندی تاریخ بر اساس استاندارد کشور مقصد:
+    - در ایران (IR): تاریخ شمسی رسمی (مثلاً 1405/07/23)
+    - در ترکیه (TR): فرمت تقویمی رسمی ترکیه (DD.MM.YYYY مثلاً 15.10.2026)
+    """
+    if not dt_val:
+        return "-"
+
+    dt = dt_val
+    if isinstance(dt_val, str):
+        s = dt_val.strip()
+        if not s or s == "-":
+            return "-"
+        try:
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except Exception:
+            try:
+                dt = datetime.strptime(s[:10], "%Y-%m-%d")
+            except Exception:
+                return s
+
+    if hasattr(dt, "year") and hasattr(dt, "month") and hasattr(dt, "day"):
+        y, m, d = dt.year, dt.month, dt.day
+        hour = getattr(dt, "hour", 0)
+        minute = getattr(dt, "minute", 0)
+
+        reg = (region_code or "IR").upper()
+        if reg == "TR":
+            date_str = f"{d:02d}.{m:02d}.{y:04d}"
+        else:
+            jy, jm, jd = gregorian_to_jalali(y, m, d)
+            date_str = f"{jy:04d}/{jm:02d}/{jd:02d}"
+
+        if include_time and hasattr(dt, "hour"):
+            return f"{date_str} {hour:02d}:{minute:02d}"
+        return date_str
+
+    return str(dt_val)
+
+
+@pass_context
+def format_date_filter(context, value, region: Any = None, include_time: bool = False) -> str:
+    """فیلتر Jinja2 برای نمایش هوشمند تاریخ در قالب‌ها با پشتیبانی از شمسی (ایران) و رسمی ترکیه"""
+    if not value:
+        return "-"
+    reg = "IR"
+    if isinstance(region, bool):
+        reg = "TR" if region else "IR"
+    elif isinstance(region, str):
+        reg = region.upper()
+    else:
+        if context.get("is_tr") is True:
+            reg = "TR"
+        else:
+            active_reg = context.get("active_region")
+            if hasattr(active_reg, "code"):
+                reg = active_reg.code
+            elif isinstance(active_reg, dict) and "code" in active_reg:
+                reg = active_reg.get("code", "IR")
+            else:
+                req = context.get("request")
+                if req and hasattr(req, "cookies"):
+                    reg = req.cookies.get("nexus_region", "IR")
+
+    return format_date_localized(value, region_code=reg or "IR", include_time=include_time)
+
+
+def register_jinja_filters(jinja_templates: Any):
+    """ثبت فیلترهای بومی‌سازی دو زبانه در نمونه Jinja2Templates"""
+    jinja_templates.env.filters["tr_loc"] = localize_display_name
+    jinja_templates.env.filters["format_date"] = format_date_filter
+    jinja_templates.env.filters["format_currency"] = format_currency
 
 
 # دیکشنری جامع ترجمه و بومی‌سازی داده‌های پایه (کالاها، دسته‌بندی‌ها، انبارها، واحدها و برندها)

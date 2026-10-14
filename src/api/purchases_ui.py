@@ -21,14 +21,16 @@ from src.domain_model.inventory_models import (
     StockTransaction,
     TransactionType
 )
-from src.domain_model.enums import PurchaseOrderStatus, DocumentStatus
+from src.domain_model.enums import PurchaseOrderStatus, DocumentStatus, TransactionSource
 from src.services.audit_service import AuditService
 from src.services.tax_service import TaxService
+from src.services.inventory_service import InventoryService
 from src.core.localization.regions import get_active_region, Region, localize_display_name
 
 router = APIRouter(prefix="/purchases", tags=["Purchase Orders"])
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
+
 
 
 @router.get("", response_class=HTMLResponse)
@@ -138,13 +140,14 @@ async def create_purchase_order(
 ):
     """ذخیره سفارش خرید و اقلام مربوطه با محاسبه خودکار مالیات و توقیف آهن‌آلات"""
     try:
-        # تشخیص منطقه جغرافیایی سفارش (ایران یا ترکیه)
+        # تشخیص منطقه جغرافیایی سفارش منحصراً از روی کشور تأمین‌کننده (حذف وابستگی به کوکی مرورگر)
         supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
-        is_tr = (supplier and supplier.country_code == "TR") or (request.cookies.get("nexus_region", "IR").upper() == "TR")
+        is_tr = bool(supplier and supplier.country_code == "TR")
         region_code = "TR" if is_tr else "IR"
 
         # بررسی اقلام، محاسبه مبلغ خالص پایه و بررسی مشمولیت توقیف آهن و فولاد
         subtotal = 0.0
+        steel_subtotal = 0.0
         has_steel = False
         valid_items_data = []
 
@@ -159,13 +162,15 @@ async def create_purchase_order(
                     product_name=p.name
                 ):
                     has_steel = True
+                    steel_subtotal += line_total
                 valid_items_data.append((pid, qty, price, line_total))
 
-        # اجرای موتور محاسبه مالیات و توقیف آهن‌آلات
+        # اجرای موتور محاسبه مالیات و توقیف آهن‌آلات (فقط روی اقلام فولادی)
         tax_res = TaxService.calculate_tax(
             base_amount=subtotal,
             region_code=region_code,
-            is_steel=has_steel
+            is_steel=has_steel,
+            steel_base_amount=steel_subtotal
         )
 
         po = PurchaseOrder(
@@ -204,6 +209,7 @@ async def create_purchase_order(
             entity_id=str(po.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
             details=f"ثبت سفارش خرید {po.po_number} (پایه: {tax_res.base_amount} {tax_res.currency_symbol} - توقیف: {tax_res.tevkifat_amount} - نهایی: {tax_res.total_payable})"
         )
+
 
         return RedirectResponse(
             url=f"/purchases/{po.id}?msg=" + quote(f"سفارش خرید {po.po_number} با موفقیت ثبت گردید"),
@@ -298,56 +304,103 @@ async def receive_purchase_order(
     receive_qty: list[float] = Form(...)
 ):
     """
-    تبدیل مستقیم سفارش خرید به رسید انبار (Inbound Receipt Matching)
-    با کسر از باقیمانده سفارش و ثبت تراکنش رسمی ورود به انبار.
+    ثبت درخواست رسید انبار برای سفارش خرید (Inbound Cartable Dispatch)
+    ایجاد سند ورودی در وضعیت PENDING_APPROVAL جهت بررسی و تایید نهایی انباردار در کارتابل.
     """
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="سفارش خرید یافت نشد")
 
     try:
-        total_remaining_after = 0.0
-
+        active_fy = InventoryService.get_active_fiscal_year(db)
+        created_receipts = 0
         for it_id, r_qty in zip(item_id, receive_qty):
             if r_qty > 0:
                 item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == it_id).first()
                 if item:
-                    item.received_quantity += r_qty
-                    rem = item.quantity - item.received_quantity
-                    if rem > 0:
-                        total_remaining_after += rem
+                    # محاسبه اسناد در انتظار تایید کارتابل برای این ردیف سفارش (جهت کنترل سقف تلورانس)
+                    pending_in_qty = (
+                        db.query(func.coalesce(func.sum(StockTransaction.quantity), 0.0))
+                        .filter(
+                            StockTransaction.purchase_order_id == po.id,
+                            StockTransaction.purchase_order_item_id == item.id,
+                            StockTransaction.status == DocumentStatus.PENDING_APPROVAL
+                        )
+                        .scalar()
+                    )
+                    # کنترل سقف ۵٪ تلورانس باسکول با لحاظ اسناد معلق کارتابل
+                    max_allowed_receive = (item.quantity * 1.05) - item.received_quantity - pending_in_qty
+                    if r_qty > (max_allowed_receive + 0.0001):
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"مقدار دریافتی برای قلم {item.product.name} ({r_qty}) بیش از سقف مجاز سفارش به همراه ۵٪ تلورانس باسکول و اسناد معلق کارتابل (سقف باقی‌مانده: {max(0.0, round(max_allowed_receive, 3))}) است."
+                        )
 
-                    # صدور سند رسید انبار (StockTransaction IN)
+                    # صدور سند رسید موقت انبار در کارتابل (PENDING_APPROVAL)
                     tx = StockTransaction(
                         transaction_type=TransactionType.IN,
+                        transaction_source=TransactionSource.PURCHASE.value,
                         product_id=item.product_id,
                         warehouse_id=warehouse_id,
                         quantity=r_qty,
                         unit_price=item.unit_price,
                         supplier_id=po.supplier_id,
+                        purchase_order_id=po.id,
+                        purchase_order_item_id=item.id,
                         reference_document=po.po_number,
-                        status=DocumentStatus.APPROVED,
+                        status=DocumentStatus.PENDING_APPROVAL,
+                        fiscal_year_id=active_fy.id if active_fy else None,
                         created_by_id=current_user.id
                     )
                     db.add(tx)
-
-        if total_remaining_after <= 0.001:
-            po.status = PurchaseOrderStatus.COMPLETED
-        else:
-            po.status = PurchaseOrderStatus.PARTIALLY_RECEIVED
+                    created_receipts += 1
 
         db.commit()
 
         AuditService.log(
-            db, action="APPROVE", entity_name="PurchaseOrder",
+            db, action="CREATE", entity_name="PurchaseOrder",
             entity_id=str(po.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
-            details=f"تخلیه و صدور رسید انبار برای سفارش خرید {po.po_number}"
+            details=f"صدور {created_receipts} قلم رسید موقت برای سفارش خرید {po.po_number} و ارسال به کارتابل انبار"
         )
 
         return RedirectResponse(
-            url=f"/purchases/{po.id}?msg=" + quote(f"رسید انبار برای سفارش {po.po_number} صادر و موجودی افزایش یافت"),
+            url=f"/purchases/{po.id}?msg=" + quote(f"رسید موقت انبار صادر شد و جهت تایید نهایی و اعمال در موجودی به کارتابل انبار ارسال گردید."),
             status_code=303
         )
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"خطا در صدور رسید انبار: {str(e)}")
+
+
+@router.post("/{order_id}/close-short", response_class=HTMLResponse)
+async def close_short_purchase_order(
+    order_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """ختم دستی سفارش خرید (Close Short) هنگام تحویل جزئی"""
+    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
+    if not po:
+        raise HTTPException(status_code=404, detail="سفارش خرید یافت نشد")
+
+    if po.status not in (PurchaseOrderStatus.PARTIALLY_RECEIVED, PurchaseOrderStatus.CONFIRMED):
+        raise HTTPException(status_code=400, detail="تنها سفارش‌های در حال تحویل یا تایید شده قابل ختم دستی می‌باشند.")
+
+    po.status = PurchaseOrderStatus.COMPLETED
+    db.commit()
+
+    AuditService.log(
+        db, action="UPDATE", entity_name="PurchaseOrder",
+        entity_id=str(po.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+        details=f"ختم دستی سفارش خرید {po.po_number} با وضعیت تکمیل نهایی (Close Short)"
+    )
+
+    return RedirectResponse(
+        url=f"/purchases/{po.id}?msg=" + quote("سفارش خرید به صورت دستی ختم شد و وضعیت آن تکمیل نهایی ثبت گردید."),
+        status_code=303
+    )
+

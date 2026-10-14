@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Mali Yıl Dönem Kapanışı | Enterprise ERP' if is_tr else 'بستن سال مالی و انتقال به دوره جدید | Enterprise ERP' }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">
+      <i class="bi bi-shield-lock text-warning me-2"></i>
+      {% if is_tr %}Mali Yıl Kapanış ve Devir Süreci{% else %}فرآیند بستن سال مالی و انتقال مکانیزه موجودی به سال جدید{% endif %}
+    </h3>
+    <p class="text-secondary small mb-0">
+      {% if is_tr %}
+      Kapanış öncesi sistem kontrolleri, sıfır bakiyeli stokların elenmesi ve açılış fişlerinin oluşturulması
+      {% else %}
+      کنترل الزامات پیش از بستن سال، پالایش اقلام صفر، محاسبه میانگین موزون و صدور اسناد افتتاحیه اول دوره
+      {% endif %}
+    </p>
+  </div>
+  <a href="/inventory/fiscal-years" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1" {% if not is_tr %}style="transform: scaleX(-1);"{% endif %}></i>
+    {{ 'Listeye Dön' if is_tr else 'بازگشت به لیست سال‌های مالی' }}
+  </a>
+</div>
+
+<!-- کارت چک‌لیست و کنترل‌های سیستمی -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="glass-card p-4 h-100">
+      <h5 class="fw-bold mb-3 text-light">
+        <i class="bi bi-clipboard-check text-teal me-2"></i>{{ 'Kapanış Öncesi Kontroller' if is_tr else 'کنترل‌های الزامی پیش از بستن سال' }}
+      </h5>
+      <ul class="list-group list-group-flush bg-transparent">
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25 d-flex justify-content-between align-items-center px-0">
+          <div>
+            <i class="bi {% if pending_tx_count == 0 %}bi-check-circle-fill text-success{% else %}bi-exclamation-triangle-fill text-danger{% endif %} me-2"></i>
+            {{ 'Onay Bekleyen Depo Fişleri (Kartabil):' if is_tr else 'اسناد در انتظار تأیید در کارتابل انبار:' }}
+          </div>
+          <span class="badge {% if pending_tx_count == 0 %}bg-success bg-opacity-25 text-success{% else %}bg-danger bg-opacity-25 text-danger{% endif %} font-monospace">
+            {{ pending_tx_count }} {{ 'Fiş' if is_tr else 'سند' }}
+          </span>
+        </li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25 d-flex justify-content-between align-items-center px-0">
+          <div>
+            <i class="bi {% if pending_wb_count == 0 %}bi-check-circle-fill text-success{% else %}bi-exclamation-triangle-fill text-danger{% endif %} me-2"></i>
+            {{ 'Tamamlanmamış Kantar Fişleri (1. Tartım):' if is_tr else 'قبوض نیمه‌کاره باسکول (توزین اول):' }}
+          </div>
+          <span class="badge {% if pending_wb_count == 0 %}bg-success bg-opacity-25 text-success{% else %}bg-danger bg-opacity-25 text-danger{% endif %} font-monospace">
+            {{ pending_wb_count }} {{ 'Fiş' if is_tr else 'قبض' }}
+          </span>
+        </li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25 d-flex justify-content-between align-items-center px-0">
+          <div>
+            <i class="bi bi-funnel-fill text-info me-2"></i>
+            {{ 'Sıfır Bakiyeli Kalemlerin Elenmesi:' if is_tr else 'پالایش اقلام بدون مانده (موجودی صفر):' }}
+          </div>
+          <span class="badge bg-info bg-opacity-25 text-info font-monospace">
+            {{ zero_balance_items | length }} {{ 'Kalem Elendi' if is_tr else 'کالا حذف شد' }}
+          </span>
+        </li>
+      </ul>
+
+      {% if not can_close %}
+      <div class="alert alert-glass-danger mt-3 mb-0 small">
+        <i class="bi bi-x-octagon-fill me-1"></i>
+        {{ 'Uyarı: Bekleyen fişler veya açık kantar tartımları varken mali yıl kapatılamaz! Lütfen önce bu belgeleri onaylayınız veya iptal ediniz.' if is_tr else 'هشدار: تا زمانی که اسناد بلاتکلیف در کارتابل انبار یا قبوض نیمه‌کاره در باسکول وجود دارند، بستن سال مالی مجاز نمی‌باشد.' }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- فرم ثبت و افتتاح سال مالی جدید -->
+  <div class="col-md-6">
+    <div class="glass-card p-4 h-100">
+      <h5 class="fw-bold mb-3 text-light">
+        <i class="bi bi-arrow-right-circle text-teal me-2"></i>{{ 'Yeni Mali Yıl Bilgileri' if is_tr else 'مشخصات سال مالی جدید جهت افتتاح' }}
+      </h5>
+      <form action="/inventory/fiscal-year-close" method="post">
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-light">
+            {{ 'Yeni Mali Yıl Adı' if is_tr else 'عنوان سال مالی جدید' }} <span class="text-danger">*</span>
+          </label>
+          <input type="text" name="new_year_name" class="form-control bg-dark border-secondary text-light font-monospace"
+                 value="{{ '2025 Mali Yılı' if is_tr else 'سال مالی ۱۴۰۴' }}" required>
+        </div>
+
+        <div class="row g-2 mb-4">
+          <div class="col-6">
+            <label class="form-label small fw-bold text-light">
+              {{ 'Başlangıç Tarihi' if is_tr else 'تاریخ شروع دوره' }} <span class="text-danger">*</span>
+            </label>
+            <input type="text" name="new_year_start_date" class="form-control bg-dark border-secondary text-light font-monospace"
+                   value="{{ '2025-01-01' if is_tr else '1404-01-01' }}" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold text-light">
+              {{ 'Bitiş Tarihi' if is_tr else 'تاریخ پایان دوره' }} <span class="text-danger">*</span>
+            </label>
+            <input type="text" name="new_year_end_date" class="form-control bg-dark border-secondary text-light font-monospace"
+                   value="{{ '2025-12-31' if is_tr else '1404-12-29' }}" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-teal w-100 py-2 fw-bold" {% if not can_close %}disabled{% endif %}>
+          <i class="bi bi-lock-fill me-1"></i>
+          {{ 'Mali Yılı Kapat ve Açılış Fişlerini Kes' if is_tr else 'بستن قطعی سال مالی و صدور اسناد افتتاحیه' }}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- جدول اقلام واجد شرایط انتقال به سال جدید -->
+<div class="glass-card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0 text-light">
+      <i class="bi bi-box-seam text-info me-2"></i>
+      {{ 'Yeni Döneme Aktarılacak Pozitif Stoklar (Açılış Fişi Kalemleri)' if is_tr else 'اقلام واجد شرایط انتقال به سال مالی جدید (سند موجودی اول دوره)' }}
+    </h5>
+    <span class="badge bg-teal bg-opacity-25 text-teal font-monospace">
+      {{ carry_over_items | length }} {{ 'Kalem' if is_tr else 'قلم کالا' }}
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead style="background: rgba(255, 255, 255, 0.05);">
+        <tr>
+          <th>{{ 'Ürün Adı' if is_tr else 'نام کالا' }}</th>
+          <th>{{ 'Depo' if is_tr else 'انبار' }}</th>
+          <th>{{ 'Dönem Sonu Kalan Miktar' if is_tr else 'مانده مقداری پایان دوره' }}</th>
+          <th>{{ 'İkincil Miktar (Adet/Bağ)' if is_tr else 'مانده فرعی (شاخه/بندیل)' }}</th>
+          <th>{{ 'Ağırlıklı Ortalama Maliyet' if is_tr else 'فی میانگین موزون' }}</th>
+          <th>{{ 'Toplam Finansal Değer' if is_tr else 'ارزش ریالی مانده انبار' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if carry_over_items %}
+          {% for item in carry_over_items %}
+          <tr>
+            <td class="fw-bold text-light">{{ item.product.name | tr_loc(is_tr) }}</td>
+            <td>{{ item.warehouse.name | tr_loc(is_tr) }}</td>
+            <td class="font-monospace text-success fw-bold">
+              {{ "{:,.2f}".format(item.quantity) }} {{ item.product.uom | tr_loc(is_tr) }}
+            </td>
+            <td class="font-monospace text-teal">
+              {{ "{:,.0f}".format(item.secondary_quantity) if item.secondary_quantity else '-' }} {{ item.product.secondary_uom or '' }}
+            </td>
+            <td class="font-monospace small">
+              {{ "{:,.2f}".format(item.avg_cost) if is_tr else "{:,.0f}".format(item.avg_cost) }}
+            </td>
+            <td class="font-monospace text-warning fw-bold">
+              {{ "{:,.2f}".format(item.total_value) if is_tr else "{:,.0f}".format(item.total_value) }}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-secondary">
+              {{ 'Aktarılacak pozitif stok bulunamadı.' if is_tr else 'هیچ کالایی با موجودی مثبت جهت انتقال وجود ندارد.' }}
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

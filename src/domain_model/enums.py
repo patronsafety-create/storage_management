@@ -33,4 +33,26 @@ class CuttingStatus(str, Enum):
 class BaggingStatus(str, Enum):
     DRAFT = "DRAFT"
     COMPLETED = "COMPLETED"
-    CANCELLED = "CANCELLED"
+    CANCELLED = "CANCELLED"
+
+class SalesOrderStatus(str, Enum):
+    DRAFT = "DRAFT"
+    CONFIRMED = "CONFIRMED"
+    PARTIALLY_DELIVERED = "PARTIALLY_DELIVERED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+class TransactionSource(str, Enum):
+    OPENING_BALANCE = "OPENING_BALANCE"      # موجودی اول دوره
+    PURCHASE = "PURCHASE"                    # رسید خرید (PO)
+    SALES = "SALES"                          # حواله فروش (SO)
+    IN_ADJUSTMENT = "IN_ADJUSTMENT"          # اصلاحیه ورودی
+    OUT_ADJUSTMENT = "OUT_ADJUSTMENT"        # اصلاحیه خروجی
+    PRICE_ADJUSTMENT = "PRICE_ADJUSTMENT"    # اصلاحیه ریالی / بهای تمام‌شده
+    TRANSFER = "TRANSFER"                    # انتقال بین انبارها
+    BAGGING = "BAGGING"                      # کیسه‌گیری
+    CUTTING = "CUTTING"                      # برش آهن‌آلات
+    STOCKTAKING = "STOCKTAKING"              # انبارگردانی
+    RETURN = "RETURN"                        # مرجوعی
+    INTERNAL_USE = "INTERNAL_USE"            # مصرف داخلی
+

@@ -150,6 +150,49 @@
           </div>
         </div>
 
+        <!-- انتساب به سفارش خرید / فروش (انتخاب هوشمند) -->
+        <div class="row g-3 mb-4 p-3 rounded-3" style="background: rgba(13, 148, 136, 0.08); border: 1px dashed var(--teal-primary, #0d9488);">
+          <div class="col-md-6">
+            <label for="purchase_order_id" class="form-label fw-bold text-teal">
+              <i class="bi bi-cart-check me-1"></i>
+              {{ 'Satınalma Siparişi ile İlişkilendir (PO)' if is_tr else 'اتصال هوشمند به سفارش خرید (PO)' }}
+            </label>
+            <select class="form-select border-teal" id="purchase_order_id" name="purchase_order_id">
+              <option value="">{{ '-- Seçilmedi (Doğrudan Giriş) --' if is_tr else '-- بدون انتساب (توزین مستقیم ورود) --' }}</option>
+              {% for po in purchase_orders %}
+                {% set first_item = po.items[0] if po.items else None %}
+                <option value="{{ po.id }}" 
+                        data-supplier-id="{{ po.supplier_id }}" 
+                        data-product-id="{{ first_item.product_id if first_item else '' }}"
+                        data-warehouse-id="{{ po.destination_warehouse_id or '' }}">
+                  {{ po.order_number }} - {{ po.supplier.name | tr_loc(is_tr) }} {% if first_item %}({{ first_item.product.name | tr_loc(is_tr) }}){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <div class="form-text text-secondary small">با انتخاب PO، تأمین‌کننده، کالا و نوع عملیات «ورود بار» خودکار پر می‌شوند.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="sales_order_id" class="form-label fw-bold text-info">
+              <i class="bi bi-receipt me-1"></i>
+              {{ 'Satış Siparişi ile İlişkilendir (SO)' if is_tr else 'اتصال هوشمند به سفارش فروش (SO)' }}
+            </label>
+            <select class="form-select border-info" id="sales_order_id" name="sales_order_id">
+              <option value="">{{ '-- Seçilmedi (Doğrudan Çıkış) --' if is_tr else '-- بدون انتساب (توزین مستقیم خروج) --' }}</option>
+              {% for so in sales_orders %}
+                {% set first_item = so.items[0] if so.items else None %}
+                <option value="{{ so.id }}" 
+                        data-customer-id="{{ so.customer_id }}" 
+                        data-product-id="{{ first_item.product_id if first_item else '' }}"
+                        data-warehouse-id="{{ so.source_warehouse_id or '' }}">
+                  {{ so.order_number }} - {{ so.customer.name | tr_loc(is_tr) }} {% if first_item %}({{ first_item.product.name | tr_loc(is_tr) }}){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <div class="form-text text-secondary small">با انتخاب SO، مشتری، کالا و نوع عملیات «خروج بار» خودکار پر می‌شوند.</div>
+          </div>
+        </div>
+
         <!-- کالا، انبار و نوع توزین -->
         <div class="row g-3 mb-4">
           <div class="col-md-4">
@@ -275,13 +318,54 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const isTr = {{ 'true' if is_tr else 'false' }};
+    const isTr = (document.documentElement.lang === 'tr');
     const weightInput = document.getElementById('initial_weight');
     const tonDisplay = document.getElementById('tonDisplay');
     const maxWeightInput = document.getElementById('max_allowed_weight');
     const warning = document.getElementById('overweightWarning');
     const truckTypeSelect = document.getElementById('truck_type');
     const platePreviewDisplay = document.getElementById('platePreviewDisplay');
+
+    // انتخاب هوشمند سفارش خرید و فروش و پر کردن خودکار فرم
+    const poSelect = document.getElementById('purchase_order_id');
+    const soSelect = document.getElementById('sales_order_id');
+    const modeSelect = document.getElementById('weighing_mode');
+    const prodSelect = document.getElementById('product_id');
+    const suppSelect = document.getElementById('supplier_id');
+    const custSelect = document.getElementById('customer_id');
+    const whSelect = document.getElementById('warehouse_id');
+
+    if (poSelect) {
+        poSelect.addEventListener('change', function() {
+            if (this.value) {
+                if (soSelect) soSelect.value = '';
+                if (modeSelect) modeSelect.value = 'INBOUND';
+                const opt = this.options[this.selectedIndex];
+                const suppId = opt.getAttribute('data-supplier-id');
+                const prodId = opt.getAttribute('data-product-id');
+                const whId = opt.getAttribute('data-warehouse-id');
+                if (suppId && suppSelect) suppSelect.value = suppId;
+                if (prodId && prodSelect) prodSelect.value = prodId;
+                if (whId && whSelect && whId.trim() !== '') whSelect.value = whId;
+            }
+        });
+    }
+
+    if (soSelect) {
+        soSelect.addEventListener('change', function() {
+            if (this.value) {
+                if (poSelect) poSelect.value = '';
+                if (modeSelect) modeSelect.value = 'OUTBOUND';
+                const opt = this.options[this.selectedIndex];
+                const custId = opt.getAttribute('data-customer-id');
+                const prodId = opt.getAttribute('data-product-id');
+                const whId = opt.getAttribute('data-warehouse-id');
+                if (custId && custSelect) custSelect.value = custId;
+                if (prodId && prodSelect) prodSelect.value = prodId;
+                if (whId && whSelect && whId.trim() !== '') whSelect.value = whId;
+            }
+        });
+    }
 
     // به‌روزرسانی سقف وزن با تغییر نوع ناوگان
     if (truckTypeSelect) {
