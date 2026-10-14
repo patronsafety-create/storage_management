@@ -135,7 +135,12 @@
             </td>
             <td class="small">
               <strong class="text-light">{{ t.driver_name }}</strong>
-              <div class="text-secondary">{{ t.truck_type }}</div>
+              <div class="text-secondary">{{ t.truck_type | tr_loc(is_tr) }}</div>
+              {% if t.supplier %}
+                <div class="small text-success"><i class="bi bi-box-arrow-in-down me-1"></i>{{ t.supplier.name | tr_loc(is_tr) }}</div>
+              {% elif t.customer %}
+                <div class="small text-info"><i class="bi bi-box-arrow-up-right me-1"></i>{{ t.customer.name | tr_loc(is_tr) }}</div>
+              {% endif %}
             </td>
             <td class="small">
               <span class="text-light fw-semibold">{{ (t.product.name | tr_loc(is_tr)) if t.product else '-' }}</span>
