@@ -585,7 +585,7 @@
         <div class="d-grid gap-1">
           <a href="/dashboard" class="sidebar-item"><i class="bi bi-speedometer2 text-info me-2"></i>{{ 'Gösterge Paneli' if is_tr else 'داشبورد و نمودار کیکی' }}</a>
           <a href="/guide" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-book-half text-teal me-2"></i>{{ 'Kullanım Kılavuzu' if is_tr else 'راهنمای جامع کاربری' }}</a>
-          <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="sidebar-item" style="color: #00d4c8 !important;"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>{{ 'PDF Kılavuz İndir' if is_tr else 'دانلود دفترچه راهنما (PDF)' }}</a>
+          <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="sidebar-item" style="color: #00d4c8 !important;"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>{{ 'PDF Kılavuz İndir' if is_tr else 'دانلود دفترچه راهنما (PDF)' }}</a>
           <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-bar-chart-line text-teal me-2"></i>{{ 'Anlık Stok Durumu' if is_tr else 'گزارش موجودی لحظه‌ای' }}</a>
           <a href="/inventory/transactions" class="sidebar-item"><i class="bi bi-clock-history text-secondary me-2"></i>{{ 'Stok Hareketleri' if is_tr else 'لیست و جستجوی تراکنش‌ها' }}</a>
         </div>
@@ -743,7 +743,7 @@
           </div>
 
           <!-- دکمه دانلود PDF راهنما -->
-          <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info btn-sm px-2 py-1 me-1 d-none d-lg-inline-flex align-items-center gap-1" title="{{ 'PDF Kılavuzu İndir' if is_tr else 'دانلود دفترچه راهنمای جامع PDF' }}">
+          <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="btn btn-outline-info btn-sm px-2 py-1 me-1 d-none d-lg-inline-flex align-items-center gap-1" title="{{ 'PDF Kılavuzu İndir' if is_tr else 'دانلود دفترچه راهنمای جامع PDF' }}">
             <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
             <span class="small fw-bold">{{ 'PDF İndir' if is_tr else 'دانلود PDF' }}</span>
           </a>

@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>NexusPour ERP — Kapsamlı Kullanım Kılavuzu ve Teknik Şartname</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 16mm 14mm 16mm 14mm;
+      @bottom-right {
+        content: "Sayfa " counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+      @bottom-left {
+        content: "NexusPour ERP Entegre Depo Yönetim Sistemi — Mimar: Omid Pourmahmoud";
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      color: #1e293b;
+      font-size: 9.6pt;
+      line-height: 1.6;
+    }
+
+    .page {
+      page-break-after: always;
+      position: relative;
+      min-height: 260mm;
+      padding-bottom: 5mm;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Filigran (Watermark) */
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-32deg);
+      font-size: 40pt;
+      font-weight: 900;
+      color: rgba(14, 165, 233, 0.045);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+      text-align: center;
+      line-height: 1.3;
+      letter-spacing: 2px;
+    }
+
+    .content-layer {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sayfa Üst Başlığı */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 7px;
+      margin-bottom: 15px;
+      border-bottom: 1.5px solid #0284c7;
+    }
+    .page-header-title {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .page-header-meta {
+      font-size: 8pt;
+      color: #64748b;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* Sayfa Altlığı */
+    .page-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8pt;
+      color: #64748b;
+    }
+
+    /* ===== Lüks Kapak Tasarımı ===== */
+    .cover-container {
+      height: 265mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 2px solid #0284c7;
+      border-radius: 12px;
+      padding: 30px;
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0c4a6e 100%);
+      color: #ffffff;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-decor-circle {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+      top: -60px;
+      right: -60px;
+      pointer-events: none;
+    }
+
+    .cover-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 15px;
+    }
+
+    .cover-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cover-logo-svg {
+      width: 58px;
+      height: 58px;
+      filter: drop-shadow(0 4px 10px rgba(14, 165, 233, 0.5));
+    }
+
+    .cover-brand-text {
+      font-size: 22pt;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-badge-ver {
+      background: rgba(14, 165, 233, 0.2);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      font-size: 8.5pt;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-center {
+      text-align: center;
+      margin: 35px 0;
+    }
+
+    .cover-title-main {
+      font-size: 27pt;
+      font-weight: 900;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .cover-tagline-box {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 30px;
+      padding: 8px 24px;
+      font-size: 10.5pt;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .cover-features-pills {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 25px;
+    }
+
+    .cover-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 8.5pt;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .cover-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .cover-author-box {
+      text-align: left;
+    }
+
+    .cover-author-label {
+      font-size: 8pt;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-author-name {
+      font-size: 14pt;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-top: 2px;
+    }
+
+    .cover-author-role {
+      font-size: 8.5pt;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    .cover-meta-box {
+      text-align: right;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+
+    /* Başlıklar ve Tipografi */
+    h1, h2, h3, h4 {
+      margin-top: 0;
+      color: #0f172a;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: 15pt;
+      border-left: 4px solid #0284c7;
+      padding-left: 10px;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    h2 {
+      font-size: 12pt;
+      border-left: 3px solid #0891b2;
+      padding-left: 8px;
+      margin-top: 14px;
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+
+    h3 {
+      font-size: 10.2pt;
+      color: #0369a1;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    /* Kartlar ve Kurgular */
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+
+    .card-accent {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-left: 4px solid #0284c7;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+
+    .card-dark {
+      background: #0f172a;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+
+    /* Kurumsal Tablolar */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px 0;
+      font-size: 8.5pt;
+      break-inside: avoid;
+    }
+
+    table.data-table th {
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 700;
+      padding: 7px 10px;
+      text-align: left;
+      border: 1px solid #334155;
+    }
+
+    table.data-table td {
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    /* Grid Yapıları */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .badge-primary { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .badge-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-dark { background: #334155; color: #f8fafc; }
+
+    /* Süreç Akış Adımları */
+    .flow-step {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      position: relative;
+    }
+    .flow-step-num {
+      width: 22px;
+      height: 22px;
+      background: #0284c7;
+      color: #ffffff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8.5pt;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .flow-step-title {
+      font-weight: 700;
+      font-size: 8.5pt;
+      color: #0f172a;
+    }
+    .flow-step-desc {
+      font-size: 7.5pt;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Türkiye Araç Plakası */
+    .tr-plate-preview {
+      display: inline-flex;
+      align-items: center;
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-weight: 900;
+      font-size: 9pt;
+      letter-spacing: 1px;
+    }
+    .tr-plate-flag {
+      background: #003399;
+      color: #ffffff;
+      padding: 1px 4px;
+      font-size: 7pt;
+      border-radius: 2px;
+      margin-right: 6px;
+      font-weight: 800;
+    }
+
+    ul.check-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 6px 0;
+    }
+    ul.check-list li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 5px;
+      font-size: 9pt;
+    }
+    ul.check-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #059669;
+      font-weight: 900;
+    }
+
+    .text-center { text-align: center; }
+    .text-teal { color: #0097a7; }
+    .text-muted { color: #64748b; }
+    .fw-bold { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 1: RESMİ KATALOG VE TEKNİK ŞARTNAME KAPAĞI -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="cover-container">
+      <div class="cover-decor-circle"></div>
+
+      <!-- Kapak Üst Kısmı -->
+      <div class="cover-top">
+        <div class="cover-logo-wrap">
+          <!-- Vektörel Resmi NexusPour Logosu -->
+          <svg class="cover-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="24" fill="url(#coverLogoGrad)" />
+            <path d="M50 20L78 36V68L50 84L22 68V36L50 20Z" stroke="#38bdf8" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M50 20V52M78 36L50 52M22 36L50 52" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="50" cy="52" r="6" fill="#00d4c8"/>
+            <path d="M35 72L50 80L65 72" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="coverLogoGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0284c7"/>
+                <stop offset="1" stop-color="#4f46e5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div>
+            <div class="cover-brand-text">NEXUSPOUR ERP</div>
+            <div style="font-size: 8.5pt; color: #94a3b8;">Kurumsal Ağır Sanayi, Demir-Çelik ve Lojistik Yönetim Sistemi</div>
+          </div>
+        </div>
+        <div class="cover-badge-ver">ENTERPRISE EDITION v2.4 (TR)</div>
+      </div>
+
+      <!-- Kapak Merkezi: Başlık ve Açıklamalar -->
+      <div class="cover-center">
+        <div class="cover-title-main">
+          Kapsamlı Kullanım Kılavuzu &<br>
+          Teknik Sistem Şartnamesi
+        </div>
+        <div class="cover-subtitle">
+          Tüm Menülerin Adım Adım Rehberi, Ağır Sanayi & Metalurji Depo Operasyonları,<br>
+          60 Tonluk Dijital Kantar Otomasyonu, MTC Kalite Sertifikasyonu ve Türkiye Mevzuat Uyumu
+        </div>
+        <div class="cover-tagline-box">
+          ✨ Kütük Demir, İnşaat Demiri, Profil, Üre Gübresi ve Ticari Envanter İçin Özel Mimari
+        </div>
+
+        <div class="cover-features-pills">
+          <span class="cover-pill">📦 Çift Birimli Stok (Ton ve Adet/Bağ)</span>
+          <span class="cover-pill">🚛 60T Dijital Kantar & KGM Yasal Sınır Kontrolü</span>
+          <span class="cover-pill">📜 Resmi Metalurji Test Sertifikası (MTC)</span>
+          <span class="cover-pill">✂️ Demir Kesim Emri & Hurda/Parça Deposu</span>
+          <span class="cover-pill">🌾 Petrokimya Üre Dökme ➔ Big-Bag Torbalama</span>
+          <span class="cover-pill">🏛️ GİB Luhn VKN, E-İrsaliye ve 4/10 KDV Tevkifatı</span>
+          <span class="cover-pill">📊 Hareketli Ağırlıklı Ortalama Maliyet Kardeksi</span>
+        </div>
+      </div>
+
+      <!-- Kapak Altı: Müellif ve Sürüm Bilgileri -->
+      <div class="cover-bottom">
+        <div class="cover-author-box">
+          <div class="cover-author-label">Sistem Tasarımcısı, Baş Mühendis & Müellif</div>
+          <div class="cover-author-name">Omid Pourmahmoud</div>
+          <div class="cover-author-role">Kıdemli Entegre Sistem Mimarı ve Bilgi Teknolojileri Danışmanı</div>
+        </div>
+        <div class="cover-meta-box">
+          <div>Yayın Tarihi: Ekim 2026</div>
+          <div>Altyapı: Python 3.11 • FastAPI • PostgreSQL • Docker</div>
+          <div>Dağıtım Kapsamı: Kurumsal ve Gizli Ticari Lisans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 2: SİSTEM MİMARİSİ, TEKNOLOJİ YIĞINI VE İÇİNDEKİLER -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>🏛️</span>
+          <span>NexusPour Sistemi — Mimari Tanıtım, Teknoloji Yığını ve İçindekiler</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 0 • GENEL BAKIŞ & MİMARİ</div>
+      </div>
+
+      <h1>1. Sistemin Tanıtımı ve NexusPour Tasarım Felsefesi</h1>
+      <p>
+        <strong>NexusPour ERP</strong> entegre kurumsal sistemi, doğrudan <strong>Omid Pourmahmoud</strong> tarafından sahada yapılan kapsamlı süreç analizleri neticesinde tasarlanmış ve kodlanmıştır. Geleneksel depo yönetimlerinde entegre bir yapının bulunmaması ve işlemlerin kağıt-kalem veya basit elektronik tablolarda yürütülmesi; <strong>gizli mali kayıplara, şeffaf olmayan nakliye-fire maliyetlerine ve bilançolarda asla fark edilemeyen büyük zararlara</strong> neden olmaktadır. NexusPour, <strong>tüm depoları tek bir merkezi çatı altında toplamak, görünmeyen kaçakları ve fire kayıplarını engellemek ve şirket yöneticilerine gerçek zamanlı (Real-Time) stok kardeksi sunmak</strong> üzere geliştirilmiştir. Sistem, %100 yerel kurum içi (On-Premises) sunucularda sıfır veri sızıntısıyla çalışabilmekte ve Türkiye Cumhuriyeti GİB, KGM ve TSE standartlarıyla tam uyumluluk göstermektedir.
+      </p>
+
+      <div class="grid-2">
+        <div class="card-accent">
+          <h3>⚡ NexusPour'un Benzersiz Avantajları</h3>
+          <ul class="check-list">
+            <li><strong>Çift Birimli Stok Takibi:</strong> Ton/Kilogram cinsinden ağırlık ile Adet/Bağ sayısının nominal ağırlık ve standart tolerans sapmasıyla eşzamanlı takibi.</li>
+            <li><strong>Kümülatif Maliyet (Landed Cost):</strong> Navlun faturası, nakliye sigortası, kantar bedeli ve eksik yük cezalarının ürün maliyetine otomatik dağıtımı.</li>
+            <li><strong>60 Tonluk Dijital Kantar Otomasyonu:</strong> İlk tartım (Dolu) ve ikinci tartım (Boş) üzerinden otomatik net ağırlık hesabı ve KGM 40t/44t yasal sınır denetimi.</li>
+            <li><strong>MTC Metalurji Kalite Sertifikasyonu:</strong> Döküm numarası (Heat No) bazında kimyasal analiz (C, Si, Mn, P, S) ve mekanik dayanım test sertifikası basımı.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🛠️ Teknoloji Yığını & Altyapı (Tech Stack)</h3>
+          <table class="data-table" style="margin: 0;">
+            <tr>
+              <th style="width: 35%;">Sistem Katmanı</th>
+              <th>Kullanılan Standart ve Teknolojiler</th>
+            </tr>
+            <tr>
+              <td><strong>Arka Uç (Backend)</strong></td>
+              <td>Python 3.11+ • FastAPI (Yüksek Hızlı Asenkron Mimari)</td>
+            </tr>
+            <tr>
+              <td><strong>Veritabanı (DB)</strong></td>
+              <td>PostgreSQL Enterprise & SQLAlchemy ORM Modeli</td>
+            </tr>
+            <tr>
+              <td><strong>Güvenlik & Yetki</strong></td>
+              <td>OAuth2 Password Bearer • JWT Token • Argon2id Şifreleme</td>
+            </tr>
+            <tr>
+              <td><strong>Kullanıcı Arayüzü</strong></td>
+              <td>HTML5 • CSS Glassmorphism • Bootstrap 5 • Chart.js</td>
+            </tr>
+            <tr>
+              <td><strong>Dağıtım (DevOps)</strong></td>
+              <td>Docker Containers • Nginx Reverse Proxy • Systemd</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <h2>Kullanım Kılavuzu Ayrıntılı İçindekiler Tablosu</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 10%;">Bölüm</th>
+            <th style="width: 32%;">Bölüm Başlığı</th>
+            <th>Kapsanan Süreçler ve Menü Başlıkları</th>
+            <th style="width: 10%; text-align: center;">Sayfa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center fw-bold">Bölüm 1</td>
+            <td><strong>Yönetici Paneli ve İş Zekası (BI)</strong></td>
+            <td>İstatistiksel göstergeler, depo dağılım donut grafiği, stok devir hızı ve anlık alarmlar</td>
+            <td class="text-center">Sayfa 3</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">Bölüm 2</td>
+            <td><strong>Ana Veriler ve Ticari Muhataplar</strong></td>
+            <td>Ürün kataloğu, TSE/GTİP tanımları, GİB VKN/TCKN doğrulaması, sert/yumuşak silme</td>
+            <td class="text-center">Sayfa 4</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">Bölüm 3</td>
+            <td><strong>Tedarik Zinciri ve Dijital Kantar</strong></td>
+            <td>Satınalma siparişleri (PO), 60 tonluk kantar, çift tartım süreci ve Türk plaka formatı</td>
+            <td class="text-center">Sayfa 5</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">Bölüm 4</td>
+            <td><strong>Üretim, Demir Kesim ve Torbalama</strong></td>
+            <td>12m inşaat demiri kesim optimizasyonu, parça deposu, üre torbalama ve toz firesi</td>
+            <td class="text-center">Sayfa 6</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">Bölüm 5</td>
+            <td><strong>Depo Operasyonları ve Stok Kardeksi</strong></td>
+            <td>Giriş/çıkış irsaliyesi, navlun kümülatifi, ambar transferi, sayım ve hareketli ortalama maliyet</td>
+            <td class="text-center">Sayfa 7</td>
+          </tr>
+          <tr>
+            <td class="text-center fw-bold">Bölüm 6</td>
+            <td><strong>MTC Kalite, Resmi Uyum ve Güvenlik</strong></td>
+            <td>MTC test sertifikası, 4/10 KDV tevkifatı, RBAC yetki matrisi ve denetim logları</td>
+            <td class="text-center">Sayfa 8</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Tedarik Zinciri Süreç Akış Şeması (NexusPour Workflow)</h2>
+      <div class="grid-3" style="margin-top: 6px;">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-title">Tır Girişi & 1. Tartım</div>
+          <div class="flow-step-desc">Plaka, irsaliye ve 60T kantarda dolu ağırlık kaydı</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-title">Boşaltma & 2. Tartım</div>
+          <div class="flow-step-desc">Dara (boş) tartımı ve otomatik net ağırlık tespiti</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-title">Kalite Kontrol & Giriş</div>
+          <div class="flow-step-desc">MTC sertifikası eşleme ve kümülatif maliyetli irsaliye</div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-title">İşleme & Depolama</div>
+          <div class="flow-step-desc">Profil/nervürlü demir kesimi veya üre big-bag dolumu</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">5</div>
+          <div class="flow-step-title">Sevk & Çıkış İrsaliyesi</div>
+          <div class="flow-step-desc">Cari bakiye kontrolü, çıkış tartımı ve sevk irsaliyesi</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">6</div>
+          <div class="flow-step-title">Kardeks & Resmi Bildirim</div>
+          <div class="flow-step-desc">Canlı maliyet güncellemesi ve GİB E-İrsaliye dökümü</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 3: BÖLÜM 1 — YÖNETİCİ PANELİ VE İŞ ZEKASI -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>📊</span>
+          <span>Bölüm 1: Yönetici Paneli, Anahtar Performans Göstergeleri ve Analitik Grafikler</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 1 • DASHBOARD & ANALYTICS</div>
+      </div>
+
+      <h1>Yönetici Paneli Menüsü (/dashboard)</h1>
+      <p>
+        NexusPour ERP kontrol paneli, fabrika müdürleri ve depo şefleri için yüksek çözünürlüklü bir dijital izleme odası işlevi görür. Sistemdeki tüm giriş, çıkış, kantar ve üretim verilerini anlık olarak konsolide ederek gecikmesiz operasyonel kararlar alınmasını sağlar.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Dörtlü İstatistik Kartları (KPI Cards)</h3>
+          <ul class="check-list">
+            <li><strong>Toplam Ürün Sayısı (SKU):</strong> Sistemde tanımlı ve aktif olan toplam malzeme kalemi çeşidi.</li>
+            <li><strong>Konsolide Depo Mevcudu:</strong> Tüm açık saha ve kapalı hangarlardaki toplam tonaj ve adet stoğu.</li>
+            <li><strong>Mal Kabul Hareketi (Girişler):</strong> Tedarikçi bazında sahaya indirilen günlük ve aylık sevkiyat hacmi.</li>
+            <li><strong>Sevk Hareketi (Çıkışlar):</strong> Müşteri ve şantiye bazında teslim edilen toplam tonaj ve çıkış irsaliyeleri.</li>
+          </ul>
+        </div>
+        <div class="card-accent">
+          <h3>Depo Dağılım Donut Grafiği</h3>
+          <p style="font-size: 8.5pt;">
+            Panelin sol bölümünde, stokların fiziki sahalara göre yüzdesel ve tonaj bazlı dağılımı görselleştirilir:
+          </p>
+          <div style="font-size: 8pt; background: #ffffff; padding: 6px; border-radius: 6px; border: 1px solid #bae6fd;">
+            🔵 <strong>1 No'lu Açık Ağır Sanayi Sahası:</strong> Kütük demir, inşaat demiri bağları, IPE/HEA profiller, slab.<br>
+            🟢 <strong>2 No'lu Kapalı Kimyasal Hangarı:</strong> 1 tonluk üre big-bag torbaları, paletli gübreler ve hassas parçalar.
+          </div>
+        </div>
+      </div>
+
+      <h2>Son Depo Hareketleri Tablosu (Recent Transactions)</h2>
+      <p>
+        Yönetici panelinin alt kısmında, sistemde oluşturulan son 10 resmi depo belgesi tüm detaylarıyla canlı olarak akar:
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Belge No</th>
+            <th>İşlem Türü</th>
+            <th>Malzeme & Standart</th>
+            <th>Depo</th>
+            <th>Birincil Miktar (Ton/Kg)</th>
+            <th>İkincil Miktar (Adet/Bağ)</th>
+            <th>Muhatap Cari</th>
+            <th>Operatör</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-dark">TRX-2026-104</span></td>
+            <td><span class="badge badge-success">Giriş (Mal Kabul)</span></td>
+            <td>Kütük Demir 150×150 (3SP/5SP)</td>
+            <td>1 No'lu Ağır Depo</td>
+            <td>28.45 Ton</td>
+            <td>14 Adet Kütük</td>
+            <td>İskenderun Demir Çelik (İSDEMİR)</td>
+            <td>Omid Pourmahmoud</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-dark">TRX-2026-105</span></td>
+            <td><span class="badge badge-danger">Çıkış (Sevk İrsaliyesi)</span></td>
+            <td>B420B Nervürlü İnşaat Demiri Ø16</td>
+            <td>1 No'lu Ağır Depo</td>
+            <td>21.80 Ton</td>
+            <td>1.150 Boy (12m)</td>
+            <td>Rönesans Holding Şantiyesi</td>
+            <td>Depo Operatörü</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-dark">TRX-2026-106</span></td>
+            <td><span class="badge badge-primary">Ambarlar Arası Sevk</span></td>
+            <td>Granül Üre Gübresi (%46 N)</td>
+            <td>Hangardan Sahaya</td>
+            <td>15.00 Ton</td>
+            <td>15 Adet Big-Bag</td>
+            <td>Dahili Transfer</td>
+            <td>Omid Pourmahmoud</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Kritik Stok ve Sipariş Noktası Uyarı Merkezi (/inventory/alerts)</h2>
+      <div class="card-dark">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 800; color: #38bdf8;">🔔 Akıllı Kritik Stok ve Otomatik İkmal Bildirimi</span>
+          <span class="badge badge-warning">Üst Menüdeki Bildirim Ziline Entegre</span>
+        </div>
+        <p style="font-size: 8.5pt; color: #cbd5e1; margin: 0;">
+          NexusPour ERP, her malzeme kartında belirlenen <strong>Asgari Güvenlik Stoğu (Min Stock)</strong> ve <strong>Sipariş Verme Noktası (Reorder Point)</strong> eşiklerini 7/24 denetler. Mevcut tonaj emniyet sınırının altına indiğinde, üst menüdeki bildirim zili kırmızı alarm durumuna geçer ve uyarı ekranından tek tıklamayla tedarikçiye yönelik satınalma sipariş taslağı oluşturulabilir.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 4: BÖLÜM 2 — ANA VERİLER, ÜRÜNLER VE CARİ MUHATAPLAR -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>🏷️</span>
+          <span>Bölüm 2: Malzeme Kataloğu, TSE Standartları, GTİP ve Ticari Muhataplar</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 2 • MALZEME & CARİ YÖNETİMİ</div>
+      </div>
+
+      <h1>1. Kapsamlı Malzeme Kataloğu (/master-data/products)</h1>
+      <p>
+        Ağır sanayi, çelik servis merkezleri ve petrokimya sektöründe basit stok kartları yetersiz kalmaktadır. NexusPour ERP malzeme kartı, TSE normları ve Gümrük Tarife İstatistik Pozisyonu (GTİP) kodlarıyla entegre özel mühendislik alanlarına sahiptir:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Teknik ve Metalurjik Parametreler</h3>
+          <ul class="check-list">
+            <li><strong>Malzeme Kodu (SKU):</strong> Benzersiz kimlik (örn. <code>BLT-150-5SP-ISD</code>).</li>
+            <li><strong>Çift Birim Tanımı:</strong> Birincil birim: Ton / İkincil birim: Adet, Boy, Bağ, Big-Bag.</li>
+            <li><strong>Metre/Ağırlık Katsayısı:</strong> TS 708 ve TS EN 10025 standart teorik birim ağırlık.</li>
+            <li><strong>Çelik Kalite Sınıfı:</strong> B420B, B500B, S235JR, S275JR, S355JR, 3SP, 5SP.</li>
+            <li><strong>Geometrik Ölçüler:</strong> Anma çapı (mm), et kalınlığı, standart boy uzunluğu (örn. 12.00m).</li>
+          </ul>
+        </div>
+        <div class="card-accent">
+          <h3>GİB Mevzuat ve Ticari Kodlar</h3>
+          <ul class="check-list">
+            <li><strong>Resmi GTİP Kodu:</strong> 7214.20 (İnşaat Demiri), 7207.11 (Kütük), 3102.10 (Üre Gübre).</li>
+            <li><strong>KDV Oranı & Tevkifat:</strong> Standart %20 KDV ve 4/10 Demir-Çelik Tevkifat kutusu.</li>
+            <li><strong>Kritik Eşik Seviyeleri:</strong> Minimum stok, maksimum kapasite ve sipariş tetikleme tonajı.</li>
+            <li><strong>Üretici Fabrika Bilgisi:</strong> Erdemir, İsdemir, Kardemir, İçdaş, Çolakoğlu vb.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h1>2. Ticari Muhataplar (Cari Kartlar) Yönetimi (/master-data/parties)</h1>
+      <p>
+        Bu modül; <strong>Tedarikçiler</strong>, <strong>Müşteriler</strong>, <strong>Nakliye Firmaları</strong> ve <strong>Fason Atölyelerin</strong> mali ve kurumsal bilgilerini güvenle yönetir.
+      </p>
+
+      <div class="card">
+        <h3>Akıllı Resmi Kimlik ve Vergi No Doğrulama Motoru (Smart Validation)</h3>
+        <p style="font-size: 8.5pt;">
+          Kullanıcıların hatalı veri girmesini engellemek adına Türkiye Cumhuriyeti Gelir İdaresi Başkanlığı (GİB) doğrulama algoritmaları gerçek zamanlı çalışır:
+        </p>
+        <div class="grid-2" style="margin-top: 6px;">
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 8pt;">
+            <strong>🏢 Kurumsal 10 Haneli VKN Doğrulaması:</strong><br>
+            Tüzel kişilikler için Gelir İdaresi Başkanlığı resmi <strong>Mod10 / Luhn algoritması</strong> kontrolü. Hatalı veya uydurma vergi numaraları anında engellenir.
+          </div>
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 8pt;">
+            <strong>👤 Bireysel 11 Haneli T.C. Kimlik No Doğrulaması:</strong><br>
+            Şahıs firmaları için ilk hanesi sıfır olamayan, 10. ve 11. kontrol basamakları matematiksel algoritmaya uyan resmi TCKN denetimi.
+          </div>
+        </div>
+      </div>
+
+      <h2>Veritabanından Kesin Silme (Hard Delete) ile Pasife Alma (Soft Delete) Ayrımı</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">İşlem Türü</th>
+            <th style="width: 15%;">İkon & Durum</th>
+            <th>İzin Verilen Şartlar ve NexusPour Güvenlik Kuralı</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pasife Alma (Arşivleme)</strong></td>
+            <td class="text-center"><span class="badge badge-warning">👁️ Çizgili İkon</span></td>
+            <td>
+              Geçmişte kantar fişi veya irsaliyesi bulunan ancak artık çalışılmayan cariler için uygulanır. Kayıt pasifleşir, yeni evrak açılırken listeden gizlenir; ancak geçmiş yasal defter ve mali dökümlerde bütünlük korunur.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Veritabanından Kesin Silme</strong></td>
+            <td class="text-center"><span class="badge badge-danger">🗑️ Kırmızı Kutu</span></td>
+            <td>
+              <strong>Yalnızca sıfır hareketi olan kayıtlarda geçerlidir.</strong> Eğer muhataba ait tek bir tartım fişi dahi varsa, mali kaydın zedelenmemesi adına sistem silme talebini reddeder ve kullanıcıyı arşivlemeye yönlendirir.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Durum Filtreleme Butonu</strong></td>
+            <td class="text-center"><span class="badge badge-primary">🔽 Aktif/Tümü</span></td>
+            <td>
+              Listeleme ekranında <strong>"Yalnızca Aktifleri Göster"</strong> seçeneği işaretlenerek arşivlenmiş kayıtlar gizlenebilir ve operasyonel liste sade tutulabilir.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 5: BÖLÜM 3 — TEDARİK ZİNCİRİ VE 60 TONLUK DİJİTAL KANTAR -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>🚛</span>
+          <span>Bölüm 3: Satınalma Siparişleri ve 60 Tonluk Dijital Kantar Entegrasyonu</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 3 • SATINALMA & KANTAR OTOMASYONU</div>
+      </div>
+
+      <h1>1. Satınalma Siparişleri ve Mal Kabul Takibi (/purchases)</h1>
+      <p>
+        Tedarik süreci, sistem üzerinden oluşturulan resmi Satınalma Siparişi (Purchase Order - PO) ile başlar. Sipariş numarası (örn. <code>PO-2026-TR-001</code>), üretici fabrika, teslim tarihi, sipariş edilen kütük veya demir miktarı ve birim fiyat kaydedilir. Sahaya tır yanaştığında, kantar verisiyle sipariş tek tıkla eşleştirilir.
+      </p>
+
+      <h1>2. 60 Tonluk Dijital Tır Kantarı Otomasyonu (/weighbridge)</h1>
+      <p>
+        Ağır sanayide kantar, hem fiziki hem mali kontrolün başladığı en kritik güvenlik noktasıdır. NexusPour kantar modülü endüstriyel standartlarla donatılmıştır:
+      </p>
+
+      <div class="grid-2">
+        <div class="card-accent">
+          <h3>İki Aşamalı Hassas Tartım Prosedürü</h3>
+          <ol style="margin: 0; padding-left: 18px; font-size: 8.5pt;">
+            <li><strong>1. Tartım (Brüt Ağırlık / Dolu):</strong> Tır tesis kapısına ulaştığında Türk plaka formatı, şoför TCKN/telefon, sevk irsaliye no ve kantardaki dolu tonaj kaydedilir.</li>
+            <li><strong>Saha Boşaltma ve Görsel Muayene:</strong> Malzeme vinçlerle sahaya istiflenir, etiket ve döküm no kontrol edilir.</li>
+            <li><strong>2. Tartım (Dara / Boş Tır):</strong> Boşalan tır dönüşte kantara çıkar, dara ağırlığı okunur ve <strong>sistem net ağırlığı anında hesaplar</strong>.</li>
+            <li><strong>Otomatik İrsaliyeleştirme:</strong> Net ağırlık ve bağ adedi el değmeden depo giriş irsaliyesine aktarılır; klavye kaynaklı hatalar sıfırlanır.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>KGM 40 Ton / 44 Ton Yasal Ağırlık Sınır Denetimi</h3>
+          <p style="font-size: 8.5pt;">
+            Karayolları Genel Müdürlüğü (KGM) trafik yönetmeliğine göre 5 dingilli tır ve yarı römorklarda azami yüklü ağırlık <strong>40.000 kg (40 ton)</strong>, ISO konteyner taşıyan 6 dingilli araçlarda ise <strong>44.000 kg (44 ton)</strong> ile sınırlıdır.
+          </p>
+          <div style="background: #fef2f2; border: 1px solid #f87171; border-radius: 6px; padding: 8px; font-size: 8pt; color: #991b1b;">
+            ⚠️ <strong>Otomatik Gabari ve Tonaj Aşımı Alarmı:</strong> Kantarda okunan brüt ağırlık yasal sınırı aştığında fiş üzerinde kırmızı renkte <strong>«KGM Aşırı Yük Uyarısı»</strong> damgası belirir ve karayolu cezalarını önlemek amacıyla araç çıkışı için özel onay mekanizması tetiklenir.
+          </div>
+        </div>
+      </div>
+
+      <h2>Türkiye Standartlarında Resmi Dijital Kantar Fişi Örneği</h2>
+      <div class="card-dark" style="padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 8px;">
+          <div style="font-weight: 800; font-size: 11pt; color: #38bdf8;">NexusPour ERP — Resmi Dijital Kantar Tartım Fişi</div>
+          <div class="tr-plate-preview">
+            <span class="tr-plate-flag">TR</span> <span>34</span> <span>KNT</span> <span>2026</span>
+          </div>
+        </div>
+        <table class="data-table" style="background: #1e293b; color: #f8fafc; margin: 0;">
+          <tr>
+            <td style="width: 25%; color: #94a3b8;">Fiş Seri / No:</td>
+            <td class="fw-bold">KF-20261014-042</td>
+            <td style="width: 25%; color: #94a3b8;">Sürücü Adı & Tel:</td>
+            <td>Mehmet Yılmaz (0532 555 44 33)</td>
+          </tr>
+          <tr>
+            <td style="color: #94a3b8;">1. Tartım (Brüt/Dolu):</td>
+            <td class="fw-bold" style="color: #38bdf8;">39.420 kg (39,42 Ton)</td>
+            <td style="color: #94a3b8;">2. Tartım (Dara/Boş):</td>
+            <td class="fw-bold" style="color: #f59e0b;">14.180 kg (14,18 Ton)</td>
+          </tr>
+          <tr>
+            <td style="color: #94a3b8;">Hesaplanan Net Tonaj:</td>
+            <td class="fw-bold" style="color: #10b981; font-size: 10pt;">25.240 kg (25,24 Ton Net)</td>
+            <td style="color: #94a3b8;">Karayolu Uygunluk:</td>
+            <td><span class="badge badge-success">Yasal Sınır İçinde (Azami 40T Altı)</span></td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 6: BÖLÜM 4 — ÇELİK KESİM OPTİMİZASYONU VE TORBALAMA -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>⚙️</span>
+          <span>Bölüm 4: Demir Kesim Emri, Parça Deposu ve Dökme Üre Torbalama Süreçleri</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 4 • KESİM İŞLEME & TORBALAMA</div>
+      </div>
+
+      <h1>1. İnşaat Demiri Kesim Emri ve Kalan Parça Deposu (/cutting)</h1>
+      <p>
+        Haddehanelerden çıkan inşaat demirleri ve profiller standart 12.00 metre boyunda depoya girer. Ancak inşaat firmaları ve prefabrik üreticileri projelerine göre özel boylarda (örn. 4.50m, 3.20m, 2.75m) demir talep ederler. Denetimsiz atölyelerde kesim sonrası kalan parçalar şantiye hurdalığına karışarak büyük sermaye kaybına yol açar. NexusPour bu süreci finansal kazanca dönüştürür:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Otomatik Kesim ve Parça Hesabı</h3>
+          <ul class="check-list">
+            <li><strong>Standart Ham Boy:</strong> 12.00 metre (isteğe göre değiştirilebilir).</li>
+            <li><strong>Müşteri Sipariş Ölçüsü:</strong> Örn. 4.80 metre boyunda 2 adet kesim.</li>
+            <li><strong>Kalan Parça Boyu (Remnant):</strong> 12.00 - (4.80 × 2) = <strong>2.40 metre sağlam parça</strong>.</li>
+            <li><strong>Teorik Birim Ağırlık Dönüşümü:</strong> TS 708 tablosundan kalan 2.40m parçanın net kilogram ağırlığı otomatik hesaplanır.</li>
+          </ul>
+        </div>
+        <div class="card-accent">
+          <h3>Hurda/Parça Deposuna Otomatik Giriş</h3>
+          <p style="font-size: 8.5pt;">
+            Kesim emri şantiye şefi tarafından onaylandığında:
+          </p>
+          <ul class="check-list">
+            <li>Ana depodaki 12 metrelik tam boy çubuk mevcudu 1 adet düşülür.</li>
+            <li>Müşteri irsaliyesine 4.80 metrelik kesilmiş parçalar yazılır.</li>
+            <li><strong>2.40 metrelik sağlam parça, net ağırlığıyla birlikte "Parça ve Kısa Çubuk Deposu"na otomatik kaydedilir</strong> ve daha sonraki tali siparişlerde satışa sunulur.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h1>2. Petrokimya Dökme Üreden Big-Bag Torbalama Süreci (/bagging)</h1>
+      <p>
+        Üre gübresi, petrokimya tesislerinden veya ithalat gemilerinden <strong>Dökme (Bulk)</strong> olarak yüksek tonajlarla satın alınır. İhracat yüklemelerinde veya zirai bayi sevkiyatlarında bu dökme ürün tesiste <strong>1.000 kg'lık Big-Bag</strong> veya <strong>50 kg'lık polipropilen torbalara</strong> dönüştürülür.
+      </p>
+
+      <div class="card">
+        <h3>NexusPour Torbalama Maliyet ve Standart Fire Muhasebesi</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Operasyonel Parametre</th>
+              <th>Sistemik Formül ve Hareket Kaydı</th>
+              <th>100 Tonluk Dökme Parti Örneği</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tüketilen Dökme Üre</strong></td>
+              <td>Dökme Üre Silo Stoğundan doğrudan düşüş</td>
+              <td>100.00 Ton Dökme Granül Üre</td>
+            </tr>
+            <tr>
+              <td><strong>Üretilen Big-Bag Torba</strong></td>
+              <td>Mamul Paket Deposu stok kartına giriş</td>
+              <td>98 Adet Big-Bag (1.000 kg'lık)</td>
+            </tr>
+            <tr>
+              <td><strong>Buharlaşma ve Toz Firesi (Dust Loss)</strong></td>
+              <td>Standart kabul edilebilir fire (Tüketim - Üretim)</td>
+              <td>2.00 Ton (%2.0 yasal mevzuat fire limiti)</td>
+            </tr>
+            <tr>
+              <td><strong>Torba Başına İşçilik & Sarf Bedeli</strong></td>
+              <td>Big-bag kumaş, dikiş ipi ve dolum işçiliği maliyeti</td>
+              <td>Torba başına 180,00 TL ek maliyet</td>
+            </tr>
+            <tr>
+              <td><strong>Nihai Paket Birim Maliyeti</strong></td>
+              <td>(Dökme Hammadde Maliyeti + Dolum Gideri) / 98</td>
+              <td>Stok kardeksinde otomatik kümülatif maliyet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 7: BÖLÜM 5 — DEPO OPERASYONLARI VE STOK KARDEKSİ -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>📦</span>
+          <span>Bölüm 5: İrsaliyeler, Ambar Transferi, Kör Sayım ve Ağırlıklı Ortalama Kardeks</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 5 • DEPO HAREKETLERİ & KARDEKS</div>
+      </div>
+
+      <h1>1. Giriş ve Çıkış İrsaliyeleri (Landed Cost Entegrasyonu) (/inventory/transaction)</h1>
+      <p>
+        NexusPour hareket fişleri, malzemenin sadece fiziki miktarını değil; satınalma bedeline eklenen lojistik giderlerini de kusursuz şekilde yönetir:
+      </p>
+
+      <div class="card-accent">
+        <h3>Kümülatif İthalat ve Yurtiçi Giriş Maliyeti (Landed Cost Formülü)</h3>
+        <p style="font-size: 8.5pt; margin-bottom: 4px;">
+          Giriş yapılan her ton veya kilogram malzemenin defter maliyeti sistem tarafından şu kesin formülle hesaplanır:
+        </p>
+        <div style="background: #ffffff; border: 1px solid #0284c7; border-radius: 6px; padding: 8px; font-size: 8.5pt; font-family: monospace; text-align: center; color: #0369a1;">
+          Landed Cost = (Miktar × Fatura Fiyatı) + Navlun Gideri + Nakliye Sigortası + Kantar Ücreti - Eksik Yük Tazmini
+        </div>
+        <p style="font-size: 8pt; color: #64748b; margin-top: 5px;">
+          Sevkiyat esnasında binde 3'lük (%0.3) yasal toleransı aşan bir tonaj kaybı tespit edilirse, eksik yük bedeli nakliye cari hesabından otomatik düşülür.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Ambarlar Arası Virman (/inventory/transfer)</h3>
+          <p style="font-size: 8.5pt;">
+            Açık saha ile kapalı hangarlar arasında malzeme naklinde çift taraflı virman irsaliyesi kesilir. Çıkış yapılan depodan stok ağırlıklı ortalama maliyetiyle düşerken hedef depoya aynı değerle anında giriş işlenir.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Dönemsel Kör Sayım (/inventory/stocktaking)</h3>
+          <p style="font-size: 8.5pt;">
+            Sayım görevlilerine mevcut sistem miktarları gizlenerek "Kör Sayım" (Blind Count) listesi verilir. Fiziki sayım girildiğinde oluşan artı veya eksi farklar için onay mekanizmasıyla otomatik stok düzeltme fişi düzenlenir.
+          </p>
+        </div>
+      </div>
+
+      <h2>Hareketli Ağırlıklı Ortalama Maliyet Kardeksi (Moving Weighted Average)</h2>
+      <p>
+        NexusPour ERP, Türkiye Vergi Usul Kanunu (VUK) ve TMS 2 Stoklar standardına tam uyumlu <strong>Hareketli Ağırlıklı Ortalama Maliyet Yöntemini</strong> uygular:
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sıra</th>
+            <th>Evrak Türü ve Açıklama</th>
+            <th>Giren (Ton)</th>
+            <th>Çıkan (Ton)</th>
+            <th>Kalan Tonaj</th>
+            <th>Ortalama Birim Fiyat</th>
+            <th>Depo Envanter Toplam Tutarı</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Dönem Başı Devir Stoğu</td>
+            <td>20.00</td>
+            <td>-</td>
+            <td>20.00</td>
+            <td>24.000,00 TL</td>
+            <td>480.000,00 TL</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Yeni Mal Kabul (Navlun Dahil)</td>
+            <td>30.00</td>
+            <td>-</td>
+            <td>50.00</td>
+            <td>26.000,00 TL</td>
+            <td>1.260.000,00 TL (Yeni Ort. Fiyat: 25.200,00 TL)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Müşteri Sevk İrsaliyesi</td>
+            <td>-</td>
+            <td>25.00</td>
+            <td>25.00</td>
+            <td>25.200,00 TL</td>
+            <td>630.000,00 TL (Satılan Malın Maliyeti Hesabı)</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- SAYFA 8: BÖLÜM 6 — MTC KALİTE, GİB TEVKİFATI VE GÜVENLİK -->
+  <!-- ======================================================== -->
+  <div class="page">
+    <div class="watermark">NEXUSPOUR ERP<br>Omid Pourmahmoud</div>
+    <div class="content-layer">
+      <div class="page-header">
+        <div class="page-header-title">
+          <span>📜</span>
+          <span>Bölüm 6: MTC Sertifikası, 4/10 KDV Tevkifatı, RBAC Yetkilendirme ve Denetim İzi</span>
+        </div>
+        <div class="page-header-meta">BÖLÜM 6 • MTC, TEVKİFAT & SİSTEM GÜVENLİĞİ</div>
+      </div>
+
+      <h1>1. Resmi Metalurji Test Sertifikası Düzenleme (MTC - EN 10204 3.1)</h1>
+      <p>
+        Boru hatları, enerji santralleri, köprü ve gökdelen projelerinde alıcılar, malzemeyle birlikte <strong>Üretici Malzeme Test Sertifikası (Mill Test Certificate - MTC)</strong> ibraz edilmesini şart koşar. NexusPour, depo giriş irsaliyesine bağlı döküm numarasından tek tıkla resmi MTC sertifikası üretir:
+      </p>
+
+      <div class="card-accent">
+        <h3>NexusPour MTC Kalite Parametreleri Şeması</h3>
+        <table class="data-table" style="margin: 0; background: #ffffff;">
+          <tr>
+            <td style="width: 25%;"><strong>Döküm Numarası (Heat No)</strong></td>
+            <td>Haddehane veya çelikhane pota numarasını belirten uluslararası takip barkodu.</td>
+          </tr>
+          <tr>
+            <td><strong>Kimyasal Spektro Analizi</strong></td>
+            <td>Karbon (C), Silisyum (Si), Mangan (Mn), Fosfor (P), Kükürt (S) ve Karbon Eşdeğeri (CEV).</td>
+          </tr>
+          <tr>
+            <td><strong>Mekanik Çekme Testi</strong></td>
+            <td>Akma Mukavemeti (Re N/mm²), Çekme Dayanımı (Rm N/mm²) ve Kopma Uzaması (% A5).</td>
+          </tr>
+          <tr>
+            <td><strong>Kimyasal Üre Spesifikasyonu</strong></td>
+            <td>Toplam Azot oranı (Min %46.2), Biüre oranı (Maks %1.0) ve Nem tayini (Maks %0.5).</td>
+          </tr>
+        </table>
+      </div>
+
+      <h1>2. GİB 4/10 Demir-Çelik KDV Tevkifatı ve E-İrsaliye Uyumu (/compliance)</h1>
+      <p>
+        Hazine ve Maliye Bakanlığı tebliğleri uyarınca kütük demir, profil ve inşaat demiri satışlarında hesaplanan KDV'nin 4/10'u tevkifata tabidir. NexusPour faturalama ve sevk modülü bu hesaplamayı ve resmi GİB E-İrsaliye alanlarını otomatik oluşturur:
+      </p>
+      <ul class="check-list" style="margin-bottom: 12px;">
+        <li>Toplam KDV tutarını %60 Alıcı Tarafından Ödenecek KDV ve %40 Tevkifat Payı olarak ikiye ayırır.</li>
+        <li>T.C. Ulaştırma Bakanlığı U-ETDS ve GİB portalı için tek tıkla hazır Excel ve XML veri çıktısı sunar.</li>
+      </ul>
+
+      <h1>3. Rol Bazlı Erişim Yetkisi (RBAC) ve Adli Denetim İzi (/admin/audit-logs)</h1>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Kullanıcı Rolleri (RBAC)</h3>
+          <p style="font-size: 8.5pt; margin: 0;">
+            <strong>Sistem Yöneticisi (Admin):</strong> Tüm ana veriler, kullanıcı açma, veritabanı silme ve log yetkilerine tam erişim.<br>
+            <strong>Depo Operatörü (Operator):</strong> Sadece tartım, irsaliye düzenleme ve barkod okuma yetkisi. Kritik parametreleri silemez veya değiştiremez.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Değiştirilemez Denetim Logu (Audit Logs)</h3>
+          <p style="font-size: 8.5pt; margin: 0;">
+            Her kullanıcı hareketinin kesin zaman damgası, istemci IP adresi, işlem tipi (Ekleme/Düzenleme/Silme) ve değiştirilen eski-yeni veri paketleri şifrelenmiş PostgreSQL tablosuna kaydedilir.
+          </p>
+        </div>
+      </div>
+
+      <!-- Resmi İmza ve Mülkiyet Kapanış Kartı -->
+      <div class="card-dark" style="margin-top: 14px; text-align: center; border: 1px solid #38bdf8;">
+        <div style="font-size: 11pt; font-weight: 800; color: #38bdf8; margin-bottom: 4px;">
+          NexusPour ERP — Tedarik Zincirinde Akıl, Güven ve Mühendislik Gücü
+        </div>
+        <div style="font-size: 8.5pt; color: #cbd5e1; line-height: 1.6;">
+          Bu sistem, Türkiye ve uluslararası ağır sanayi standartlarını en üst seviyeye taşımak amacıyla <strong>Omid Pourmahmoud</strong> tarafından tasarlanmış ve geliştirilmiştir.<br>
+          Tüm Mülkiyet ve Lisans Hakları Saklıdır: <code>Omid Pourmahmoud • All Rights Reserved © 2026</code>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

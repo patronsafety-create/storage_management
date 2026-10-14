@@ -14,20 +14,20 @@
         </p>
     </div>
     <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end flex-wrap">
-        <a href="/static/docs/nexus_pour_executive_presentation.pdf" target="_blank" class="btn btn-teal px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="{{ 'Yönetici Özeti' if is_tr else 'دانلود خلاصه مدیریتی ۳ صفحه‌ای ویژه جلسات و مدیران' }}">
+        <a href="{{ '/static/docs/nexus_pour_executive_presentation_tr.pdf' if is_tr else '/static/docs/nexus_pour_executive_presentation.pdf' }}" target="_blank" class="btn btn-teal px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="{{ 'Yönetici Özeti (PDF)' if is_tr else 'دانلود خلاصه مدیریتی ۳ صفحه‌ای ویژه جلسات و مدیران' }}">
             <i class="bi bi-file-earmark-slides-fill fs-5"></i>
             <span>{{ 'Yönetici Özeti (3 Sayfa)' if is_tr else 'خلاصه مدیریتی (۳ صفحه)' }}</span>
         </a>
-        <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="{{ 'Kullanım Kılavuzu' if is_tr else 'دانلود دفترچه راهنمای جامع ۱۰ صفحه‌ای' }}">
+        <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="btn btn-outline-info px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1" title="{{ 'Kullanım Kılavuzu (PDF)' if is_tr else 'دانلود دفترچه راهنمای جامع ۱۰ صفحه‌ای' }}">
             <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
             <span>{{ 'Kullanım Kılavuzu (10 Sayfa)' if is_tr else 'دفترچه راهنمای کامل (۱۰ صفحه)' }}</span>
         </a>
     </div>
 </div>
 
-<!-- کارت معرفی سند و هویت بصری -->
+<!-- کارت معرفی سند و بخش دانلود اسناد رسمی به دو زبان ترکی و فارسی -->
 <div class="glass-card p-4 mb-4 border-info border-opacity-25" style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(12, 74, 110, 0.4) 100%);">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
         <div class="d-flex align-items-center gap-3">
             <div class="brand-logo-box" style="width: 56px; height: 56px; font-size: 1.8rem;">
                 <i class="bi bi-box-seam-fill"></i>
@@ -44,6 +44,52 @@
             <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-2">{{ '10 Sayfa Resmi Kılavuz' if is_tr else '۱۰ صفحه راهنمای رسمی' }}</span>
             <span class="badge bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25 px-3 py-2">{{ 'Vektörel Kalite' if is_tr else 'کیفیت برداری (Vector)' }}</span>
             <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-25 px-3 py-2">{{ 'Orijinal Damgalı' if is_tr else 'دارای واترمارک اصالت' }}</span>
+        </div>
+    </div>
+
+    <!-- جعبه دانلود دو زبانه اسناد آموزشی و راهنما -->
+    <div class="row g-3 pt-3 border-top border-secondary border-opacity-25">
+        <div class="col-12 col-md-6">
+            <div class="p-3 rounded-3" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.3);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="fw-bold text-info"><span class="me-1">🇹🇷</span> {{ 'Türkçe Resmi Eğitim Dokümanları' if is_tr else 'مستندات رسمی و آموزشی به زبان ترکی' }}</span>
+                    <span class="badge bg-info text-dark">TR</span>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/static/docs/nexus_pour_user_manual_tr.pdf" target="_blank" class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                        <span>{{ 'Kullanım Kılavuzu (PDF)' if is_tr else 'دفترچه راهنما (PDF ترکی)' }}</span>
+                    </a>
+                    <a href="/static/docs/nexus_pour_executive_presentation_tr.pdf" target="_blank" class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-file-earmark-slides-fill text-warning"></i>
+                        <span>{{ 'Yönetici Sunumu (PDF)' if is_tr else 'ارائه مدیریتی (PDF ترکی)' }}</span>
+                    </a>
+                    <a href="/static/docs/nexus_pour_user_manual_tr.html" target="_blank" class="btn btn-sm btn-glass text-teal" title="{{ 'Web Görünümü' if is_tr else 'مشاهده در مرورگر' }}">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="p-3 rounded-3" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="fw-bold text-primary"><span class="me-1">🇮🇷</span> {{ 'Farsça Orijinal Dokümanlar' if is_tr else 'مستندات اصلی و رسمی به زبان فارسی' }}</span>
+                    <span class="badge bg-primary">FA</span>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                        <span>{{ 'Kullanım Kılavuzu (PDF Farsça)' if is_tr else 'دفترچه راهنمای جامع (PDF)' }}</span>
+                    </a>
+                    <a href="/static/docs/nexus_pour_executive_presentation.pdf" target="_blank" class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-file-earmark-slides-fill text-warning"></i>
+                        <span>{{ 'Yönetici Sunumu (PDF Farsça)' if is_tr else 'اسلایدهای مدیریتی (PDF)' }}</span>
+                    </a>
+                    <a href="/static/docs/nexus_pour_user_manual.html" target="_blank" class="btn btn-sm btn-glass text-teal" title="{{ 'Web Görünümü' if is_tr else 'مشاهده در مرورگر' }}">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -78,7 +124,7 @@
                 </button>
             </div>
             <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
-                <a href="/static/docs/nexus_pour_user_manual.pdf" target="_blank" class="btn btn-outline-info w-100 btn-sm">
+                <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="btn btn-outline-info w-100 btn-sm">
                     <i class="bi bi-download me-1"></i>{{ 'PDF Olarak İndir' if is_tr else 'دانلود مستقیم نسخه PDF' }}
                 </a>
             </div>
