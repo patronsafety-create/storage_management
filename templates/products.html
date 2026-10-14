@@ -122,7 +122,7 @@
                 <span class="input-group-text bg-transparent border-secondary border-opacity-25 text-secondary">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" name="search" class="form-control" placeholder="جستجو در نام، SKU، برند، سایز یا استاندارد..." value="{{ search }}">
+                <input type="text" name="search" class="form-control" placeholder="{% if is_tr %}Ürün adı, SKU, GTİP, TSE veya marka ara...{% else %}جستجو در نام، SKU، کد GTİP، استاندارد TSE، برند یا سایز...{% endif %}" value="{{ search }}">
             </div>
         </div>
         <div class="col-6 col-md-3">
@@ -222,13 +222,19 @@
                                 {% if p.grade %}
                                 <span class="badge bg-dark border border-teal border-opacity-50 text-teal">گرید: {{ p.grade }}</span>
                                 {% endif %}
+                                {% if p.tse_standard %}
+                                <span class="badge bg-dark border border-warning border-opacity-50 text-warning" title="استاندارد ملی ترکیه (TSE)"><i class="bi bi-patch-check-fill me-1"></i>{{ p.tse_standard }}</span>
+                                {% endif %}
+                                {% if p.gtip_code %}
+                                <span class="badge bg-dark border border-danger border-opacity-50 text-danger" title="کد تعرفه گمرکی ترکیه (GTİP)"><i class="bi bi-upc me-1"></i>GTİP: {{ p.gtip_code }}</span>
+                                {% endif %}
                                 {% if p.length %}
                                 <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary">طول: {{ p.length }}m</span>
                                 {% endif %}
                                 {% if p.thickness %}
                                 <span class="badge bg-dark border border-secondary border-opacity-50 text-secondary">ضخامت: {{ p.thickness }}mm</span>
                                 {% endif %}
-                                {% if not p.size and not p.grade and not p.length and not p.thickness %}
+                                {% if not p.size and not p.grade and not p.length and not p.thickness and not p.tse_standard and not p.gtip_code %}
                                 <span class="text-secondary">-</span>
                                 {% endif %}
                             </div>
@@ -276,6 +282,11 @@
                                             <i class="bi bi-cash-stack text-warning me-2"></i>کاردکس ریالی
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 text-info" href="/inventory/products/{{ p.id }}/label" target="_blank">
+                                            <i class="bi bi-upc-scan me-2"></i>چاپ برچسب بارکد و اتیکت بندیل
+                                        </a>
+                                    </li>
                                     {% if is_admin %}
                                     <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
                                     <li>
@@ -292,6 +303,8 @@
                                                 "thickness": p.thickness or "",
                                                 "grade": p.grade or "",
                                                 "standard": p.standard or "",
+                                                "gtip_code": p.gtip_code or "",
+                                                "tse_standard": p.tse_standard or "",
                                                 "min_stock": p.min_stock or 0,
                                                 "max_stock": p.max_stock or 0,
                                                 "reorder_point": p.reorder_point or 0,
@@ -410,6 +423,20 @@
                     <input type="text" class="form-control" name="standard" placeholder="ISIRI 3132, DIN 488, ASTM">
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>کد تعرفه گمرکی ترکیه (GTİP)</span>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 small font-monospace">12-Digit</span>
+                    </label>
+                    <input type="text" class="form-control font-monospace" name="gtip_code" placeholder="7214.20.00.00.00">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>استاندارد ملی ترکیه (TSE)</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 small">TS 708 / TS EN</span>
+                    </label>
+                    <input type="text" class="form-control" name="tse_standard" placeholder="TS 708 یا TS EN 10025-2">
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">توضیحات و کاربرد</label>
                     <input type="text" class="form-control" name="description" placeholder="توضیحات اختیاری">
                 </div>
@@ -511,6 +538,20 @@
                     <input type="text" class="form-control" id="edit_standard" name="standard">
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>کد تعرفه گمرکی ترکیه (GTİP)</span>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 small font-monospace">12-Digit</span>
+                    </label>
+                    <input type="text" class="form-control font-monospace" id="edit_gtip_code" name="gtip_code" placeholder="7214.20.00.00.00">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>استاندارد ملی ترکیه (TSE)</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 small">TS 708 / TS EN</span>
+                    </label>
+                    <input type="text" class="form-control" id="edit_tse_standard" name="tse_standard" placeholder="TS 708">
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">توضیحات</label>
                     <input type="text" class="form-control" id="edit_description" name="description">
                 </div>
@@ -594,6 +635,8 @@ function openEditProductModal(prod) {
     document.getElementById('edit_thickness').value = prod.thickness || '';
     document.getElementById('edit_grade').value = prod.grade || '';
     document.getElementById('edit_standard').value = prod.standard || '';
+    document.getElementById('edit_gtip_code').value = prod.gtip_code || '';
+    document.getElementById('edit_tse_standard').value = prod.tse_standard || '';
     document.getElementById('edit_min_stock').value = prod.min_stock || 0;
     document.getElementById('edit_reorder_point').value = prod.reorder_point || 0;
     document.getElementById('edit_max_stock').value = prod.max_stock || 0;

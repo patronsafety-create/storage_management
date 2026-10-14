@@ -47,6 +47,8 @@ class ProductBase(BaseModel):
     thickness: Optional[float] = None
     grade: Optional[str] = None
     standard: Optional[str] = None
+    gtip_code: Optional[str] = Field(None, max_length=20, description="کد ۱۲ رقمی تعرفه گمرکی ترکیه (GTİP)")
+    tse_standard: Optional[str] = Field(None, max_length=50, description="استاندارد ملی ترکیه (TSE)")
     min_stock: Optional[float] = 0.0
     max_stock: Optional[float] = 0.0
     reorder_point: Optional[float] = 0.0

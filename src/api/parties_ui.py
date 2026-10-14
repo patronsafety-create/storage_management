@@ -8,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_
 
 from src.core.dependencies import get_db, require_admin, get_current_user
+from src.core.localization.regions import get_active_region
+from src.core.localization.tr_rules import validate_turkish_party_data
 from src.domain_model.inventory_models import (
     Supplier, Customer, StockTransaction, TransactionType,
     PurchaseOrder, WeighbridgeTicket
@@ -56,7 +58,9 @@ async def list_parties(
                 Supplier.code.ilike(term),
                 Supplier.contact_person.ilike(term),
                 Supplier.phone.ilike(term),
-                Supplier.national_id.ilike(term)
+                Supplier.national_id.ilike(term),
+                Supplier.vkn.ilike(term),
+                Supplier.tax_office.ilike(term)
             )
         )
         cust_query = cust_query.filter(
@@ -65,7 +69,9 @@ async def list_parties(
                 Customer.code.ilike(term),
                 Customer.contact_person.ilike(term),
                 Customer.phone.ilike(term),
-                Customer.national_id.ilike(term)
+                Customer.national_id.ilike(term),
+                Customer.vkn.ilike(term),
+                Customer.tax_office.ilike(term)
             )
         )
 
@@ -214,6 +220,7 @@ def validate_party_data(
 
 @router.post("/supplier")
 async def create_supplier(
+    request: Request,
     name: str = Form(...),
     code: Optional[str] = Form(None),
     contact_person: Optional[str] = Form(None),
@@ -221,11 +228,28 @@ async def create_supplier(
     email: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     national_id: Optional[str] = Form(None),
+    country_code: Optional[str] = Form("IR"),
+    vkn: Optional[str] = Form(None),
+    tax_office: Optional[str] = Form(None),
+    mersis_no: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin)
 ):
-    """ایجاد تأمین‌کننده جدید"""
-    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
+    """ایجاد تأمین‌کننده جدید با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
+    active_region = get_active_region(request)
+    effective_country = (country_code or active_region.code or "IR").upper()
+
+    if effective_country == "TR":
+        tax_num = (vkn or national_id or "").strip()
+        err, clean_name, clean_phone, clean_tax_num = validate_turkish_party_data(
+            name, phone, tax_num if tax_num else None, "Tedarikçi"
+        )
+        clean_nid = None
+        clean_vkn = clean_tax_num
+    else:
+        err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
+        clean_vkn = vkn.strip() if vkn else None
+
     if err:
         return RedirectResponse(
             url=f"/master-data/parties?tab=suppliers&error={quote(err)}",
@@ -243,18 +267,24 @@ async def create_supplier(
             email=email.strip() if email and email.strip() else None,
             address=address.strip() if address and address.strip() else None,
             national_id=clean_nid,
+            country_code=effective_country,
+            vkn=clean_vkn,
+            tax_office=tax_office.strip() if tax_office and tax_office.strip() else None,
+            mersis_no=mersis_no.strip() if mersis_no and mersis_no.strip() else None,
             is_active=True
         )
         db.add(new_sup)
         db.commit()
+        msg = "Tedarikçi başarıyla kaydedildi" if effective_country == "TR" else "تأمین‌کننده جدید با موفقیت ثبت شد"
         return RedirectResponse(
-            url=f"/master-data/parties?tab=suppliers&msg={quote('تأمین‌کننده جدید با موفقیت ثبت شد')}",
+            url=f"/master-data/parties?tab=suppliers&msg={quote(msg)}",
             status_code=303
         )
     except IntegrityError:
         db.rollback()
+        err_msg = "Tedarikçi adı veya kodu zaten mevcut" if effective_country == "TR" else "نام تأمین‌کننده یا کد آن تکراری است"
         return RedirectResponse(
-            url=f"/master-data/parties?tab=suppliers&error={quote('نام تأمین‌کننده یا کد آن تکراری است')}",
+            url=f"/master-data/parties?tab=suppliers&error={quote(err_msg)}",
             status_code=303
         )
 
@@ -262,6 +292,7 @@ async def create_supplier(
 @router.post("/supplier/{supplier_id}/edit")
 async def edit_supplier(
     supplier_id: int,
+    request: Request,
     name: str = Form(...),
     code: Optional[str] = Form(None),
     contact_person: Optional[str] = Form(None),
@@ -269,15 +300,32 @@ async def edit_supplier(
     email: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     national_id: Optional[str] = Form(None),
+    country_code: Optional[str] = Form("IR"),
+    vkn: Optional[str] = Form(None),
+    tax_office: Optional[str] = Form(None),
+    mersis_no: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin)
 ):
-    """ویرایش اطلاعات تأمین‌کننده"""
+    """ویرایش اطلاعات تأمین‌کننده با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
     supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
     if not supplier:
         return RedirectResponse(url="/master-data/parties?tab=suppliers&error=" + quote("تأمین‌کننده یافت نشد"), status_code=303)
 
-    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
+    active_region = get_active_region(request)
+    effective_country = (country_code or supplier.country_code or active_region.code or "IR").upper()
+
+    if effective_country == "TR":
+        tax_num = (vkn or national_id or "").strip()
+        err, clean_name, clean_phone, clean_tax_num = validate_turkish_party_data(
+            name, phone, tax_num if tax_num else None, "Tedarikçi"
+        )
+        clean_nid = supplier.national_id if not national_id else national_id.strip()
+        clean_vkn = clean_tax_num
+    else:
+        err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "تأمین‌کننده")
+        clean_vkn = vkn.strip() if vkn else supplier.vkn
+
     if err:
         return RedirectResponse(
             url=f"/master-data/parties?tab=suppliers&error={quote(err)}",
@@ -292,9 +340,14 @@ async def edit_supplier(
         supplier.email = email.strip() if email and email.strip() else None
         supplier.address = address.strip() if address and address.strip() else None
         supplier.national_id = clean_nid
+        supplier.country_code = effective_country
+        supplier.vkn = clean_vkn
+        supplier.tax_office = tax_office.strip() if tax_office and tax_office.strip() else None
+        supplier.mersis_no = mersis_no.strip() if mersis_no and mersis_no.strip() else None
         db.commit()
+        msg = "Tedarikçi bilgileri başarıyla güncellendi" if effective_country == "TR" else "مشخصات تأمین‌کننده با موفقیت به‌روزرسانی شد"
         return RedirectResponse(
-            url=f"/master-data/parties?tab=suppliers&msg={quote('مشخصات تأمین‌کننده با موفقیت به‌روزرسانی شد')}",
+            url=f"/master-data/parties?tab=suppliers&msg={quote(msg)}",
             status_code=303
         )
     except IntegrityError:
@@ -379,6 +432,7 @@ async def delete_supplier(
 
 @router.post("/customer")
 async def create_customer(
+    request: Request,
     name: str = Form(...),
     code: Optional[str] = Form(None),
     contact_person: Optional[str] = Form(None),
@@ -386,12 +440,29 @@ async def create_customer(
     email: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     national_id: Optional[str] = Form(None),
+    country_code: Optional[str] = Form("IR"),
+    vkn: Optional[str] = Form(None),
+    tax_office: Optional[str] = Form(None),
+    mersis_no: Optional[str] = Form(None),
     credit_limit: Optional[float] = Form(0.0),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin)
 ):
-    """ایجاد مشتری جدید"""
-    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")
+    """ایجاد مشتری جدید با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
+    active_region = get_active_region(request)
+    effective_country = (country_code or active_region.code or "IR").upper()
+
+    if effective_country == "TR":
+        tax_num = (vkn or national_id or "").strip()
+        err, clean_name, clean_phone, clean_tax_num = validate_turkish_party_data(
+            name, phone, tax_num if tax_num else None, "Müşteri"
+        )
+        clean_nid = None
+        clean_vkn = clean_tax_num
+    else:
+        err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")
+        clean_vkn = vkn.strip() if vkn else None
+
     if err:
         return RedirectResponse(
             url=f"/master-data/parties?tab=customers&error={quote(err)}",
@@ -409,19 +480,25 @@ async def create_customer(
             email=email.strip() if email and email.strip() else None,
             address=address.strip() if address and address.strip() else None,
             national_id=clean_nid,
+            country_code=effective_country,
+            vkn=clean_vkn,
+            tax_office=tax_office.strip() if tax_office and tax_office.strip() else None,
+            mersis_no=mersis_no.strip() if mersis_no and mersis_no.strip() else None,
             credit_limit=credit_limit or 0.0,
             is_active=True
         )
         db.add(new_cust)
         db.commit()
+        msg = "Müşteri başarıyla kaydedildi" if effective_country == "TR" else "مشتری جدید با موفقیت ثبت شد"
         return RedirectResponse(
-            url=f"/master-data/parties?tab=customers&msg={quote('مشتری جدید با موفقیت ثبت شد')}",
+            url=f"/master-data/parties?tab=customers&msg={quote(msg)}",
             status_code=303
         )
     except IntegrityError:
         db.rollback()
+        err_msg = "Müşteri adı veya kodu zaten mevcut" if effective_country == "TR" else "نام مشتری یا کد آن تکراری است"
         return RedirectResponse(
-            url=f"/master-data/parties?tab=customers&error={quote('نام مشتری یا کد آن تکراری است')}",
+            url=f"/master-data/parties?tab=customers&error={quote(err_msg)}",
             status_code=303
         )
 
@@ -429,6 +506,7 @@ async def create_customer(
 @router.post("/customer/{customer_id}/edit")
 async def edit_customer(
     customer_id: int,
+    request: Request,
     name: str = Form(...),
     code: Optional[str] = Form(None),
     contact_person: Optional[str] = Form(None),
@@ -436,16 +514,33 @@ async def edit_customer(
     email: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     national_id: Optional[str] = Form(None),
+    country_code: Optional[str] = Form("IR"),
+    vkn: Optional[str] = Form(None),
+    tax_office: Optional[str] = Form(None),
+    mersis_no: Optional[str] = Form(None),
     credit_limit: Optional[float] = Form(0.0),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin)
 ):
-    """ویرایش اطلاعات مشتری"""
+    """ویرایش اطلاعات مشتری با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
         return RedirectResponse(url="/master-data/parties?tab=customers&error=" + quote("مشتری یافت نشد"), status_code=303)
 
-    err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")
+    active_region = get_active_region(request)
+    effective_country = (country_code or customer.country_code or active_region.code or "IR").upper()
+
+    if effective_country == "TR":
+        tax_num = (vkn or national_id or "").strip()
+        err, clean_name, clean_phone, clean_tax_num = validate_turkish_party_data(
+            name, phone, tax_num if tax_num else None, "Müşteri"
+        )
+        clean_nid = customer.national_id if not national_id else national_id.strip()
+        clean_vkn = clean_tax_num
+    else:
+        err, clean_name, clean_phone, clean_nid = validate_party_data(name, phone, national_id, "مشتری")
+        clean_vkn = vkn.strip() if vkn else customer.vkn
+
     if err:
         return RedirectResponse(
             url=f"/master-data/parties?tab=customers&error={quote(err)}",
@@ -460,10 +555,15 @@ async def edit_customer(
         customer.email = email.strip() if email and email.strip() else None
         customer.address = address.strip() if address and address.strip() else None
         customer.national_id = clean_nid
+        customer.country_code = effective_country
+        customer.vkn = clean_vkn
+        customer.tax_office = tax_office.strip() if tax_office and tax_office.strip() else None
+        customer.mersis_no = mersis_no.strip() if mersis_no and mersis_no.strip() else None
         customer.credit_limit = credit_limit or 0.0
         db.commit()
+        msg = "Müşteri bilgileri başarıyla güncellendi" if effective_country == "TR" else "مشخصات مشتری با موفقیت به‌روزرسانی شد"
         return RedirectResponse(
-            url=f"/master-data/parties?tab=customers&msg={quote('مشخصات مشتری با موفقیت به‌روزرسانی شد')}",
+            url=f"/master-data/parties?tab=customers&msg={quote(msg)}",
             status_code=303
         )
     except IntegrityError:

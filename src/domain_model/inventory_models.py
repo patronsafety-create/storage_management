@@ -51,6 +51,8 @@ class Product(Base):
     sku = Column(String, unique=True, index=True, nullable=True)  # شناسه یا بارکد یکتا
     irc_code = Column(String, nullable=True)             # شناسه کالا در سامانه جامع تجارت (IRC)
     hs_code = Column(String, nullable=True)              # کد تعرفه گمرکی بین‌المللی (HS Code)
+    gtip_code = Column(String, nullable=True)            # کد ۱۲ رقمی تعرفه گمرکی ترکیه (GTİP - Gümrük Tarife İstatistik Pozisyonu)
+    tse_standard = Column(String, nullable=True)         # استاندارد ملی ترکیه (TSE - Türk Standardları Enstitüsü مانند TS 708)
     category_id = Column(Integer, ForeignKey("product_categories.id"), nullable=True)
 
     # 🔬 مشخصات صنعتی و متالورژی
@@ -95,6 +97,10 @@ class Supplier(Base):
     email = Column(String, nullable=True)
     address = Column(String, nullable=True)
     national_id = Column(String, nullable=True)        # شناسه ملی / کد اقتصادی
+    vkn = Column(String, nullable=True)                # شناسه مالیاتی ترکیه (VKN / T.C. Kimlik)
+    tax_office = Column(String, nullable=True)         # حوزه مالیاتی ترکیه (Vergi Dairesi)
+    mersis_no = Column(String, nullable=True)          # شماره مرسیس ترکیه (MERSİS No)
+    country_code = Column(String, default="IR")        # کد کشور (IR یا TR)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -113,7 +119,11 @@ class Customer(Base):
     email = Column(String, nullable=True)
     address = Column(String, nullable=True)
     national_id = Column(String, nullable=True)        # شناسه ملی / کد اقتصادی
-    credit_limit = Column(Float, default=0.0)          # سقف اعتبار ریالی
+    vkn = Column(String, nullable=True)                # شناسه مالیاتی ترکیه (VKN / T.C. Kimlik)
+    tax_office = Column(String, nullable=True)         # حوزه مالیاتی ترکیه (Vergi Dairesi)
+    mersis_no = Column(String, nullable=True)          # شماره مرسیس ترکیه (MERSİS No)
+    country_code = Column(String, default="IR")        # کد کشور (IR یا TR)
+    credit_limit = Column(Float, default=0.0)          # سقف اعتبار ریالی / ارزی
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

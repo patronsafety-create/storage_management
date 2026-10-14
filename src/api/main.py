@@ -48,6 +48,8 @@ async def lifespan(app: FastAPI):
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS nominal_weight FLOAT DEFAULT 0.0;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS irc_code VARCHAR;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS hs_code VARCHAR;
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS gtip_code VARCHAR;
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS tse_standard VARCHAR;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES product_categories(id);
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS size VARCHAR;
@@ -72,10 +74,19 @@ async def lifespan(app: FastAPI):
                     email VARCHAR,
                     address VARCHAR,
                     national_id VARCHAR,
+                    vkn VARCHAR,
+                    tax_office VARCHAR,
+                    mersis_no VARCHAR,
+                    country_code VARCHAR DEFAULT 'IR',
                     is_active BOOLEAN DEFAULT TRUE,
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 );
                 CREATE INDEX IF NOT EXISTS ix_suppliers_id ON suppliers(id);
+
+                ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS vkn VARCHAR;
+                ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS tax_office VARCHAR;
+                ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS mersis_no VARCHAR;
+                ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS country_code VARCHAR DEFAULT 'IR';
 
                 CREATE TABLE IF NOT EXISTS customers (
                     id SERIAL PRIMARY KEY,
@@ -86,11 +97,20 @@ async def lifespan(app: FastAPI):
                     email VARCHAR,
                     address VARCHAR,
                     national_id VARCHAR,
+                    vkn VARCHAR,
+                    tax_office VARCHAR,
+                    mersis_no VARCHAR,
+                    country_code VARCHAR DEFAULT 'IR',
                     credit_limit FLOAT DEFAULT 0.0,
                     is_active BOOLEAN DEFAULT TRUE,
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 );
                 CREATE INDEX IF NOT EXISTS ix_customers_id ON customers(id);
+
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS vkn VARCHAR;
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS tax_office VARCHAR;
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS mersis_no VARCHAR;
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS country_code VARCHAR DEFAULT 'IR';
 
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS supplier_id INTEGER REFERENCES suppliers(id);
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS customer_id INTEGER REFERENCES customers(id);
@@ -381,6 +401,182 @@ async def lifespan(app: FastAPI):
                     national_id="10100987654",
                     credit_limit=30000000000.0,
                     is_active=True
+                )
+            ])
+            db.commit()
+
+        # ۶-ب. تأمین‌کنندگان شاخص ترکیه (Turkish Key Industry Suppliers)
+        if not db.query(inventory_models.Supplier).filter_by(code="TR-SUP-001").first():
+            db.add_all([
+                inventory_models.Supplier(
+                    name="Ereğli Demir ve Çelik Fabrikaları T.A.Ş. (Erdemir)",
+                    code="TR-SUP-001",
+                    contact_person="Ahmet Yılmaz (Satış & Lojistik Müdürü)",
+                    phone="03723232500",
+                    email="satis@erdemir.com.tr",
+                    address="Kdz. Ereğli, Zonguldak, Türkiye",
+                    national_id="3530018590",
+                    vkn="3530018590",
+                    tax_office="Karadeniz Ereğli Vergi Dairesi",
+                    mersis_no="0353001859000018",
+                    country_code="TR",
+                    is_active=True
+                ),
+                inventory_models.Supplier(
+                    name="İskenderun Demir ve Çelik A.Ş. (İsdemir)",
+                    code="TR-SUP-002",
+                    contact_person="Mehmet Demir (Kütük & Çubuk Satış Direktörü)",
+                    phone="03267584000",
+                    email="pazarlama@isdemir.com.tr",
+                    address="Payas, İskenderun, Hatay, Türkiye",
+                    national_id="4810052415",
+                    vkn="4810052415",
+                    tax_office="İskenderun Vergi Dairesi",
+                    mersis_no="0481005241500012",
+                    country_code="TR",
+                    is_active=True
+                ),
+                inventory_models.Supplier(
+                    name="Karabük Demir Çelik Sanayi ve Ticaret A.Ş. (Kardemir)",
+                    code="TR-SUP-003",
+                    contact_person="Murat Kaya (Profil ve Ray Sevkiyat Şefi)",
+                    phone="03704182000",
+                    email="kurumsal@kardemir.com",
+                    address="Karabük Merkez, Karabük, Türkiye",
+                    national_id="5240031891",
+                    vkn="5240031891",
+                    tax_office="Karabük Vergi Dairesi",
+                    mersis_no="0524003189100015",
+                    country_code="TR",
+                    is_active=True
+                ),
+                inventory_models.Supplier(
+                    name="Toros Tarım ve Gübre Sanayi A.Ş. (Toros Gübre)",
+                    code="TR-SUP-004",
+                    contact_person="Fatma Çelik (Kimyevi Gübre & Üre Satış Yöneticisi)",
+                    phone="02123570202",
+                    email="toros@toros.com.tr",
+                    address="Tekfen Tower, Levent, İstanbul, Türkiye",
+                    national_id="8510041233",
+                    vkn="8510041233",
+                    tax_office="Büyük Mükellefler Vergi Dairesi",
+                    mersis_no="0851004123300016",
+                    country_code="TR",
+                    is_active=True
+                )
+            ])
+            db.commit()
+
+        # ۶-ج. مشتریان و پیمانکاران شاخص ترکیه (Turkish Key Industry Customers)
+        if not db.query(inventory_models.Customer).filter_by(code="TR-CUST-001").first():
+            db.add_all([
+                inventory_models.Customer(
+                    name="Rönesans Holding / İnşaat Sanayi ve Ticaret A.Ş.",
+                    code="TR-CUST-001",
+                    contact_person="Emre Şahin (Satın Alma ve Şantiye Tedarik Direktörü)",
+                    phone="03124413141",
+                    email="tedarik@ronesans.com",
+                    address="Çankaya, Ankara, Türkiye",
+                    national_id="7350021940",
+                    vkn="7350021940",
+                    tax_office="Başkent Vergi Dairesi",
+                    mersis_no="0735002194000019",
+                    country_code="TR",
+                    credit_limit=15000000.0,
+                    is_active=True
+                ),
+                inventory_models.Customer(
+                    name="ENKA İnşaat ve Sanayi A.Ş.",
+                    code="TR-CUST-002",
+                    contact_person="Hakan Arslan (Endüstriyel Projeler Satın Alma)",
+                    phone="02123761000",
+                    email="procurement@enka.com",
+                    address="Balmumcu, Beşiktaş, İstanbul, Türkiye",
+                    national_id="3360018422",
+                    vkn="3360018422",
+                    tax_office="Beşiktaş Vergi Dairesi",
+                    mersis_no="0336001842200014",
+                    country_code="TR",
+                    credit_limit=25000000.0,
+                    is_active=True
+                ),
+                inventory_models.Customer(
+                    name="Marmara Çelik Profil ve Dış Ticaret Ltd. Şti.",
+                    code="TR-CUST-003",
+                    contact_person="Ali Öztürk (Depo ve Dış Ticaret Müdürü)",
+                    phone="02164998877",
+                    email="info@marmaracelik.com.tr",
+                    address="Dudullu Organize Sanayi Bölgesi, Ümraniye, İstanbul",
+                    national_id="6120048192",
+                    vkn="6120048192",
+                    tax_office="Ümraniye Vergi Dairesi",
+                    mersis_no="0612004819200011",
+                    country_code="TR",
+                    credit_limit=8000000.0,
+                    is_active=True
+                )
+            ])
+            db.commit()
+
+        # ۶-د. کالاهای شاخص صنایع ترکیه (Turkish Steel & Chemical Products with GTİP & TSE)
+        if not db.query(inventory_models.Product).filter_by(sku="TR-REB-B420B-16").first():
+            cat_steel = db.query(inventory_models.ProductCategory).filter_by(code="STL-RAW").first()
+            cat_chem = db.query(inventory_models.ProductCategory).filter_by(code="CHEM-PET").first()
+            db.add_all([
+                inventory_models.Product(
+                    name="Nervürlü İnşaat Demiri Ø16mm B420B (12m)",
+                    uom="kg",
+                    secondary_uom="çubuk",
+                    nominal_weight=18.96,
+                    sku="TR-REB-B420B-16",
+                    gtip_code="7214.20.00.00.00",
+                    tse_standard="TS 708",
+                    hs_code="72142000",
+                    category_id=cat_steel.id if cat_steel else None,
+                    brand="İsdemir",
+                    size="16",
+                    length=12.0,
+                    grade="B420B",
+                    standard="TS 708 / TS EN 10080",
+                    min_stock=5000.0,
+                    reorder_point=10000.0,
+                    description="Standart nervürlü inşaat çeliği (TS 708 B420B)"
+                ),
+                inventory_models.Product(
+                    name="Sürekli Döküm Çelik Kütük 150×150mm S235JR",
+                    uom="ton",
+                    secondary_uom="kütük",
+                    nominal_weight=2000.0,
+                    sku="TR-BLT-150-S235JR",
+                    gtip_code="7207.11.14.00.00",
+                    tse_standard="TS EN 10025-2",
+                    hs_code="72071114",
+                    category_id=cat_steel.id if cat_steel else None,
+                    brand="Kardemir",
+                    size="150x150",
+                    length=6.0,
+                    grade="S235JR",
+                    standard="TS EN 10025-2",
+                    min_stock=100.0,
+                    reorder_point=200.0,
+                    description="Sürekli döküm yapı çeliği kare kütük"
+                ),
+                inventory_models.Product(
+                    name="Granül Üre Gübresi %46 Azot (Dökme & Big Bag)",
+                    uom="ton",
+                    secondary_uom="big-bag",
+                    nominal_weight=1000.0,
+                    sku="TR-UREA-GRAN-46",
+                    gtip_code="3102.10.10.00.00",
+                    tse_standard="TS 3601",
+                    hs_code="31021010",
+                    category_id=cat_chem.id if cat_chem else None,
+                    brand="Toros Gübre",
+                    grade="%46 N",
+                    standard="TS 3601 / EC FERTILIZER",
+                    min_stock=50.0,
+                    reorder_point=100.0,
+                    description="Tarımsal ve endüstriyel saf granül üre gübresi"
                 )
             ])
             db.commit()

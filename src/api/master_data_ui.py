@@ -47,7 +47,9 @@ async def list_products(
                 Product.brand.ilike(term),
                 Product.size.ilike(term),
                 Product.grade.ilike(term),
-                Product.standard.ilike(term)
+                Product.standard.ilike(term),
+                Product.gtip_code.ilike(term),
+                Product.tse_standard.ilike(term)
             )
         )
 
@@ -127,6 +129,8 @@ async def create_product(
     thickness: Optional[float] = Form(None),
     grade: Optional[str] = Form(None),
     standard: Optional[str] = Form(None),
+    gtip_code: Optional[str] = Form(None),
+    tse_standard: Optional[str] = Form(None),
     min_stock: Optional[float] = Form(0.0),
     max_stock: Optional[float] = Form(0.0),
     reorder_point: Optional[float] = Form(0.0),
@@ -155,6 +159,8 @@ async def create_product(
             thickness=thickness,
             grade=grade.strip() if grade and grade.strip() else None,
             standard=standard.strip() if standard and standard.strip() else None,
+            gtip_code=gtip_code.strip() if gtip_code and gtip_code.strip() else None,
+            tse_standard=tse_standard.strip() if tse_standard and tse_standard.strip() else None,
             min_stock=min_stock or 0.0,
             max_stock=max_stock or 0.0,
             reorder_point=reorder_point or 0.0,
@@ -191,6 +197,8 @@ async def edit_product(
     thickness: Optional[float] = Form(None),
     grade: Optional[str] = Form(None),
     standard: Optional[str] = Form(None),
+    gtip_code: Optional[str] = Form(None),
+    tse_standard: Optional[str] = Form(None),
     min_stock: Optional[float] = Form(0.0),
     max_stock: Optional[float] = Form(0.0),
     reorder_point: Optional[float] = Form(0.0),
@@ -217,6 +225,8 @@ async def edit_product(
         product.thickness = thickness
         product.grade = grade.strip() if grade and grade.strip() else None
         product.standard = standard.strip() if standard and standard.strip() else None
+        product.gtip_code = gtip_code.strip() if gtip_code and gtip_code.strip() else None
+        product.tse_standard = tse_standard.strip() if tse_standard and tse_standard.strip() else None
         product.min_stock = min_stock or 0.0
         product.max_stock = max_stock or 0.0
         product.reorder_point = reorder_point or 0.0

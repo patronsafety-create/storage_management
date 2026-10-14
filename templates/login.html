@@ -1,12 +1,17 @@
 <!doctype html>
-<html lang="fa" dir="rtl">
+{% set is_tr = (region and region.code == 'TR') %}
+<html lang="{{ 'tr' if is_tr else 'fa' }}" dir="{{ 'ltr' if is_tr else 'rtl' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ورود به سامانه | NexusPour ERP</title>
+    <title>{{ 'Giriş Yap | NexusPour Türkiye' if is_tr else 'ورود به سامانه | NexusPour ERP' }}</title>
     
-    <!-- بوت‌استرپ و آیکون‌ها -->
+    <!-- بوت‌استرپ متناسب با جهت زبان -->
+    {% if is_tr %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    {% else %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+    {% endif %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <!-- فونت استاندارد وزیرمتن با ارقام فارسی -->
@@ -30,8 +35,10 @@
                 radial-gradient(circle at 15% 15%, rgba(0, 212, 200, 0.12) 0%, transparent 40%),
                 radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.14) 0%, transparent 40%),
                 radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6) 0%, transparent 70%);
-            font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            {% if not is_tr %}
             font-feature-settings: "ss01" 1 !important;
+            {% endif %}
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -101,6 +108,43 @@
             color: #e2e8f0;
         }
 
+        /* سوئیچر مدرن انتخاب کشور */
+        .region-toggle-group {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 4px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .region-toggle-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .region-toggle-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .region-toggle-btn.active {
+            background: linear-gradient(135deg, rgba(0, 212, 200, 0.2), rgba(139, 92, 246, 0.25));
+            border: 1px solid rgba(0, 212, 200, 0.4);
+            color: var(--accent-teal);
+            box-shadow: 0 2px 10px rgba(0, 212, 200, 0.2);
+        }
+
         .form-control {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
@@ -159,16 +203,34 @@
                     <i class="bi bi-box-seam-fill"></i>
                 </div>
                 <div class="d-flex align-items-center justify-content-center gap-2">
-                    <h3 class="brand-title-main mb-0">نکسوس‌پـور</h3>
-                    <span class="badge-edition">NexusPour ERP</span>
+                    <h3 class="brand-title-main mb-0">{{ 'NexusPour' if is_tr else 'نکسوس‌پـور' }}</h3>
+                    <span class="badge-edition">{{ 'Türkiye Sürümü' if is_tr else 'NexusPour ERP' }}</span>
                 </div>
                 <div class="brand-signature">
                     <i class="bi bi-shield-check text-info me-1"></i>
+                    {% if is_tr %}
+                    Mülkiyet ve Mühendislik: <strong>Omid Pourmahmoud</strong>
+                    {% else %}
                     مالکیت و مهندسی: <strong>امید پورمحمود</strong>
+                    {% endif %}
                 </div>
             </div>
             
             <div class="px-4 pb-4">
+                <!-- سوئیچ انتخاب کشور و قوانین -->
+                <div class="mb-4">
+                    <div class="region-toggle-group">
+                        <a href="/set-region/IR?next=/login" class="region-toggle-btn {% if not is_tr %}active{% endif %}">
+                            <span>🇮🇷</span>
+                            <span>ایران (IR)</span>
+                        </a>
+                        <a href="/set-region/TR?next=/login" class="region-toggle-btn {% if is_tr %}active{% endif %}">
+                            <span>🇹🇷</span>
+                            <span>Türkiye (TR)</span>
+                        </a>
+                    </div>
+                </div>
+
                 {% if error %}
                 <div class="alert alert-danger py-2 text-center small fw-bold mb-3 border-0 rounded-3" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3) !important;" role="alert">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
@@ -176,29 +238,36 @@
                 {% endif %}
 
                 <form action="/login" method="post">
+                    <input type="hidden" name="region" value="{{ 'TR' if is_tr else 'IR' }}">
+
                     <div class="mb-3">
                         <label for="username" class="form-label small fw-bold text-secondary mb-1">
-                            <i class="bi bi-person me-1"></i>نام کاربری
+                            <i class="bi bi-person me-1"></i>{{ 'Kullanıcı Adı' if is_tr else 'نام کاربری' }}
                         </label>
-                        <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="مثال: admin" autocomplete="username">
+                        <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="{{ 'Örn: admin' if is_tr else 'مثال: admin' }}" autocomplete="username">
                     </div>
                     
                     <div class="mb-4">
                         <label for="password" class="form-label small fw-bold text-secondary mb-1">
-                            <i class="bi bi-key me-1"></i>رمز عبور
+                            <i class="bi bi-key me-1"></i>{{ 'Şifre' if is_tr else 'رمز عبور' }}
                         </label>
-                        <input type="password" class="form-control" id="password" name="password" required placeholder="رمز عبور خود را وارد کنید" autocomplete="current-password">
+                        <input type="password" class="form-control" id="password" name="password" required placeholder="{{ 'Şifrenizi giriniz' if is_tr else 'رمز عبور خود را وارد کنید' }}" autocomplete="current-password">
                     </div>
                     
                     <button type="submit" class="btn btn-login w-100">
-                        <i class="bi bi-box-arrow-in-left me-1"></i> ورود به سیستم
+                        <i class="bi bi-box-arrow-in-{{ 'right' if is_tr else 'left' }} me-1"></i> {{ 'Giriş Yap' if is_tr else 'ورود به سیستم' }}
                     </button>
                 </form>
             </div>
 
             <div class="copyright-box">
+                {% if is_tr %}
+                <div>Tüm maddi ve manevi hakları <strong>Omid Pourmahmoud</strong>'a aittir</div>
+                <div class="opacity-75 mt-1">NexusPour Heavy WMS &copy; 2026</div>
+                {% else %}
                 <div>تمامی حقوق مادی و معنوی متعلق به <strong>امید پورمحمود</strong> است</div>
                 <div class="opacity-75 mt-1">NexusPour Enterprise Storage System &copy; 2026</div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -162,10 +162,10 @@
                             <th>کد تأمین‌کننده</th>
                             <th>نام شرکت / تأمین‌کننده</th>
                             <th>شخص رابط و تماس</th>
-                            <th>شناسه ملی / کد اقتصادی</th>
+                            <th>{% if is_tr %}Vergi No / VKN{% else %}شناسه ملی / کد اقتصادی / VKN{% endif %}</th>
                             <th class="text-center">تعداد رسیدها</th>
                             <th>مجموع تناژ وارده</th>
-                            <th>ارزش کل خرید (ریال)</th>
+                            <th>ارزش کل خرید ({{ active_region.currency_label }})</th>
                             <th>وضعیت</th>
                             <th class="text-center">عملیات</th>
                         </tr>
@@ -182,7 +182,14 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-light fs-6">{{ s.name }}</div>
+                                    <div class="fw-bold text-light fs-6">
+                                        {% if s.country_code == 'TR' %}
+                                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 me-1" title="Türkiye">🇹🇷 TR</span>
+                                        {% else %}
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 me-1" title="ایران">🇮🇷 IR</span>
+                                        {% endif %}
+                                        {{ s.name }}
+                                    </div>
                                     {% if s.address %}
                                     <small class="text-secondary d-block text-truncate" style="max-width: 250px;"><i class="bi bi-geo-alt me-1"></i>{{ s.address }}</small>
                                     {% endif %}
@@ -194,7 +201,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <span class="font-monospace text-secondary">{{ s.national_id or '-' }}</span>
+                                    {% if s.country_code == 'TR' %}
+                                        <span class="font-monospace text-light fw-bold">{{ s.vkn or s.national_id or '-' }}</span>
+                                        {% if s.tax_office %}
+                                        <div class="small text-secondary"><i class="bi bi-bank me-1"></i>{{ s.tax_office }} V.D.</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="font-monospace text-secondary">{{ s.national_id or '-' }}</span>
+                                    {% endif %}
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-teal bg-opacity-10 text-teal border border-teal border-opacity-25 px-2 py-1">
@@ -226,7 +240,11 @@
                                                 "phone": s.phone or "",
                                                 "email": s.email or "",
                                                 "address": s.address or "",
-                                                "national_id": s.national_id or ""
+                                                "national_id": s.national_id or "",
+                                                "country_code": s.country_code or "IR",
+                                                "vkn": s.vkn or "",
+                                                "tax_office": s.tax_office or "",
+                                                "mersis_no": s.mersis_no or ""
                                             } | tojson }})' title="ویرایش اطلاعات">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
@@ -272,11 +290,11 @@
                             <th>کد مشتری</th>
                             <th>نام مشتری / کارفرما</th>
                             <th>شخص رابط و تماس</th>
-                            <th>شناسه ملی / کد اقتصادی</th>
-                            <th>سقف اعتبار (ریال)</th>
+                            <th>{% if is_tr %}Vergi No / VKN{% else %}شناسه ملی / کد اقتصادی / VKN{% endif %}</th>
+                            <th>سقف اعتبار ({{ active_region.currency_label }})</th>
                             <th class="text-center">تعداد حواله‌ها</th>
                             <th>مجموع تناژ صادره</th>
-                            <th>ارزش کل فروش (ریال)</th>
+                            <th>ارزش کل فروش ({{ active_region.currency_label }})</th>
                             <th>وضعیت</th>
                             <th class="text-center">عملیات</th>
                         </tr>
@@ -293,7 +311,14 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-light fs-6">{{ c.name }}</div>
+                                    <div class="fw-bold text-light fs-6">
+                                        {% if c.country_code == 'TR' %}
+                                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 me-1" title="Türkiye">🇹🇷 TR</span>
+                                        {% else %}
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 me-1" title="ایران">🇮🇷 IR</span>
+                                        {% endif %}
+                                        {{ c.name }}
+                                    </div>
                                     {% if c.address %}
                                     <small class="text-secondary d-block text-truncate" style="max-width: 250px;"><i class="bi bi-geo-alt me-1"></i>{{ c.address }}</small>
                                     {% endif %}
@@ -305,7 +330,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <span class="font-monospace text-secondary">{{ c.national_id or '-' }}</span>
+                                    {% if c.country_code == 'TR' %}
+                                        <span class="font-monospace text-light fw-bold">{{ c.vkn or c.national_id or '-' }}</span>
+                                        {% if c.tax_office %}
+                                        <div class="small text-secondary"><i class="bi bi-bank me-1"></i>{{ c.tax_office }} V.D.</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="font-monospace text-secondary">{{ c.national_id or '-' }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if c.credit_limit and c.credit_limit > 0 %}
@@ -345,6 +377,10 @@
                                                 "email": c.email or "",
                                                 "address": c.address or "",
                                                 "national_id": c.national_id or "",
+                                                "country_code": c.country_code or "IR",
+                                                "vkn": c.vkn or "",
+                                                "tax_office": c.tax_office or "",
+                                                "mersis_no": c.mersis_no or "",
                                                 "credit_limit": c.credit_limit or 0
                                             } | tojson }})' title="ویرایش اطلاعات">
                                             <i class="bi bi-pencil-square"></i>
@@ -391,7 +427,7 @@
       <form action="/master-data/supplier" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addSupplierModalLabel">
-                <i class="bi bi-building-add text-success me-2"></i>تعریف تأمین‌کننده / کارخانه تولیدی جدید
+                <i class="bi bi-building-add text-success me-2"></i>تعریف تأمین‌کننده / Yeni Tedarikçi Kaydı
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -400,33 +436,58 @@
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label">نام شرکت / کارخانه / تأمین‌کننده <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت سهامی ذوب‌آهن اصفهان">
+                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت فولاد مبارکه یا Erdemir Çelik">
                     <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد)</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <select class="form-select country-select" name="country_code" onchange="handleCountryChange(this.closest('form'))">
+                        <option value="IR" {% if not is_tr %}selected{% endif %}>🇮🇷 ایران (کد اقتصادی / ملی)</option>
+                        <option value="TR" {% if is_tr %}selected{% endif %}>🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
+                    </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">کد سیستمی تأمین‌کننده</label>
                     <input type="text" class="form-control" name="code" placeholder="اختیاری (خودکار: SUP-xxx)">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شخص رابط / مدیر فروش</label>
-                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس رضایی">
+                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس رضایی / Ahmet Bey">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شماره تلفن / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
+                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="{% if is_tr %}0532 123 4567{% else %}۰۹۱۲-۳۴۵-۶۷۸۹{% endif %}">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
-                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
+                    <div class="form-text text-secondary small phone-hint">{% if is_tr %}Telefon numarası (05xx veya 02xx){% else %}شماره همراه ۱۱ رقمی با ۰۹ (الزامی){% endif %}</div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">شناسه ملی / کد اقتصادی</label>
+
+                <!-- فیلدهای ایران -->
+                <div class="col-md-6 ir-field {% if is_tr %}d-none{% endif %}">
+                    <label class="form-label">شناسه ملی / کد اقتصادی (ایران)</label>
                     <input type="text" class="form-control font-monospace national-id-input" name="national_id" placeholder="۱۰ یا ۱۱ رقم">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
+
+                <!-- فیلدهای ترکیه -->
+                <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
+                    <label class="form-label text-danger">Vergi Kimlik No (VKN / TCKN)</label>
+                    <input type="text" class="form-control font-monospace tr-vkn-input" name="vkn" placeholder="10 haneli VKN veya 11 haneli TCKN">
+                    <div class="form-text text-secondary small">10 haneli VKN (Kurumsal) veya 11 haneli TCKN</div>
+                </div>
+                <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
+                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <input type="text" class="form-control" name="tax_office" placeholder="Örn: Karadeniz Ereğli, Kadıköy">
+                </div>
+                <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
+                    <label class="form-label text-danger">MERSİS No (اختیاری)</label>
+                    <input type="text" class="form-control font-monospace" name="mersis_no" placeholder="16 haneli MERSİS">
+                </div>
+
                 <div class="col-md-6">
                     <label class="form-label">پست الکترونیکی (ایمیل)</label>
-                    <input type="email" class="form-control" name="email" placeholder="sales@company.ir">
+                    <input type="email" class="form-control" name="email" placeholder="sales@company.com">
                 </div>
                 <div class="col-12">
                     <label class="form-label">آدرس کارخانه / دفتر مرکزی</label>
@@ -435,8 +496,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">ثبت تأمین‌کننده</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
+            <button type="submit" class="btn btn-teal px-4">ثبت تأمین‌کننده / Kaydet</button>
           </div>
       </form>
     </div>
@@ -450,7 +511,7 @@
       <form id="editSupplierForm" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="editSupplierModalLabel">
-                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات تأمین‌کننده
+                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات تأمین‌کننده / Tedarikçi Düzenle
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -463,26 +524,51 @@
                     <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شرکت یا شخص (نه فقط عدد)</div>
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <select class="form-select country-select" id="edit_sup_country" name="country_code" onchange="handleCountryChange(this.closest('form'))">
+                        <option value="IR">🇮🇷 ایران (کد اقتصادی / ملی)</option>
+                        <option value="TR">🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">کد سیستمی</label>
                     <input type="text" class="form-control" id="edit_sup_code" name="code">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شخص رابط</label>
                     <input type="text" class="form-control" id="edit_sup_contact" name="contact_person">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شماره تلفن / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
                         <input type="tel" class="form-control ir-mobile font-monospace" id="edit_sup_phone" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
-                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
+                    <div class="form-text text-secondary small phone-hint">شماره همراه ۱۱ رقمی (الزامی)</div>
                 </div>
-                <div class="col-md-6">
+
+                <!-- فیلدهای ایران -->
+                <div class="col-md-6 ir-field">
                     <label class="form-label">شناسه ملی / کد اقتصادی</label>
                     <input type="text" class="form-control font-monospace national-id-input" id="edit_sup_national_id" name="national_id">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
+
+                <!-- فیلدهای ترکیه -->
+                <div class="col-md-4 tr-field d-none">
+                    <label class="form-label text-danger">Vergi Kimlik No (VKN / TCKN)</label>
+                    <input type="text" class="form-control font-monospace tr-vkn-input" id="edit_sup_vkn" name="vkn">
+                    <div class="form-text text-secondary small">10 haneli VKN veya 11 haneli TCKN</div>
+                </div>
+                <div class="col-md-4 tr-field d-none">
+                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <input type="text" class="form-control" id="edit_sup_tax_office" name="tax_office">
+                </div>
+                <div class="col-md-4 tr-field d-none">
+                    <label class="form-label text-danger">MERSİS No</label>
+                    <input type="text" class="form-control font-monospace" id="edit_sup_mersis" name="mersis_no">
+                </div>
+
                 <div class="col-md-6">
                     <label class="form-label">پست الکترونیکی</label>
                     <input type="email" class="form-control" id="edit_sup_email" name="email">
@@ -494,8 +580,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
+            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات / Güncelle</button>
           </div>
       </form>
     </div>
@@ -509,7 +595,7 @@
       <form action="/master-data/customer" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="addCustomerModalLabel">
-                <i class="bi bi-person-plus-fill text-teal me-2"></i>تعریف مشتری / پیمانکار پروژه جدید
+                <i class="bi bi-person-plus-fill text-teal me-2"></i>تعریف مشتری / پیمانکار پروژه جدید / Yeni Müşteri
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -518,37 +604,62 @@
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label">نام شخص / نام شرکت خریدار <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت مهندسی و ساختمانی آرمان">
+                    <input type="text" class="form-control party-name-input" name="name" required minlength="3" placeholder="مثلاً: شرکت مهندسی آرمان یا ENKA İnşaat">
                     <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد)</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <select class="form-select country-select" name="country_code" onchange="handleCountryChange(this.closest('form'))">
+                        <option value="IR" {% if not is_tr %}selected{% endif %}>🇮🇷 ایران (کد اقتصادی / ملی)</option>
+                        <option value="TR" {% if is_tr %}selected{% endif %}>🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
+                    </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">کد مشتری</label>
                     <input type="text" class="form-control" name="code" placeholder="اختیاری (خودکار: CUST-xxx)">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شخص تحویل‌گیرنده / رابط</label>
-                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس حسینی">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
-                    <div class="ir-mobile-wrapper">
-                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
-                        <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
-                    </div>
-                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
+                    <input type="text" class="form-control" name="contact_person" placeholder="مثلاً: مهندس حسینی / Selim Bey">
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
+                    <div class="ir-mobile-wrapper">
+                        <input type="tel" class="form-control ir-mobile font-monospace" name="phone" required placeholder="{% if is_tr %}0532 123 4567{% else %}۰۹۱۲-۳۴۵-۶۷۸۹{% endif %}">
+                        <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
+                    </div>
+                    <div class="form-text text-secondary small phone-hint">{% if is_tr %}Telefon numarası (05xx veya 02xx){% else %}شماره همراه ۱۱ رقمی با ۰۹ (الزامی){% endif %}</div>
+                </div>
+
+                <!-- فیلدهای ایران -->
+                <div class="col-md-4 ir-field {% if is_tr %}d-none{% endif %}">
                     <label class="form-label">شناسه ملی / کد ملی</label>
                     <input type="text" class="form-control font-monospace national-id-input" name="national_id" placeholder="کد ۱۰ یا ۱۱ رقمی">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
+
+                <!-- فیلدهای ترکیه -->
+                <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
+                    <label class="form-label text-danger">Vergi Kimlik No (VKN / TCKN)</label>
+                    <input type="text" class="form-control font-monospace tr-vkn-input" name="vkn" placeholder="10 haneli VKN veya 11 haneli TCKN">
+                    <div class="form-text text-secondary small">10 haneli VKN veya 11 haneli TCKN</div>
+                </div>
+                <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
+                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <input type="text" class="form-control" name="tax_office" placeholder="Örn: Beşiktaş, İskenderun">
+                </div>
+                <div class="col-md-4 tr-field {% if not is_tr %}d-none{% endif %}">
+                    <label class="form-label text-danger">MERSİS No</label>
+                    <input type="text" class="form-control font-monospace" name="mersis_no" placeholder="16 haneli MERSİS">
+                </div>
+
                 <div class="col-md-4">
-                    <label class="form-label">سقف اعتبار مالی (ریال)</label>
-                    <input type="number" step="1000000" class="form-control" name="credit_limit" value="0" placeholder="0 = نامحدود">
+                    <label class="form-label">سقف اعتبار مالی ({{ active_region.currency_label }})</label>
+                    <input type="number" step="1000" class="form-control" name="credit_limit" value="0" placeholder="0 = نامحدود">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">پست الکترونیکی</label>
-                    <input type="email" class="form-control" name="email" placeholder="client@domain.ir">
+                    <input type="email" class="form-control" name="email" placeholder="client@domain.com">
                 </div>
                 <div class="col-12">
                     <label class="form-label">آدرس کارگاه / دفتر خریدار</label>
@@ -557,8 +668,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">ثبت مشتری</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
+            <button type="submit" class="btn btn-teal px-4">ثبت مشتری / Kaydet</button>
           </div>
       </form>
     </div>
@@ -572,7 +683,7 @@
       <form id="editCustomerForm" method="post">
           <div class="modal-header">
             <h5 class="modal-title fw-bold text-light" id="editCustomerModalLabel">
-                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات مشتری
+                <i class="bi bi-pencil-square text-teal me-2"></i>ویرایش مشخصات مشتری / Müşteri Düzenle
             </h5>
             <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -585,29 +696,54 @@
                     <div class="form-text text-secondary small">حداقل ۳ حرف، شامل نام معتبر شخص یا شرکت خریدار (نه فقط عدد)</div>
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">کشور و مقررات مالیاتی / Ülke</label>
+                    <select class="form-select country-select" id="edit_cust_country" name="country_code" onchange="handleCountryChange(this.closest('form'))">
+                        <option value="IR">🇮🇷 ایران (کد اقتصادی / ملی)</option>
+                        <option value="TR">🇹🇷 Türkiye (VKN / Vergi Dairesi)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">کد مشتری</label>
                     <input type="text" class="form-control" id="edit_cust_code" name="code">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شخص رابط</label>
                     <input type="text" class="form-control" id="edit_cust_contact" name="contact_person">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">شماره تماس / همراه <span class="text-danger">*</span></label>
                     <div class="ir-mobile-wrapper">
                         <input type="tel" class="form-control ir-mobile font-monospace" id="edit_cust_phone" name="phone" required placeholder="۰۹۱۲-۳۴۵-۶۷۸۹">
                         <span class="ir-mobile-status"><i class="bi bi-phone text-muted"></i></span>
                     </div>
-                    <div class="form-text text-secondary small">شماره همراه ۱۱ رقمی با ۰۹ (الزامی)</div>
+                    <div class="form-text text-secondary small phone-hint">شماره همراه ۱۱ رقمی (الزامی)</div>
                 </div>
-                <div class="col-md-4">
+
+                <!-- فیلدهای ایران -->
+                <div class="col-md-4 ir-field">
                     <label class="form-label">شناسه ملی / کد ملی</label>
                     <input type="text" class="form-control font-monospace national-id-input" id="edit_cust_national_id" name="national_id">
                     <div class="form-text text-secondary small">۱۰ رقم حقیقی با چک‌سام یا ۱۱ رقم حقوقی</div>
                 </div>
+
+                <!-- فیلدهای ترکیه -->
+                <div class="col-md-4 tr-field d-none">
+                    <label class="form-label text-danger">Vergi Kimlik No (VKN / TCKN)</label>
+                    <input type="text" class="form-control font-monospace tr-vkn-input" id="edit_cust_vkn" name="vkn">
+                    <div class="form-text text-secondary small">10 haneli VKN veya 11 haneli TCKN</div>
+                </div>
+                <div class="col-md-4 tr-field d-none">
+                    <label class="form-label text-danger">Vergi Dairesi (اداره مالیاتی)</label>
+                    <input type="text" class="form-control" id="edit_cust_tax_office" name="tax_office">
+                </div>
+                <div class="col-md-4 tr-field d-none">
+                    <label class="form-label text-danger">MERSİS No</label>
+                    <input type="text" class="form-control font-monospace" id="edit_cust_mersis" name="mersis_no">
+                </div>
+
                 <div class="col-md-4">
-                    <label class="form-label">سقف اعتبار (ریال)</label>
-                    <input type="number" step="1000000" class="form-control" id="edit_cust_credit" name="credit_limit">
+                    <label class="form-label">سقف اعتبار ({{ active_region.currency_label }})</label>
+                    <input type="number" step="1000" class="form-control" id="edit_cust_credit" name="credit_limit">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">پست الکترونیکی</label>
@@ -620,8 +756,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف / İptal</button>
+            <button type="submit" class="btn btn-teal px-4">ذخیره تغییرات / Güncelle</button>
           </div>
       </form>
     </div>
@@ -629,7 +765,7 @@
 </div>
 
 <script>
-/* ===== اعتبارسنجی الگوریتم ۱۰ رقمی کد ملی اشخاص حقیقی ===== */
+/* ===== اعتبارسنجی الگوریتم ۱۰ رقمی کد ملی اشخاص حقیقی ایران ===== */
 function isValidIranianNationalCode(code) {
     if (!code) return false;
     code = toEnglishDigits(code).replace(/[^0-9]/g, '');
@@ -642,6 +778,71 @@ function isValidIranianNationalCode(code) {
     const rem = sum % 11;
     const check = parseInt(code.charAt(9), 10);
     return rem < 2 ? check === rem : check === (11 - rem);
+}
+
+/* ===== اعتبارسنجی رسمی ۱۰ رقمی VKN ترکیه (الگوریتم رسمی GİB) ===== */
+function isValidTurkishVKN(vkn) {
+    if (!vkn) return false;
+    vkn = toEnglishDigits(vkn).replace(/\D/g, '');
+    if (vkn.length !== 10) return false;
+    let s = 0;
+    for (let i = 1; i <= 9; i++) {
+        let d = parseInt(vkn.charAt(i - 1), 10);
+        let c1 = (d + (10 - i)) % 10;
+        if (c1 !== 0) {
+            let c2 = (c1 * Math.pow(2, 10 - i)) % 9;
+            s += (c2 === 0 ? 9 : c2);
+        }
+    }
+    let check = (10 - (s % 10)) % 10;
+    return parseInt(vkn.charAt(9), 10) === check;
+}
+
+/* ===== اعتبارسنجی ۱۱ رقمی کد ملی اشخاص حقیقی ترکیه (TCKN) ===== */
+function isValidTurkishTCKN(tc) {
+    if (!tc) return false;
+    tc = toEnglishDigits(tc).replace(/\D/g, '');
+    if (tc.length !== 11 || tc.charAt(0) === '0') return false;
+    let d = tc.split('').map(Number);
+    let oddSum = d[0] + d[2] + d[4] + d[6] + d[8];
+    let evenSum = d[1] + d[3] + d[5] + d[7];
+    let d10 = ((7 * oddSum) - evenSum) % 10;
+    if (d10 < 0) d10 += 10;
+    if (d[9] !== d10) return false;
+    let d11 = d.slice(0, 10).reduce((a, b) => a + b, 0) % 10;
+    return d[10] === d11;
+}
+
+/* ===== اعتبارسنجی شماره تلفن ترکیه (05xx یا 02xx) ===== */
+function isValidTurkishPhone(phone) {
+    if (!phone) return false;
+    let clean = toEnglishDigits(phone).replace(/\D/g, '');
+    if (clean.startsWith('90') && clean.length === 12) clean = '0' + clean.slice(2);
+    if (clean.length === 10 && !clean.startsWith('0')) clean = '0' + clean;
+    return clean.length === 11 && clean.startsWith('0') && ['2','3','4','5'].includes(clean.charAt(1));
+}
+
+function handleCountryChange(form) {
+    if (!form) return;
+    const countrySelect = form.querySelector('[name="country_code"]');
+    const isTR = countrySelect && countrySelect.value === 'TR';
+    const trFields = form.querySelectorAll('.tr-field');
+    const irFields = form.querySelectorAll('.ir-field');
+    const phoneInput = form.querySelector('[name="phone"]');
+    const phoneHint = form.querySelector('.phone-hint');
+    
+    trFields.forEach(el => el.classList.toggle('d-none', !isTR));
+    irFields.forEach(el => el.classList.toggle('d-none', isTR));
+    
+    if (phoneInput) {
+        if (isTR) {
+            phoneInput.placeholder = '0532 123 4567';
+            if (phoneHint) phoneHint.textContent = 'Telefon numarası (05xx veya 02xx)';
+        } else {
+            phoneInput.placeholder = '۰۹۱۲-۳۴۵-۶۷۸۹';
+            if (phoneHint) phoneHint.textContent = 'شماره همراه ۱۱ رقمی با ۰۹ (الزامی)';
+        }
+    }
 }
 
 function showModalError(form, inputEl, message) {
@@ -670,22 +871,25 @@ function clearModalError(form) {
 function validatePartyForm(form) {
     clearModalError(form);
 
+    const countrySelect = form.querySelector('[name="country_code"]');
+    const isTR = countrySelect && countrySelect.value === 'TR';
+
     // ۱. بررسی نام طرف تجاری
     const nameInput = form.querySelector('[name="name"]');
     if (nameInput) {
         const rawName = nameInput.value.trim();
         const engDigitsName = toEnglishDigits(rawName).replace(/\s+/g, '');
         if (rawName.length < 3) {
-            showModalError(form, nameInput, 'نام طرف تجاری باید حداقل شامل ۳ حرف باشد.');
+            showModalError(form, nameInput, isTR ? 'Cari hesap adı en az 3 karakter olmalıdır.' : 'نام طرف تجاری باید حداقل شامل ۳ حرف باشد.');
             return false;
         }
         if (/^\d+$/.test(engDigitsName)) {
-            showModalError(form, nameInput, 'نام طرف تجاری نمی‌تواند صرفاً از ارقام تشکیل شود. لطفاً نام واقعی شخص یا شرکت را وارد نمایید.');
+            showModalError(form, nameInput, isTR ? 'Cari hesap adı sadece rakamlardan oluşamaz.' : 'نام طرف تجاری نمی‌تواند صرفاً از ارقام تشکیل شود.');
             return false;
         }
-        const hasLetter = /[a-zA-Z\u0600-\u06FF]/.test(rawName);
+        const hasLetter = /[a-zA-Z\u0600-\u06FFçÇğĞıİöÖşŞüÜ]/.test(rawName);
         if (!hasLetter) {
-            showModalError(form, nameInput, 'نام طرف تجاری باید شامل حروف معتبر باشد.');
+            showModalError(form, nameInput, isTR ? 'Cari hesap adı geçerli harfler içermelidir.' : 'نام طرف تجاری باید شامل حروف معتبر باشد.');
             return false;
         }
         nameInput.classList.remove('is-invalid');
@@ -697,31 +901,61 @@ function validatePartyForm(form) {
     if (phoneInput) {
         const phoneDigits = toEnglishDigits(phoneInput.value).replace(/[^0-9]/g, '');
         if (!phoneDigits) {
-            showModalError(form, phoneInput, 'وارد کردن شماره تماس / همراه الزامی است.');
+            showModalError(form, phoneInput, isTR ? 'Telefon numarası zorunludur.' : 'وارد کردن شماره تماس / همراه الزامی است.');
             return false;
         }
-        if (phoneDigits.length !== 11 || (!phoneDigits.startsWith('09') && !phoneDigits.startsWith('0'))) {
-            showModalError(form, phoneInput, 'شماره همراه باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).');
-            return false;
+        if (isTR) {
+            if (!isValidTurkishPhone(phoneDigits)) {
+                showModalError(form, phoneInput, 'Geçersiz telefon formatı. 05xx veya 02xx ile 11 hane olmalıdır (Örn: 05321234567).');
+                return false;
+            }
+        } else {
+            if (phoneDigits.length !== 11 || (!phoneDigits.startsWith('09') && !phoneDigits.startsWith('0'))) {
+                showModalError(form, phoneInput, 'شماره همراه باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).');
+                return false;
+            }
         }
         phoneInput.classList.remove('is-invalid');
         phoneInput.classList.add('is-valid');
     }
 
-    // ۳. بررسی کد ملی / شناسه ملی (در صورت پر بودن)
-    const nidInput = form.querySelector('[name="national_id"]');
-    if (nidInput && nidInput.value.trim()) {
-        const nidDigits = toEnglishDigits(nidInput.value).replace(/[^0-9]/g, '');
-        if (nidDigits.length !== 10 && nidDigits.length !== 11) {
-            showModalError(form, nidInput, 'شناسه ملی یا کد اقتصادی باید ۱۰ رقم (اشخاص حقیقی) یا ۱۱ رقم (اشخاص حقوقی) باشد.');
-            return false;
+    // ۳. بررسی کد مالیاتی
+    if (isTR) {
+        const vknInput = form.querySelector('[name="vkn"]');
+        if (vknInput && vknInput.value.trim()) {
+            const cleanTax = toEnglishDigits(vknInput.value).replace(/[^0-9]/g, '');
+            if (cleanTax.length === 10) {
+                if (!isValidTurkishVKN(cleanTax)) {
+                    showModalError(form, vknInput, 'Vergi Kimlik Numarası (VKN) algoritma kontrolünden geçemedi (Geçersiz VKN).');
+                    return false;
+                }
+            } else if (cleanTax.length === 11) {
+                if (!isValidTurkishTCKN(cleanTax)) {
+                    showModalError(form, vknInput, 'T.C. Kimlik Numarası algoritma kontrolünden geçemedi (Geçersiz TCKN).');
+                    return false;
+                }
+            } else {
+                showModalError(form, vknInput, 'Kurumsal firmalar için 10 haneli VKN veya şahıslar için 11 haneli T.C. Kimlik girilmelidir.');
+                return false;
+            }
+            vknInput.classList.remove('is-invalid');
+            vknInput.classList.add('is-valid');
         }
-        if (nidDigits.length === 10 && !isValidIranianNationalCode(nidDigits)) {
-            showModalError(form, nidInput, 'کد ملی ۱۰ رقمی وارد شده نامعتبر است (رقم کنترل چک‌سام همخوانی ندارد).');
-            return false;
+    } else {
+        const nidInput = form.querySelector('[name="national_id"]');
+        if (nidInput && nidInput.value.trim()) {
+            const nidDigits = toEnglishDigits(nidInput.value).replace(/[^0-9]/g, '');
+            if (nidDigits.length !== 10 && nidDigits.length !== 11) {
+                showModalError(form, nidInput, 'شناسه ملی یا کد اقتصادی باید ۱۰ رقم (اشخاص حقیقی) یا ۱۱ رقم (اشخاص حقوقی) باشد.');
+                return false;
+            }
+            if (nidDigits.length === 10 && !isValidIranianNationalCode(nidDigits)) {
+                showModalError(form, nidInput, 'کد ملی ۱۰ رقمی وارد شده نامعتبر است (رقم کنترل چک‌سام همخوانی ندارد).');
+                return false;
+            }
+            nidInput.classList.remove('is-invalid');
+            nidInput.classList.add('is-valid');
         }
-        nidInput.classList.remove('is-invalid');
-        nidInput.classList.add('is-valid');
     }
 
     return true;
@@ -743,6 +977,16 @@ function openEditSupplierModal(sup) {
     document.getElementById('edit_sup_address').value = sup.address || '';
     document.getElementById('edit_sup_national_id').value = sup.national_id || '';
 
+    const countrySel = document.getElementById('edit_sup_country');
+    if (countrySel) {
+        countrySel.value = sup.country_code || 'IR';
+    }
+    document.getElementById('edit_sup_vkn').value = sup.vkn || '';
+    document.getElementById('edit_sup_tax_office').value = sup.tax_office || '';
+    document.getElementById('edit_sup_mersis').value = sup.mersis_no || '';
+
+    handleCountryChange(form);
+
     const modal = new bootstrap.Modal(document.getElementById('editSupplierModal'));
     modal.show();
 }
@@ -763,6 +1007,16 @@ function openEditCustomerModal(cust) {
     document.getElementById('edit_cust_address').value = cust.address || '';
     document.getElementById('edit_cust_national_id').value = cust.national_id || '';
     document.getElementById('edit_cust_credit').value = cust.credit_limit || 0;
+
+    const countrySel = document.getElementById('edit_cust_country');
+    if (countrySel) {
+        countrySel.value = cust.country_code || 'IR';
+    }
+    document.getElementById('edit_cust_vkn').value = cust.vkn || '';
+    document.getElementById('edit_cust_tax_office').value = cust.tax_office || '';
+    document.getElementById('edit_cust_mersis').value = cust.mersis_no || '';
+
+    handleCountryChange(form);
 
     const modal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
     modal.show();
@@ -787,7 +1041,7 @@ document.addEventListener("DOMContentLoaded", function() {
             nameInput.addEventListener('input', function() {
                 const val = this.value.trim();
                 const engDigits = toEnglishDigits(val).replace(/\s+/g, '');
-                if (val.length >= 3 && !/^\d+$/.test(engDigits) && /[a-zA-Z\u0600-\u06FF]/.test(val)) {
+                if (val.length >= 3 && !/^\d+$/.test(engDigits) && /[a-zA-Z\u0600-\u06FFçÇğĞıİöÖşŞüÜ]/.test(val)) {
                     this.classList.remove('is-invalid');
                     this.classList.add('is-valid');
                     clearModalError(form);
@@ -798,7 +1052,40 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
-        // اعتبارسنجی بلادرنگ کد ملی
+        // اعتبارسنجی بلادرنگ VKN ترکیه
+        const vknInput = form.querySelector('[name="vkn"]');
+        if (vknInput) {
+            vknInput.addEventListener('input', function() {
+                const val = toEnglishDigits(this.value).replace(/\D/g, '');
+                if (val.length === 10) {
+                    if (isValidTurkishVKN(val)) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        clearModalError(form);
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                } else if (val.length === 11) {
+                    if (isValidTurkishTCKN(val)) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        clearModalError(form);
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                } else if (val.length > 0) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-valid', 'is-invalid');
+                    clearModalError(form);
+                }
+            });
+        }
+
+        // اعتبارسنجی بلادرنگ کد ملی ایران
         const nidInput = form.querySelector('[name="national_id"]');
         if (nidInput) {
             nidInput.addEventListener('input', function() {
