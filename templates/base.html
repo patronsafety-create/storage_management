@@ -490,12 +490,89 @@
       color: var(--accent-teal);
       transform: translateX(-4px);
     }
+    .sidebar-item.active {
+      background: linear-gradient(135deg, rgba(0, 212, 200, 0.2), rgba(139, 92, 246, 0.2));
+      border: 1px solid rgba(0, 212, 200, 0.35);
+      color: var(--accent-teal);
+      font-weight: 700;
+    }
     .sidebar-category {
       font-size: 0.75rem;
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--text-secondary);
       padding: 0.5rem 0.6rem 0.2rem 0.6rem;
+      font-weight: 700;
+    }
+
+    /* استایل منوی درختی تاشو حرفه‌ای نکسوس‌پور (Accordion Tree Menu) */
+    .menu-tree-group {
+      margin-bottom: 0.35rem;
+    }
+    .menu-tree-header {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      text-align: inherit;
+    }
+    .menu-tree-header:hover {
+      background: rgba(0, 212, 200, 0.08);
+      color: var(--accent-teal);
+      border-color: rgba(0, 212, 200, 0.3);
+    }
+    .menu-tree-header:not(.collapsed) {
+      background: linear-gradient(135deg, rgba(0, 212, 200, 0.12), rgba(139, 92, 246, 0.12));
+      border-color: rgba(0, 212, 200, 0.35);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .tree-chevron {
+      font-size: 0.75rem;
+      transition: transform 0.25s ease;
+    }
+    .menu-tree-header:not(.collapsed) .tree-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-teal);
+    }
+    .menu-tree-subitems {
+      border-inline-start: 2px solid rgba(0, 212, 200, 0.3);
+      margin-inline-start: 1.1rem;
+      margin-top: 0.3rem;
+      margin-bottom: 0.3rem;
+      padding-inline-start: 0.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .menu-subitem {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.7rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.82rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .menu-subitem:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #38bdf8;
+      transform: translateX(-3px);
+    }
+    .menu-subitem.active {
+      background: rgba(0, 212, 200, 0.18);
+      color: var(--accent-teal);
       font-weight: 700;
     }
 
@@ -564,6 +641,20 @@
     {% set is_seller = is_commercial %}
     {% set is_baskool = ('Weighbridge_Operator' in user_role_names) or (user.username == 'baskool') %}
     {% set is_workshop = is_warehouse %}
+
+    {% if is_admin %}
+      {% set current_user_title = 'Sistem Yöneticisi' if is_tr else 'مدیر ارشد سیستم' %}
+    {% elif is_finance %}
+      {% set current_user_title = 'Mali ve Muhasebe Müdürü' if is_tr else 'مدیر مالی و حسابداری' %}
+    {% elif is_warehouse %}
+      {% set current_user_title = 'Depo Amiri' if is_tr else 'سرپرست انبار' %}
+    {% elif is_commercial %}
+      {% set current_user_title = 'Ticaret Uzmanı' if is_tr else 'کارشناس بازرگانی' %}
+    {% elif is_baskool %}
+      {% set current_user_title = 'Kantar Operatörü' if is_tr else 'اپراتور باسکول' %}
+    {% else %}
+      {% set current_user_title = user.roles[0].name if user.roles else ('Kullanıcı' if is_tr else 'کاربر سیستم') %}
+    {% endif %}
   {% else %}
     {% set is_admin = false %}
     {% set is_finance = false %}
@@ -573,10 +664,18 @@
     {% set is_seller = false %}
     {% set is_baskool = false %}
     {% set is_workshop = false %}
+    {% set current_user_title = '' %}
   {% endif %}
 
-  <!-- منوی کشویی سایدبار (Offcanvas Sidebar) -->
-  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarDrawer" aria-labelledby="sidebarDrawerLabel" style="background: rgba(13, 17, 23, 0.98) !important; backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); width: 330px;">
+  {% set cur_url = request.url.path if request and request.url else '' %}
+  {% set is_active_commercial = cur_url.startswith('/purchases') or cur_url.startswith('/sales') or cur_url.startswith('/master-data/parties') %}
+  {% set is_active_inventory = cur_url.startswith('/inventory/transactions') or cur_url.startswith('/inventory/balance') or cur_url.startswith('/inventory/transaction') or cur_url.startswith('/inventory/transfer') or cur_url.startswith('/inventory/returns') or cur_url.startswith('/bagging') or cur_url.startswith('/inventory/stocktaking') %}
+  {% set is_active_weighbridge = cur_url.startswith('/weighbridge') %}
+  {% set is_active_finance = cur_url.startswith('/master-data/products') or cur_url.startswith('/inventory/fiscal') or cur_url.startswith('/compliance') %}
+  {% set is_active_admin = cur_url.startswith('/admin') %}
+
+  <!-- منوی درختی تاشو سایدبار (Collapsible Tree Menu) -->
+  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="sidebarDrawer" aria-labelledby="sidebarDrawerLabel" style="background: rgba(13, 17, 23, 0.98) !important; backdrop-filter: blur(25px); border-left: 1px solid var(--glass-border); width: 310px;">
     <div class="offcanvas-header border-bottom border-secondary border-opacity-25 py-3">
       <div class="d-flex align-items-center gap-2">
         <div class="brand-logo-box">
@@ -599,236 +698,288 @@
       </div>
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="offcanvas-body p-3">
-      <!-- پیشخوان و آمار -->
-      <div class="mb-3">
-        <div class="sidebar-category">📊 {{ 'Gösterge ve Raporlar' if is_tr else 'پیشخوان و وضعیت' }}</div>
-        <div class="d-grid gap-1">
-          <a href="/dashboard" class="sidebar-item"><i class="bi bi-speedometer2 text-info me-2"></i>{{ 'Gösterge Paneli' if is_tr else 'داشبورد و نمودار کیکی' }}</a>
-          <a href="/guide" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-book-half text-teal me-2"></i>{{ 'Kullanım Kılavuzu' if is_tr else 'راهنمای جامع کاربری' }}</a>
-          <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="sidebar-item" style="color: #00d4c8 !important;"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>{{ 'PDF Kılavuz İndir' if is_tr else 'دانلود دفترچه راهنما (PDF)' }}</a>
-          {% if is_admin or is_warehouse or is_finance or is_buyer or is_seller or is_workshop %}
-          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-bar-chart-line text-teal me-2"></i>{{ 'Anlık Stok Durumu' if is_tr else 'گزارش موجودی لحظه‌ای' }}</a>
-          <a href="/inventory/transactions" class="sidebar-item"><i class="bi bi-clock-history text-secondary me-2"></i>{{ 'Stok Hareketleri' if is_tr else 'لیست و جستجوی تراکنش‌ها' }}</a>
-          {% endif %}
+    
+    <div class="offcanvas-body p-3 d-flex flex-column justify-content-between" style="overflow-y: auto;">
+      <div class="tree-menu-container">
+        
+        <!-- ۱. پیشخوان مدیریتی -->
+        <div class="mb-2">
+          <a href="/dashboard" class="sidebar-item {% if cur_url == '/dashboard' or cur_url == '/' %}active{% endif %}">
+            <i class="bi bi-speedometer2 text-info me-2"></i>
+            <span>{{ 'Gösterge Paneli' if is_tr else '📊 پیشخوان مدیریتی' }}</span>
+          </a>
         </div>
+
+        <!-- ۲. بازرگانی (خرید و فروش) -->
+        {% if is_admin or is_commercial or is_finance or is_warehouse %}
+        <div class="menu-tree-group">
+          <button class="menu-tree-header {% if not is_active_commercial %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeCommercial" aria-expanded="{{ 'true' if is_active_commercial else 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-briefcase text-teal"></i>
+              <span>{{ 'Ticaret ve Satış/Satın Alma' if is_tr else '🤝 بازرگانی (خرید و فروش)' }}</span>
+            </span>
+            <i class="bi bi-chevron-down tree-chevron"></i>
+          </button>
+          <div class="collapse {% if is_active_commercial %}show{% endif %}" id="treeCommercial">
+            <div class="menu-tree-subitems">
+              <a href="/purchases" class="menu-subitem {% if cur_url.startswith('/purchases') %}active{% endif %}">
+                <i class="bi bi-cart-check text-teal"></i>
+                <span>{{ 'Satın Alma Siparişleri (PO)' if is_tr else 'سفارشات خرید (PO)' }}</span>
+              </a>
+              <a href="/sales" class="menu-subitem {% if cur_url.startswith('/sales') %}active{% endif %}">
+                <i class="bi bi-receipt text-success"></i>
+                <span>{{ 'Satış Siparişleri (SO)' if is_tr else 'سفارشات فروش (SO)' }}</span>
+              </a>
+              <a href="/master-data/parties" class="menu-subitem {% if cur_url.startswith('/master-data/parties') %}active{% endif %}">
+                <i class="bi bi-people text-info"></i>
+                <span>{{ 'Cari Hesaplar (Tedarikçi/Müşteri)' if is_tr else 'طرف‌های تجاری (تأمین‌کننده/مشتری)' }}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ۳. عملیات انبارداری -->
+        {% if is_admin or is_warehouse or is_finance %}
+        <div class="menu-tree-group">
+          <button class="menu-tree-header {% if not is_active_inventory %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeInventory" aria-expanded="{{ 'true' if is_active_inventory else 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-boxes text-warning"></i>
+              <span>{{ 'Depo Operasyonları' if is_tr else '📦 عملیات انبارداری' }}</span>
+            </span>
+            <i class="bi bi-chevron-down tree-chevron"></i>
+          </button>
+          <div class="collapse {% if is_active_inventory %}show{% endif %}" id="treeInventory">
+            <div class="menu-tree-subitems">
+              <a href="/inventory/transactions" class="menu-subitem {% if cur_url == '/inventory/transactions' %}active{% endif %}">
+                <i class="bi bi-clock-history text-secondary"></i>
+                <span>{{ 'Stok Hareketleri ve Kartabl' if is_tr else 'کارتابل و لیست تراکنش‌ها' }}</span>
+              </a>
+              <a href="/inventory/balance" class="menu-subitem {% if cur_url == '/inventory/balance' %}active{% endif %}">
+                <i class="bi bi-bar-chart-line text-teal"></i>
+                <span>{{ 'Anlık Stok Durumu' if is_tr else 'گزارش موجودی لحظه‌ای' }}</span>
+              </a>
+              {% if is_admin or is_warehouse %}
+              <a href="/inventory/transaction" class="menu-subitem {% if cur_url == '/inventory/transaction' %}active{% endif %}">
+                <i class="bi bi-plus-circle text-success"></i>
+                <span>{{ 'Doğrudan Fiş Kaydı' if is_tr else 'ثبت سند مستقیم انبار' }}</span>
+              </a>
+              <a href="/inventory/transfer" class="menu-subitem {% if cur_url.startswith('/inventory/transfer') %}active{% endif %}">
+                <i class="bi bi-arrow-left-right text-warning"></i>
+                <span>{{ 'Depolar Arası Transfer' if is_tr else 'انتقال بین انبارها' }}</span>
+              </a>
+              {% endif %}
+              <a href="/inventory/returns/new" class="menu-subitem {% if cur_url.startswith('/inventory/returns') %}active{% endif %}">
+                <i class="bi bi-arrow-return-right text-danger"></i>
+                <span>{{ 'Alış / Satış İadeleri' if is_tr else 'برگشت از خرید / فروش' }}</span>
+              </a>
+              {% if is_admin or is_warehouse %}
+              <a href="/bagging" class="menu-subitem {% if cur_url.startswith('/bagging') %}active{% endif %}">
+                <i class="bi bi-box2 text-success"></i>
+                <span>{{ 'Üre Torbalama ve Paketleme' if is_tr else 'کیسه‌گیری اوره' }}</span>
+              </a>
+              <a href="/inventory/stocktaking" class="menu-subitem {% if cur_url.startswith('/inventory/stocktaking') %}active{% endif %}">
+                <i class="bi bi-clipboard2-check text-primary"></i>
+                <span>{{ 'Depo Sayım ve Mutabakat' if is_tr else 'انبارگردانی' }}</span>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ۴. باسکول دیجیتال -->
+        {% if is_admin or is_baskool or is_warehouse %}
+        <div class="menu-tree-group">
+          <button class="menu-tree-header {% if not is_active_weighbridge %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeWeighbridge" aria-expanded="{{ 'true' if is_active_weighbridge else 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-truck text-warning"></i>
+              <span>{{ 'Tır Kantarı' if is_tr else '⚖️ باسکول دیجیتال' }}</span>
+            </span>
+            <i class="bi bi-chevron-down tree-chevron"></i>
+          </button>
+          <div class="collapse {% if is_active_weighbridge %}show{% endif %}" id="treeWeighbridge">
+            <div class="menu-tree-subitems">
+              <a href="/weighbridge" class="menu-subitem {% if cur_url.startswith('/weighbridge') %}active{% endif %}">
+                <i class="bi bi-speedometer text-warning"></i>
+                <span>{{ 'Tartım ve Nöbet Kaydı' if is_tr else 'نوبت‌دهی و توزین کامیون' }}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ۵. مالی و تعاریف پایه -->
+        {% if is_admin or is_finance or is_commercial or is_warehouse %}
+        <div class="menu-tree-group">
+          <button class="menu-tree-header {% if not is_active_finance %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeFinance" aria-expanded="{{ 'true' if is_active_finance else 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-coin text-info"></i>
+              <span>{{ 'Mali ve Temel Tanımlar' if is_tr else '💰 مالی و تعاریف پایه' }}</span>
+            </span>
+            <i class="bi bi-chevron-down tree-chevron"></i>
+          </button>
+          <div class="collapse {% if is_active_finance %}show{% endif %}" id="treeFinance">
+            <div class="menu-tree-subitems">
+              {% if not is_baskool %}
+              <a href="/master-data/products" class="menu-subitem {% if cur_url.startswith('/master-data/products') %}active{% endif %}">
+                <i class="bi bi-box-seam text-info"></i>
+                <span>{{ 'Malzeme ve Depo Kartları' if is_tr else 'کاتالوگ کالاها و انبارها' }}</span>
+              </a>
+              {% endif %}
+              {% if is_admin or is_finance %}
+              <a href="/inventory/fiscal-years" class="menu-subitem {% if cur_url.startswith('/inventory/fiscal') %}active{% endif %}">
+                <i class="bi bi-calendar-check text-teal"></i>
+                <span>{{ 'Mali Yıl ve Dönem Kapanışı' if is_tr else 'مدیریت سال مالی و بستن دوره' }}</span>
+              </a>
+              <a href="/compliance" class="menu-subitem {% if cur_url.startswith('/compliance') %}active{% endif %}">
+                <i class="bi bi-bank2 text-danger"></i>
+                <span>{{ 'e-İrsaliye ve Mevzuat' if is_tr else 'سامانه جامع تجارت' }}</span>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ۶. مدیریت سیستم -->
+        {% if is_admin %}
+        <div class="menu-tree-group">
+          <button class="menu-tree-header {% if not is_active_admin %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeAdmin" aria-expanded="{{ 'true' if is_active_admin else 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-gear-fill text-purple" style="color: #c084fc;"></i>
+              <span>{{ 'Sistem Yönetimi' if is_tr else '⚙️ مدیریت سیستم' }}</span>
+            </span>
+            <i class="bi bi-chevron-down tree-chevron"></i>
+          </button>
+          <div class="collapse {% if is_active_admin %}show{% endif %}" id="treeAdmin">
+            <div class="menu-tree-subitems">
+              <a href="/admin/users" class="menu-subitem {% if cur_url.startswith('/admin/users') %}active{% endif %}">
+                <i class="bi bi-person-lines-fill text-purple" style="color: #c084fc;"></i>
+                <span>{{ 'Kullanıcı ve Rol Yönetimi' if is_tr else 'مدیریت کاربران' }}</span>
+              </a>
+              <a href="/admin/audit-logs" class="menu-subitem {% if cur_url.startswith('/admin/audit-logs') %}active{% endif %}">
+                <i class="bi bi-shield-check text-info"></i>
+                <span>{{ 'Güvenlik Denetim Kayıtları' if is_tr else 'لاگ حسابرسی امنیتی' }}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
       </div>
 
-      <!-- اطلاعات پایه و کاتالوگ کالاها -->
-      {% if is_admin or is_finance or is_warehouse or is_buyer or is_seller %}
-      <div class="mb-3">
-        <div class="sidebar-category">🏷️ {{ 'Temel Tanımlar ve Kartlar' if is_tr else 'تعاریف پایه و کاتالوگ' }}</div>
-        <div class="d-grid gap-1">
-          <a href="/master-data/products" class="sidebar-item"><i class="bi bi-box-seam text-info me-2"></i>{{ 'Malzeme Kartları' if is_tr else 'کاتالوگ و مدیریت کالاها' }}</a>
-          <a href="/master-data/parties" class="sidebar-item"><i class="bi bi-people text-teal me-2"></i>{{ 'Cari Hesaplar (Tedarikçi/Müşteri)' if is_tr else 'طرف‌های تجاری (تأمین‌کننده / مشتری)' }}</a>
-        </div>
+      <!-- پاورقی سایدبار: راهنما و فایل PDF -->
+      <div class="pt-3 mt-3 border-top border-secondary border-opacity-25 d-flex flex-column gap-1">
+        <a href="/guide" class="sidebar-item py-1" style="color: #38bdf8 !important;">
+          <i class="bi bi-book-half text-teal me-2"></i>
+          <span>{{ 'Kullanım Kılavuzu' if is_tr else 'راهنمای جامع کاربری' }}</span>
+        </a>
+        <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="sidebar-item py-1" style="color: #00d4c8 !important;">
+          <i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>
+          <span>{{ 'PDF Kılavuzu İndir' if is_tr else 'دانلود دفترچه راهنما (PDF)' }}</span>
+        </a>
       </div>
-      {% endif %}
-
-      <!-- عملیات انبارداری و زنجیره تأمین -->
-      <div class="mb-3">
-        <div class="sidebar-category">🔄 {{ 'Depo Operasyonları ve Lojistik' if is_tr else 'عملیات انبارداری و زنجیره تأمین' }}</div>
-        <div class="d-grid gap-1">
-          {% if is_admin or is_warehouse or is_finance %}
-          <a href="/inventory/transaction" class="sidebar-item"><i class="bi bi-box-arrow-in-down-right text-success me-2"></i>{{ 'Giriş / Çıkış Fişi' if is_tr else 'ثبت رسید / حواله انبار' }}</a>
-          {% endif %}
-          {% if is_admin or is_finance or is_buyer %}
-          <a href="/purchases" class="sidebar-item"><i class="bi bi-cart-check text-teal me-2"></i>{{ 'Satın Alma Siparişleri (PO)' if is_tr else 'سفارشات خرید و رسید کالا (PO)' }}</a>
-          {% endif %}
-          {% if is_admin or is_finance or is_seller %}
-          <a href="/sales" class="sidebar-item"><i class="bi bi-receipt text-success me-2"></i>{{ 'Satış Siparişleri (SO)' if is_tr else 'سفارشات فروش و حواله کالا (SO)' }}</a>
-          {% endif %}
-          {% if is_admin or is_baskool or is_warehouse %}
-          <a href="/weighbridge" class="sidebar-item"><i class="bi bi-truck text-warning me-2"></i>{{ 'Elektronik Tır Kantarı' if is_tr else 'باسکول دیجیتال تریلی و قبض' }}</a>
-          {% endif %}
-          {% if is_admin or is_warehouse %}
-          <a href="/bagging" class="sidebar-item"><i class="bi bi-box2 text-success me-2"></i>{{ 'Üre Torbalama ve Paketleme' if is_tr else 'کیسه‌گیری فله به جامبوبگ اوره' }}</a>
-          {% endif %}
-          {% if is_admin or is_warehouse %}
-          <a href="/inventory/transfer" class="sidebar-item"><i class="bi bi-arrow-left-right text-warning me-2"></i>{{ 'Depolar Arası Transfer' if is_tr else 'انتقال بین انبارها' }}</a>
-          <a href="/inventory/stocktaking" class="sidebar-item"><i class="bi bi-clipboard2-check text-primary me-2"></i>{{ 'Depo Sayım ve Mutabakat' if is_tr else 'انبارگردانی و مغایرت‌گیری' }}</a>
-          {% endif %}
-          {% if is_admin or is_warehouse or is_finance %}
-          <a href="/inventory/returns/new" class="sidebar-item"><i class="bi bi-arrow-return-right text-danger me-2"></i>{{ 'Alış / Satış İadeleri' if is_tr else 'برگشت از خرید / برگشت از فروش' }}</a>
-          {% endif %}
-          {% if is_admin or is_finance %}
-          <a href="/inventory/fiscal-years" class="sidebar-item"><i class="bi bi-calendar-check text-info me-2"></i>{{ 'Mali Yıl Yönetimi' if is_tr else 'سال مالی و بستن دوره' }}</a>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- کنترل موجودی، کاردکس و سامانه‌ها -->
-      {% if is_admin or is_finance or is_warehouse %}
-      <div class="mb-3">
-        <div class="sidebar-category">💰 {{ 'Ekstreler ve Yasal Uyum' if is_tr else 'کاردکس، هشدارها و سامانه‌ها' }}</div>
-        <div class="d-grid gap-1">
-          <a href="/inventory/alerts" class="sidebar-item"><i class="bi bi-bell-fill text-warning me-2"></i>{{ 'Sipariş Noktası Uyarıları' if is_tr else 'مرکز هشدارهای نقطه سفارش' }}</a>
-          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-receipt text-info me-2"></i>{{ 'Çift Birim Miktar Ekstresi' if is_tr else 'کاردکس مقداری و دو واحدی' }}</a>
-          <a href="/inventory/balance" class="sidebar-item"><i class="bi bi-cash-stack text-success me-2"></i>{{ 'Ağırlıklı Ortalama Maliyet' if is_tr else 'کاردکس ریالی و میانگین موزون' }}</a>
-          <a href="/compliance" class="sidebar-item"><i class="bi bi-bank2 text-teal me-2"></i>{{ 'e-İrsaliye ve GİB Uyumu' if is_tr else 'سامانه جامع تجارت و انبارها' }}</a>
-        </div>
-      </div>
-
-      <!-- خروجی اکسل -->
-      <div class="mb-3">
-        <div class="sidebar-category">📥 {{ 'Excel Raporları' if is_tr else 'خروجی اکسل و گزارش‌ها' }}</div>
-        <div class="d-grid gap-1">
-          <a href="/inventory/export/stock" class="sidebar-item"><i class="bi bi-file-earmark-excel text-success me-2"></i>{{ 'Stok Listesi (Excel)' if is_tr else 'خروجی اکسل موجودی انبار' }}</a>
-          <a href="/inventory/export/transactions" class="sidebar-item"><i class="bi bi-file-earmark-spreadsheet text-info me-2"></i>{{ 'Tüm Hareketler (Excel)' if is_tr else 'خروجی اکسل کلیه تراکنش‌ها' }}</a>
-          <a href="/compliance/export/ntsw" class="sidebar-item"><i class="bi bi-file-earmark-arrow-down text-warning me-2"></i>{{ 'e-İrsaliye ve Gümrük Raporu' if is_tr else 'خروجی ویژه سامانه جامع تجارت' }}</a>
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- مدیریت سیستم و حسابرسی -->
-      {% if is_admin %}
-      <div class="mb-3">
-        <div class="sidebar-category">⚙️ {{ 'Sistem ve Güvenlik' if is_tr else 'مدیریت سیستم و امنیت' }}</div>
-        <div class="d-grid gap-1">
-          <a href="/admin/users" class="sidebar-item" style="color: #a78bfa !important;"><i class="bi bi-people me-2"></i>{{ 'Kullanıcı ve Rol Yönetimi' if is_tr else 'مدیریت کاربران و نقش‌ها' }}</a>
-          <a href="/admin/audit-logs" class="sidebar-item" style="color: #38bdf8 !important;"><i class="bi bi-shield-lock me-2"></i>{{ 'Güvenlik ve Denetim Kayıtları' if is_tr else 'لاگ جامع حسابرسی و امنیت' }}</a>
-        </div>
-      </div>
-      {% endif %}
     </div>
   </div>
 
-  <nav class="navbar navbar-expand-lg sticky-top">
-    <div class="container-fluid px-4">
-      <div class="d-flex align-items-center">
-        <!-- دکمه منوی کشویی سایدبار -->
-        <button class="btn btn-glass me-3 px-3 py-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarDrawer" aria-controls="sidebarDrawer" title="{{ 'Sistem Menüsü' if is_tr else 'منوی کشویی دسترسی سریع' }}">
+  <!-- نوار بالای صفحه مدرن و خلوت (Top Navbar - SAP / Enterprise ERP Style) -->
+  <nav class="navbar navbar-expand sticky-top py-2 px-3">
+    <div class="container-fluid px-2 d-flex justify-content-between align-items-center">
+      <!-- بخش راست: دکمه منوی درختی، برند و عنوان صفحه جاری -->
+      <div class="d-flex align-items-center gap-2 gap-md-3">
+        <!-- دکمه باز کردن منوی درختی -->
+        <button class="btn btn-glass px-2 py-1 px-md-3 py-md-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarDrawer" aria-controls="sidebarDrawer" title="{{ 'Sistem Menüsü' if is_tr else 'منوی سیستم' }}">
           <i class="bi bi-list fs-5 align-middle"></i>
           <span class="d-none d-sm-inline ms-1 fw-bold small">{{ 'Menü' if is_tr else 'منوی سیستم' }}</span>
         </button>
-        <a class="navbar-brand mb-0 text-decoration-none d-flex align-items-center gap-2" href="/dashboard">
-          <div class="brand-logo-box">
+
+        <a class="navbar-brand mb-0 text-decoration-none d-flex align-items-center gap-2 me-1" href="/dashboard">
+          <div class="brand-logo-box" style="width: 36px; height: 36px; font-size: 1.1rem; border-radius: 10px;">
             <i class="bi bi-box-seam-fill"></i>
           </div>
-          <div class="d-flex flex-column text-start">
-            <div class="d-flex align-items-center gap-2">
-              <span class="brand-title-main">{{ 'NexusPour' if is_tr else 'نکسوس‌پـور' }}</span>
-              <span class="badge-edition d-none d-md-inline-block">{{ 'Türkiye' if is_tr else 'NexusPour ERP' }}</span>
-            </div>
-            <div class="brand-signature d-none d-sm-flex">
-              <i class="bi bi-shield-check text-teal"></i>
-              {% if is_tr %}
-              Mülkiyet ve Mühendislik: <strong>Omid Pourmahmoud</strong>
-              {% else %}
-              مالکیت و مهندسی: <strong>امید پورمحمود</strong>
-              {% endif %}
-            </div>
+          <span class="brand-title-main d-none d-sm-inline" style="font-size: 1.15rem;">{{ 'NexusPour' if is_tr else 'نکسوس‌پـور' }}</span>
+        </a>
+
+        <!-- عنوان صفحه جاری (Breadcrumb / Title) -->
+        <div class="vr mx-1 opacity-25 d-none d-md-block" style="height: 22px;"></div>
+        <div class="page-title-badge d-none d-md-flex align-items-center gap-1 text-teal fw-bold small">
+          <i class="bi bi-geo-alt-fill text-info opacity-75"></i>
+          <span>
+            {% if cur_url.startswith('/dashboard') %}{{ 'Gösterge Paneli' if is_tr else 'پیشخوان مدیریتی' }}
+            {% elif cur_url.startswith('/purchases') %}{{ 'Satın Alma Siparişleri (PO)' if is_tr else 'سفارشات خرید (PO)' }}
+            {% elif cur_url.startswith('/sales') %}{{ 'Satış Siparişleri (SO)' if is_tr else 'سفارشات فروش (SO)' }}
+            {% elif cur_url.startswith('/weighbridge') %}{{ 'Tır Kantarı' if is_tr else 'باسکول دیجیتال تریلی' }}
+            {% elif cur_url.startswith('/inventory/transactions') %}{{ 'Stok Hareketleri ve Kartabl' if is_tr else 'کارتابل و لیست تراکنش‌ها' }}
+            {% elif cur_url.startswith('/inventory/balance') %}{{ 'Anlık Stok Durumu' if is_tr else 'گزارش موجودی لحظه‌ای' }}
+            {% elif cur_url.startswith('/inventory/transaction') %}{{ 'Stok Fişi Kaydı' if is_tr else 'ثبت سند مستقیم انبار' }}
+            {% elif cur_url.startswith('/inventory/transfer') %}{{ 'Depolar Arası Transfer' if is_tr else 'انتقال بین انبارها' }}
+            {% elif cur_url.startswith('/inventory/stocktaking') %}{{ 'Depo Sayım ve Mutabakat' if is_tr else 'انبارگردانی و مغایرت‌گیری' }}
+            {% elif cur_url.startswith('/inventory/returns') %}{{ 'Alış / Satış İadeleri' if is_tr else 'برگشت از خرید / برگشت از فروش' }}
+            {% elif cur_url.startswith('/bagging') %}{{ 'Üre Torbalama' if is_tr else 'کیسه‌گیری فله اوره' }}
+            {% elif cur_url.startswith('/master-data/parties') %}{{ 'Cari Hesaplar' if is_tr else 'طرف‌های تجاری' }}
+            {% elif cur_url.startswith('/master-data/products') %}{{ 'Malzeme Kataloğu' if is_tr else 'کاتالوگ کالاها و انبارها' }}
+            {% elif cur_url.startswith('/inventory/fiscal') %}{{ 'Mali Yıl Yönetimi' if is_tr else 'مدیریت سال مالی و بستن دوره' }}
+            {% elif cur_url.startswith('/compliance') %}{{ 'e-İrsaliye ve Mevzuat' if is_tr else 'سامانه جامع تجارت' }}
+            {% elif cur_url.startswith('/admin') %}{{ 'Sistem Yönetimi' if is_tr else 'مدیریت و امنیت سیستم' }}
+            {% elif cur_url.startswith('/guide') %}{{ 'Kullanım Kılavuzu' if is_tr else 'راهنمای جامع کاربری' }}
+            {% else %}{{ 'NexusPour ERP' }}{% endif %}
+          </span>
+        </div>
+
+        <!-- نشانگر سال مالی فعال -->
+        <div class="active-fiscal-indicator d-none d-lg-flex align-items-center gap-1 px-2 py-1 rounded-3" style="background: rgba(0, 212, 200, 0.08); border: 1px solid rgba(0, 212, 200, 0.25); font-size: 0.78rem;">
+          <i class="bi bi-calendar-check text-teal"></i>
+          <span class="text-secondary">{{ 'Mali Yıl:' if is_tr else 'سال مالی:' }}</span>
+          <strong class="text-teal">۱۴۰۳</strong>
+        </div>
+      </div>
+
+      <!-- بخش چپ: سوییچ زبان، نام و سمت فارسی کاربر، دکمه خروج -->
+      {% if user %}
+      <div class="d-flex align-items-center gap-2">
+        <!-- سوئیچر کشور و زبان -->
+        <div class="dropdown">
+          <button class="btn btn-glass btn-sm dropdown-toggle d-flex align-items-center gap-1 py-1 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ 'Bölge Değiştir' if is_tr else 'تغییر کشور' }}">
+            {% if is_tr %}
+            <span>🇹🇷</span>
+            <span class="small fw-bold text-teal">TR</span>
+            {% else %}
+            <span>🇮🇷</span>
+            <span class="small fw-bold text-teal">IR</span>
+            {% endif %}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-secondary border-opacity-25 py-1" style="font-size: 0.82rem; min-width: 175px;">
+            <li>
+              <a class="dropdown-item d-flex align-items-center justify-content-between py-2 {% if not is_tr %}active bg-info bg-opacity-25 text-info{% endif %}" href="/set-region/IR">
+                <span class="d-flex align-items-center gap-2"><span>🇮🇷</span> <span>ایران (IR Edition)</span></span>
+                {% if not is_tr %}<i class="bi bi-check2 text-info"></i>{% endif %}
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center justify-content-between py-2 {% if is_tr %}active bg-info bg-opacity-25 text-info{% endif %}" href="/set-region/TR">
+                <span class="d-flex align-items-center gap-2"><span>🇹🇷</span> <span>Türkiye (TR Edition)</span></span>
+                {% if is_tr %}<i class="bi bi-check2 text-info"></i>{% endif %}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- نام و سمت فارسی کاربر -->
+        <div class="user-pill d-flex align-items-center gap-2 py-1 px-2 px-md-3">
+          <i class="bi bi-person-badge text-teal fs-5"></i>
+          <div class="d-flex flex-column text-start" style="line-height: 1.15;">
+            <strong class="small text-light">{{ user.full_name or user.username }}</strong>
+            <span class="text-teal" style="font-size: 0.72rem; font-weight: 600;">{{ current_user_title }}</span>
           </div>
+        </div>
+
+        <!-- دکمه خروج -->
+        <a href="/logout" class="btn-logout text-decoration-none py-1 px-2 px-md-3" title="{{ 'Çıkış Yap' if is_tr else 'خروج از سامانه' }}">
+          <i class="bi bi-box-arrow-right me-1"></i><span class="d-none d-sm-inline">{{ 'Çıkış' if is_tr else 'خروج' }}</span>
         </a>
       </div>
-
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-          <li class="nav-item">
-            <a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2 me-1"></i>{{ 'Gösterge' if is_tr else 'داشبورد' }}</a>
-          </li>
-          {% if is_admin or is_warehouse or is_finance %}
-          <li class="nav-item">
-            <a class="nav-link" href="/inventory/transaction"><i class="bi bi-plus-circle me-1"></i>{{ 'Yeni Fiş' if is_tr else 'ثبت تراکنش' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_finance or is_buyer %}
-          <li class="nav-item">
-            <a class="nav-link" href="/purchases"><i class="bi bi-cart-check me-1"></i>{{ 'Satın Alma' if is_tr else 'سفارشات خرید' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_finance or is_seller %}
-          <li class="nav-item">
-            <a class="nav-link" href="/sales"><i class="bi bi-receipt me-1"></i>{{ 'Satış' if is_tr else 'سفارشات فروش' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_baskool or is_warehouse %}
-          <li class="nav-item">
-            <a class="nav-link" href="/weighbridge"><i class="bi bi-truck me-1"></i>{{ 'Kantar' if is_tr else 'باسکول' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_warehouse %}
-          <li class="nav-item">
-            <a class="nav-link" href="/bagging"><i class="bi bi-box2 me-1"></i>{{ 'Torbalama' if is_tr else 'کیسه‌گیری' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_warehouse or is_finance or is_workshop %}
-          <li class="nav-item">
-            <a class="nav-link" href="/inventory/balance"><i class="bi bi-bar-chart-line me-1"></i>{{ 'Anlık Stok' if is_tr else 'موجودی' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_warehouse or is_buyer or is_seller or is_finance %}
-          <li class="nav-item">
-            <a class="nav-link" href="/master-data/products"><i class="bi bi-box-seam me-1"></i>{{ 'Katalog' if is_tr else 'کاتالوگ' }}</a>
-          </li>
-          {% endif %}
-          {% if is_admin or is_buyer or is_seller or is_finance %}
-          <li class="nav-item">
-            <a class="nav-link" href="/master-data/parties"><i class="bi bi-people me-1"></i>{{ 'Cari Hesaplar' if is_tr else 'طرف‌های تجاری' }}</a>
-          </li>
-          {% endif %}
-          <li class="nav-item">
-            <a class="nav-link" href="/guide"><i class="bi bi-book-half me-1"></i>{{ 'Kılavuz' if is_tr else 'راهنما' }}</a>
-          </li>
-        </ul>
-
-        {% if user %}
-        <div class="d-flex align-items-center gap-2">
-          <!-- سوئیچر هوشمند کشور (ایران / ترکیه) -->
-          <div class="dropdown me-1">
-            <button class="btn btn-glass btn-sm dropdown-toggle d-flex align-items-center gap-1 py-1 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ 'Bölge Değiştir' if is_tr else 'تغییر منطقه و کشور' }}">
-              {% if is_tr %}
-              <span>🇹🇷</span>
-              <span class="small fw-bold text-teal">TR</span>
-              {% else %}
-              <span>🇮🇷</span>
-              <span class="small fw-bold text-teal">IR</span>
-              {% endif %}
-            </button>
-            <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-secondary border-opacity-25 py-1" style="font-size: 0.82rem; min-width: 175px;">
-              <li>
-                <a class="dropdown-item d-flex align-items-center justify-content-between py-2 {% if not is_tr %}active bg-info bg-opacity-25 text-info{% endif %}" href="/set-region/IR">
-                  <span class="d-flex align-items-center gap-2"><span>🇮🇷</span> <span>ایران (IR Edition)</span></span>
-                  {% if not is_tr %}<i class="bi bi-check2 text-info"></i>{% endif %}
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item d-flex align-items-center justify-content-between py-2 {% if is_tr %}active bg-info bg-opacity-25 text-info{% endif %}" href="/set-region/TR">
-                  <span class="d-flex align-items-center gap-2"><span>🇹🇷</span> <span>Türkiye (TR Edition)</span></span>
-                  {% if is_tr %}<i class="bi bi-check2 text-info"></i>{% endif %}
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <!-- دکمه دانلود PDF راهنما -->
-          <a href="{{ '/static/docs/nexus_pour_user_manual_tr.pdf' if is_tr else '/static/docs/nexus_pour_user_manual.pdf' }}" target="_blank" class="btn btn-outline-info btn-sm px-2 py-1 me-1 d-none d-lg-inline-flex align-items-center gap-1" title="{{ 'PDF Kılavuzu İndir' if is_tr else 'دانلود دفترچه راهنمای جامع PDF' }}">
-            <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
-            <span class="small fw-bold">{{ 'PDF İndir' if is_tr else 'دانلود PDF' }}</span>
-          </a>
-
-          <!-- زنگوله هشدار نقطه سفارش -->
-          <a href="/inventory/alerts" class="btn btn-glass px-2 py-1 position-relative me-2" title="{{ 'Kritik Stok Uyarıları' if is_tr else 'هشدارهای هوشمند موجودی و نقطه سفارش' }}">
-            <i class="bi bi-bell fs-5 text-warning"></i>
-            <span id="navAlertBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
-              0
-            </span>
-          </a>
-
-          <div class="user-pill">
-            <i class="bi bi-person-circle me-1"></i>
-            <strong>{{ user.full_name or user.username }}</strong>
-          </div>
-          <a href="/logout" class="btn-logout text-decoration-none">
-            <i class="bi bi-box-arrow-right me-1"></i>{{ 'Çıkış' if is_tr else 'خروج' }}
-          </a>
-        </div>
-        {% endif %}
-      </div>
+      {% endif %}
     </div>
   </nav>
 

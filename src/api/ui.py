@@ -25,7 +25,17 @@ async def dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    transaction_count = db.query(StockTransaction).count()
+    # ۱. سال مالی فعال و شمارش اسناد تأیید شده (APPROVED) دوره جاری
+    active_fy = InventoryService.get_active_fiscal_year(db)
+    if active_fy:
+        approved_tx_count = db.query(StockTransaction).filter(
+            StockTransaction.status == DocumentStatus.APPROVED,
+            StockTransaction.fiscal_year_id == active_fy.id
+        ).count()
+    else:
+        approved_tx_count = db.query(StockTransaction).filter(
+            StockTransaction.status == DocumentStatus.APPROVED
+        ).count()
 
     recent_transactions = (
         db.query(StockTransaction)
@@ -48,10 +58,38 @@ async def dashboard(
         .all()
     )
 
-    is_admin = any(role.name == "Admin" for role in current_user.roles)
+    # تعیین نقش‌ها
+    user_role_names = [role.name for role in current_user.roles]
+    is_admin = ("Admin" in user_role_names) or (current_user.username == "admin")
+    is_finance = ("Finance_Manager" in user_role_names) or (current_user.username == "finance")
+    is_warehouse = ("Warehouse_Supervisor" in user_role_names) or (current_user.username in ["warehouse", "operator"])
+    is_commercial = ("Commercial_Officer" in user_role_names) or (current_user.username in ["commercial", "buyer", "seller"])
+    is_baskool = ("Weighbridge_Operator" in user_role_names) or (current_user.username == "baskool")
 
-    # داده‌های نمودار: موجودی لحظه‌ای کالاها
+    # نام نقش فارسی
+    if is_admin:
+        user_role_fa = "مدیر ارشد سیستم"
+        user_role_tr = "Sistem Yöneticisi"
+    elif is_finance:
+        user_role_fa = "مدیر مالی و حسابداری"
+        user_role_tr = "Mali ve Muhasebe Müdürü"
+    elif is_warehouse:
+        user_role_fa = "سرپرست انبار"
+        user_role_tr = "Depo Amiri"
+    elif is_commercial:
+        user_role_fa = "کارشناس بازرگانی"
+        user_role_tr = "Ticaret Uzmanı"
+    elif is_baskool:
+        user_role_fa = "اپراتور باسکول دیجیتال"
+        user_role_tr = "Kantar Operatörü"
+    else:
+        user_role_fa = current_user.roles[0].description if current_user.roles else "کاربر سیستم"
+        user_role_tr = current_user.roles[0].name if current_user.roles else "Kullanıcı"
+
+    # ۲. داده‌های موجودی و شمارش اقلام دارای موجودی مثبت (current_balance > 0)
     stock_balances = InventoryService.calculate_stock_balances(db)
+    positive_stock_items_count = sum(1 for item in stock_balances if item.get("current_balance", 0) > 0)
+
     categories = db.query(ProductCategory).order_by(ProductCategory.name).all()
 
     active_region = get_active_region(request)
@@ -62,13 +100,20 @@ async def dashboard(
         name="dashboard.html",
         context={
             "request": request,
-            "tx_count": transaction_count,
+            "tx_count": approved_tx_count,
+            "positive_items_count": positive_stock_items_count,
+            "user_role_fa": user_role_tr if is_tr else user_role_fa,
+            "active_fiscal_year": active_fy,
             "recent_txs": recent_transactions,
             "pending_txs": pending_transactions,
             "msg": msg,
             "error": error,
             "user": current_user,
             "is_admin": is_admin,
+            "is_finance": is_finance,
+            "is_warehouse": is_warehouse,
+            "is_commercial": is_commercial,
+            "is_baskool": is_baskool,
             "stock_balances": stock_balances,
             "categories": categories,
             "active_region": active_region,
