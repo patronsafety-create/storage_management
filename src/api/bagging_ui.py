@@ -12,7 +12,7 @@ from src.core.dependencies import allow_roles
 from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import BaggingOrder, Product, Warehouse, StockTransaction, TransactionType
-from src.domain_model.enums import BaggingStatus, DocumentStatus
+from src.domain_model.enums import BaggingStatus, DocumentStatus, TransactionSource
 from src.services.audit_service import AuditService
 from src.services.inventory_service import InventoryService
 from src.core.localization.regions import get_active_region, Region, localize_display_name

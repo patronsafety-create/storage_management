@@ -19,7 +19,7 @@ from src.domain_model.auth_models import User
 router = APIRouter(
     prefix="/master-data",
     tags=["Business Partners"],
-    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))]
+    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager", "Warehouse_Supervisor"))]
 )
 
 templates = Jinja2Templates(directory="templates")
