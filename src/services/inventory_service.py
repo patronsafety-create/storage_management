@@ -25,13 +25,19 @@ class InventoryService:
 
         if not active_fy:
             active_fy = FiscalYear(
-                name="سال مالی ۱۴۰۴",
-                start_date="1404-01-01",
-                end_date="1404-12-29",
+                name="سال مالی ۱۴۰۳",
+                start_date="1403-01-01",
+                end_date="1403-12-29",
                 is_active=True,
                 is_closed=False
             )
             db.add(active_fy)
+            db.commit()
+            db.refresh(active_fy)
+        elif active_fy.name == "سال مالی ۱۴۰۴":
+            active_fy.name = "سال مالی ۱۴۰۳"
+            active_fy.start_date = "1403-01-01"
+            active_fy.end_date = "1403-12-29"
             db.commit()
             db.refresh(active_fy)
 

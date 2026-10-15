@@ -234,6 +234,31 @@ def test_3_commercial_actions(wh_id: int, prod_id: int):
     assert res_so_view.status_code == 200, f"صفحه جزئیات سفارش فروش با خطای {res_so_view.status_code} مواجه شد!"
     log_success(f"صفحه جزئیات سفارش فروش #{so_id} با موفقیت بارگذاری شد (200 OK - بدون خطای tax_info)")
 
+    # ۵. راستی‌آزمایی مهار هوشمند خروج مازاد بر موجودی بدون خطای خام ۴۰۰
+    with SessionLocal() as db:
+        item = db.query(SalesOrderItem).filter(SalesOrderItem.sales_order_id == so_id).first()
+        item_id = item.id
+
+    res_deliver_fail = commercial_client.post(
+        f"/sales/{so_id}/deliver",
+        data={
+            "warehouse_id": wh_id,
+            "item_id": [item_id],
+            "deliver_qty": [9999999.0]
+        }
+    )
+    assert res_deliver_fail.status_code == 303, f"کد غیرمنتظره {res_deliver_fail.status_code} حین خروج مازاد بر موجودی!"
+    loc = res_deliver_fail.headers.get("location", "")
+    assert "error=" in loc, f"خطای عدم موجودی در ریدایرکت ثبت نشد: {loc}"
+    log_success("سیستم با موفقیت درخواست خروج مازاد بر موجودی را مهار کرد (هدایت امن با بنر خطا بدون خطای خام ۴۰۰)")
+
+    # ۶. استعلام زنده موجودی آزاد از API
+    res_stock = commercial_client.get(f"/api/stock/{prod_id}/{wh_id}")
+    assert res_stock.status_code == 200, f"خطا در استعلام API موجودی: {res_stock.status_code}"
+    stock_json = res_stock.json()
+    assert "available_stock" in stock_json, "فیلد available_stock در خروجی API یافت نشد!"
+    log_success(f"استعلام زنده موجودی از API با موفقیت انجام شد (موجودی آزاد: {stock_json['available_stock']})")
+
     return supplier_id, customer_id
 
 
@@ -324,8 +349,10 @@ def test_4_full_lifecycle_workflow(wh_id: int, prod_id: int, supplier_id: int):
             "receive_qty": [po_qty]
         }
     )
-    assert res_duplicate_attempt.status_code == 400, "سیستم باید جلوی ثبت دستی را در زمان حضور کامیون روی باسکول بگیرد!"
-    log_success("گام ۳ (کنترل باگ ۴): سیستم با موفقیت از ثبت مضاعف دستی حین توزین اول جلوگیری کرد (400 Bad Request)")
+    assert res_duplicate_attempt.status_code in (400, 303), "سیستم باید جلوی ثبت دستی را در زمان حضور کامیون روی باسکول بگیرد!"
+    if res_duplicate_attempt.status_code == 303:
+        assert "error=" in res_duplicate_attempt.headers.get("location", ""), "پیام خطا در ریدایرکت ثبت نشد!"
+    log_success("گام ۳ (کنترل باگ ۴): سیستم با موفقیت از ثبت مضاعف دستی حین توزین اول جلوگیری کرد (مهار با ریدایرکت/پیام خطا)")
 
     # گام ۴: کامیون پس از تخلیه بار به باسکول بازمی‌گردد ➔ توزین دوم (تار/خالی) ثبت می‌شود
     tare_wt = 26000.0  # وزن خالص = 10,000 کیلوگرم دقیقاً برابر با سفارش

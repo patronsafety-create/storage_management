@@ -984,6 +984,27 @@
   </nav>
 
   <div class="container-fluid px-4 py-4 app-content-fade">
+    {% if request.query_params.get('error') %}
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-lg mb-4 d-flex align-items-center" role="alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #fca5a5; backdrop-filter: blur(8px);">
+      <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-danger flex-shrink-0"></i>
+      <div class="flex-grow-1">
+        <strong class="d-block mb-1">{% if is_tr %}Sistem İşlem Uyarısı:{% else %}هشدار عملیاتی سیستم:{% endif %}</strong>
+        <span>{{ request.query_params.get('error') }}</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('msg') %}
+    <div class="alert alert-success alert-dismissible fade show border-0 shadow-lg mb-4 d-flex align-items-center" role="alert" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #6ee7b7; backdrop-filter: blur(8px);">
+      <i class="bi bi-check-circle-fill fs-4 me-3 text-success flex-shrink-0"></i>
+      <div class="flex-grow-1">
+        <span>{{ request.query_params.get('msg') }}</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     {% block content %}{% endblock %}
   </div>
 

@@ -212,7 +212,12 @@
           <i class="bi bi-shield-lock me-1 text-warning"></i>
           {{ 'Not: Bu işlem doğrudan stoktan düşmez; Depo Kartabilesine onay için "Beklemede" durumunda bir çıkış fişi gönderir.' if is_tr else 'توجه: ثبت این فرم بلافاصله موجودی را صفر نمی‌کند، بلکه سند خروج را در وضعیت «در انتظار تأیید» به کارتابل انبار ارسال می‌کند و موجودی پس از تأیید قطعی انباردار کسر خواهد شد.' }}
         </p>
-        <form action="/sales/{{ order.id }}/deliver" method="post">
+        <form id="deliverOrderForm" action="/sales/{{ order.id }}/deliver" method="post">
+          <div id="deliverFormAlert" class="alert alert-danger d-none mb-3 py-2 px-3 small border-0 shadow-sm align-items-center" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4) !important;">
+            <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
+            <span id="deliverFormAlertText"></span>
+          </div>
+
           <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label for="warehouse_id" class="form-label small fw-bold text-light">
@@ -224,6 +229,12 @@
                 {% endfor %}
               </select>
             </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="text-secondary small pb-1">
+                <i class="bi bi-info-circle me-1 text-teal"></i>
+                {{ 'Mevcut serbest stoklar seçilen depoya göre anlık hesaplanmaktadır.' if is_tr else 'موجودی آزاد کالاها متناسب با انبار انتخابی به صورت هوشمند محاسبه می‌شود.' }}
+              </div>
+            </div>
           </div>
 
           <div class="table-responsive mb-3">
@@ -232,21 +243,27 @@
                 <tr>
                   <th>{{ 'Malzeme' if is_tr else 'کالا' }}</th>
                   <th>{{ 'Kalan Miktar' if is_tr else 'باقیمانده سفارش' }}</th>
-                  <th style="width: 200px;">{{ 'Bu Partide Çıkacak Miktar' if is_tr else 'مقدار ارسالی در این پارت' }}</th>
+                  <th>{{ 'Depo Serbest Stoğu' if is_tr else 'موجودی آزاد انبار' }}</th>
+                  <th style="width: 220px;">{{ 'Bu Partide Çıkacak Miktar' if is_tr else 'مقدار ارسالی در این پارت' }}</th>
                 </tr>
               </thead>
               <tbody>
                 {% for it in order.items %}
                 {% set rem = it.quantity - it.delivered_quantity %}
-                <tr>
+                <tr class="deliver-item-row" data-product-id="{{ it.product_id }}" data-product-name="{{ it.product.name if it.product else '' }}" data-rem-qty="{{ rem }}" data-uom="{{ (it.product.uom | tr_loc(is_tr)) if it.product else '' }}">
                   <td class="small text-light">{{ (it.product.name | tr_loc(is_tr)) if it.product else '-' }}</td>
                   <td class="small font-monospace text-warning">{{ "{:,.2f}".format(rem) }} {{ (it.product.uom | tr_loc(is_tr)) if it.product else '' }}</td>
+                  <td class="small" id="stock_badge_cell_{{ it.product_id }}">
+                    <span class="badge bg-secondary bg-opacity-25 text-light">{{ 'Sorgulanıyor...' if is_tr else 'در حال استعلام...' }}</span>
+                  </td>
                   <td>
                     <input type="hidden" name="item_id" value="{{ it.id }}">
-                    <input type="number" step="0.001" min="0" max="{{ rem }}" name="deliver_qty"
-                           class="form-control form-control-sm"
+                    <input type="number" step="0.001" min="0" name="deliver_qty"
+                           id="deliver_input_{{ it.product_id }}"
+                           class="form-control form-control-sm deliver-qty-input font-monospace"
                            value="{{ rem if rem > 0 else 0 }}"
                            {% if rem <= 0 %}disabled{% endif %}>
+                    <div class="small text-danger mt-1 d-none stock-row-err" id="stock_err_{{ it.product_id }}"></div>
                   </td>
                 </tr>
                 {% endfor %}
@@ -254,7 +271,7 @@
             </table>
           </div>
 
-          <button type="submit" class="btn btn-teal w-100 py-2">
+          <button type="submit" id="submitDeliverBtn" class="btn btn-teal w-100 py-2">
             <i class="bi bi-send-check me-1"></i>
             {{ 'Depo Kartabilesine Gönder (Çıkış İsteği)' if is_tr else 'ارسال به کارتابل انبار (درخواست خروج کالا)' }}
           </button>
@@ -271,4 +288,135 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const stockMap = {{ stock_map_json | safe if stock_map_json else '{}' }};
+    const warehouseSelect = document.getElementById('warehouse_id');
+    const deliverForm = document.getElementById('deliverOrderForm');
+    const alertBox = document.getElementById('deliverFormAlert');
+    const alertText = document.getElementById('deliverFormAlertText');
+    const submitBtn = document.getElementById('submitDeliverBtn');
+
+    if (!warehouseSelect || !deliverForm) return;
+
+    function updateStockDisplay() {
+        const selectedWh = String(warehouseSelect.value);
+        const whStocks = stockMap[selectedWh] || {};
+        const rows = document.querySelectorAll('.deliver-item-row');
+        let totalPositiveDeliverable = 0;
+
+        rows.forEach(row => {
+            const pId = String(row.getAttribute('data-product-id'));
+            const pName = row.getAttribute('data-product-name');
+            const remQty = parseFloat(row.getAttribute('data-rem-qty')) || 0;
+            const uom = row.getAttribute('data-uom') || '';
+            const cell = document.getElementById(`stock_badge_cell_${pId}`);
+            const input = document.getElementById(`deliver_input_${pId}`);
+            const errDiv = document.getElementById(`stock_err_${pId}`);
+
+            const stockInfo = whStocks[pId] || { available: 0, current: 0 };
+            const avail = stockInfo.available || 0;
+
+            if (avail <= 0.0001) {
+                cell.innerHTML = `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50"><i class="bi bi-x-circle me-1"></i>{% if is_tr %}Stok Yok (0){% else %}عدم موجودی (۰){% endif %}</span>`;
+                if (remQty > 0) {
+                    input.value = 0;
+                    input.max = 0;
+                    input.classList.add('border-danger');
+                    errDiv.classList.remove('d-none');
+                    errDiv.textContent = `{% if is_tr %}Bu depoda ürün mevcut değil!{% else %}موجودی آزاد این کالا در این انبار صفر است!{% endif %}`;
+                }
+            } else {
+                cell.innerHTML = `<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50"><i class="bi bi-check-circle me-1"></i>{% if is_tr %}Serbest:{% else %}موجودی آزاد:{% endif %} ${avail.toLocaleString()} ${uom}</span>`;
+                const maxAllowed = Math.min(remQty, avail);
+                input.max = maxAllowed;
+                if (parseFloat(input.value) > maxAllowed) {
+                    input.value = maxAllowed;
+                } else if (parseFloat(input.value) === 0 && remQty > 0) {
+                    input.value = maxAllowed;
+                }
+                input.classList.remove('border-danger');
+                errDiv.classList.add('d-none');
+                totalPositiveDeliverable += maxAllowed;
+            }
+        });
+
+        if (alertBox) alertBox.classList.add('d-none');
+    }
+
+    warehouseSelect.addEventListener('change', updateStockDisplay);
+    updateStockDisplay();
+
+    // اعتبارسنجی مقادیر دستی حین تایپ
+    document.querySelectorAll('.deliver-qty-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const row = this.closest('.deliver-item-row');
+            const pId = String(row.getAttribute('data-product-id'));
+            const pName = row.getAttribute('data-product-name');
+            const selectedWh = String(warehouseSelect.value);
+            const whStocks = stockMap[selectedWh] || {};
+            const avail = (whStocks[pId] && whStocks[pId].available) || 0;
+            const remQty = parseFloat(row.getAttribute('data-rem-qty')) || 0;
+            const val = parseFloat(this.value) || 0;
+            const errDiv = document.getElementById(`stock_err_${pId}`);
+
+            if (val > avail) {
+                this.classList.add('border-danger');
+                errDiv.classList.remove('d-none');
+                errDiv.textContent = `{% if is_tr %}Maksimum serbest stok: ${avail}{% else %}سقف موجودی آزاد این انبار: ${avail} واحد است!{% endif %}`;
+            } else if (val > remQty * 1.05) {
+                this.classList.add('border-danger');
+                errDiv.classList.remove('d-none');
+                errDiv.textContent = `{% if is_tr %}Sipariş bakiyesinden fazla girilemez{% else %}بیش از مانده سفارش قابل تحویل نیست{% endif %}`;
+            } else {
+                this.classList.remove('border-danger');
+                errDiv.classList.add('d-none');
+            }
+        });
+    });
+
+    // جلوگیری قطعی از ارسال فرم در صورت ناکافی بودن موجودی یا عدم انتخاب مقدار
+    deliverForm.addEventListener('submit', function(e) {
+        const selectedWh = String(warehouseSelect.value);
+        const whStocks = stockMap[selectedWh] || {};
+        const rows = document.querySelectorAll('.deliver-item-row');
+        let hasError = false;
+        let errorMessage = '';
+        let totalQty = 0;
+
+        rows.forEach(row => {
+            const pId = String(row.getAttribute('data-product-id'));
+            const pName = row.getAttribute('data-product-name');
+            const input = document.getElementById(`deliver_input_${pId}`);
+            if (!input || input.disabled) return;
+
+            const val = parseFloat(input.value) || 0;
+            totalQty += val;
+            const avail = (whStocks[pId] && whStocks[pId].available) || 0;
+
+            if (val > avail + 0.0001) {
+                hasError = true;
+                errorMessage = `{% if is_tr %}«${pName}» ürünü için girilen miktar (${val}), seçilen depodaki serbest stoktan (${avail}) fazladır! Lütfen miktarı azaltın veya başka bir depo seçin.{% else %}موجودی آزاد کالای «${pName}» در این انبار (${avail}) کافی نیست (درخواستی: ${val}). امکان صدور حواله مازاد بر موجودی وجود ندارد.{% endif %}`;
+                input.focus();
+                input.classList.add('border-danger');
+            }
+        });
+
+        if (totalQty <= 0.0001 && !hasError) {
+            hasError = true;
+            errorMessage = `{% if is_tr %}Lütfen en az bir kalem için sevk miktarı belirtiniz.{% else %}حداقل برای یکی از اقلام باید مقدار ارسالی معتبر وارد شود.{% endif %}`;
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            alertText.textContent = errorMessage;
+            alertBox.classList.remove('d-none');
+            alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+});
+</script>
 {% endblock %}

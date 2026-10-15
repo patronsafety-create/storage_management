@@ -323,9 +323,9 @@ async def receive_purchase_order(
         WeighbridgeTicket.status == WeighbridgeStatus.FIRST_WEIGHING
     ).first()
     if active_wb:
-        raise HTTPException(
-            status_code=400,
-            detail=f"کامیون این سفارش در حال حاضر روی باسکول و در مرحله توزین اول است (قبض #{active_wb.ticket_number} - پلاک {active_wb.truck_plate}). پس از ثبت توزین دوم، سند به صورت خودکار به کارتابل انبار ارسال می‌شود."
+        return RedirectResponse(
+            url=f"/purchases/{po.id}?error=" + quote(f"کامیون این سفارش در حال حاضر روی باسکول و در مرحله توزین اول است (قبض #{active_wb.ticket_number} - پلاک {active_wb.truck_plate}). پس از ثبت توزین دوم، سند به صورت خودکار به کارتابل انبار ارسال می‌شود."),
+            status_code=303
         )
 
     try:
@@ -384,12 +384,18 @@ async def receive_purchase_order(
             url=f"/purchases/{po.id}?msg=" + quote(f"رسید موقت انبار صادر شد و جهت تایید نهایی و اعمال در موجودی به کارتابل انبار ارسال گردید."),
             status_code=303
         )
-    except HTTPException:
+    except HTTPException as he:
         db.rollback()
-        raise
+        return RedirectResponse(
+            url=f"/purchases/{po.id}?error=" + quote(he.detail),
+            status_code=303
+        )
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"خطا در صدور رسید انبار: {str(e)}")
+        return RedirectResponse(
+            url=f"/purchases/{po.id}?error=" + quote(f"خطا در صدور رسید انبار: {str(e)}"),
+            status_code=303
+        )
 
 
 @router.post("/{order_id}/close-short", response_class=HTMLResponse)
@@ -405,7 +411,10 @@ async def close_short_purchase_order(
         raise HTTPException(status_code=404, detail="سفارش خرید یافت نشد")
 
     if po.status not in (PurchaseOrderStatus.PARTIALLY_RECEIVED, PurchaseOrderStatus.CONFIRMED):
-        raise HTTPException(status_code=400, detail="تنها سفارش‌های در حال تحویل یا تایید شده قابل ختم دستی می‌باشند.")
+        return RedirectResponse(
+            url=f"/purchases/{po.id}?error=" + quote("تنها سفارش‌های در حال تحویل یا تایید شده قابل ختم دستی می‌باشند."),
+            status_code=303
+        )
 
     po.status = PurchaseOrderStatus.COMPLETED
     db.commit()

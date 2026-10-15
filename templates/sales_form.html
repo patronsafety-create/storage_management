@@ -114,9 +114,13 @@
                     <select name="product_id" class="form-select product-select" required>
                       <option value="" selected disabled>{{ 'Malzeme seçiniz...' if is_tr else 'انتخاب کالا...' }}</option>
                       {% for p in products %}
-                      <option value="{{ p.id }}">{{ p.name | tr_loc(is_tr) }} ({{ p.uom | tr_loc(is_tr) }})</option>
+                      {% set p_stock = product_stocks.get(p.id, 0.0) if product_stocks else 0.0 %}
+                      <option value="{{ p.id }}" data-stock="{{ p_stock }}" data-uom="{{ p.uom | tr_loc(is_tr) }}">
+                        {{ p.name | tr_loc(is_tr) }} ({{ 'Toplam Stok:' if is_tr else 'موجودی کل انبارها:' }} {{ "{:,.2f}".format(p_stock) }} {{ p.uom | tr_loc(is_tr) }})
+                      </option>
                       {% endfor %}
                     </select>
+                    <div class="small mt-1 product-stock-info"></div>
                   </td>
                   <td>
                     <input type="number" step="0.001" min="0.001" name="quantity" class="form-control" required placeholder="{{ 'Örn: 25.0' if is_tr else 'مثلاً: 25.0' }}">
@@ -154,12 +158,34 @@ document.addEventListener("DOMContentLoaded", function() {
     const addRowBtn = document.getElementById('addRowBtn');
     const itemsBody = document.getElementById('itemsBody');
 
+    function attachSelectListener(row) {
+        const sel = row.querySelector('.product-select');
+        const infoDiv = row.querySelector('.product-stock-info');
+        if (!sel || !infoDiv) return;
+
+        sel.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            const stock = parseFloat(opt.getAttribute('data-stock')) || 0;
+            const uom = opt.getAttribute('data-uom') || '';
+
+            if (stock <= 0.0001) {
+                infoDiv.innerHTML = `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50"><i class="bi bi-exclamation-octagon me-1"></i>{% if is_tr %}Stok Yok (0){% else %}موجودی در انبارها صفر است{% endif %}</span>`;
+            } else {
+                infoDiv.innerHTML = `<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50"><i class="bi bi-check-circle me-1"></i>{% if is_tr %}Mevcut Toplam Stok:{% else %}موجودی کل انبارها:{% endif %} ${stock.toLocaleString()} ${uom}</span>`;
+            }
+        });
+    }
+
+    document.querySelectorAll('#itemsBody tr').forEach(attachSelectListener);
+
     addRowBtn.addEventListener('click', function() {
         const firstRow = itemsBody.querySelector('tr');
         const newRow = firstRow.cloneNode(true);
         
         // پاکسازی مقادیر کپی شده
         newRow.querySelector('select').selectedIndex = 0;
+        const infoDiv = newRow.querySelector('.product-stock-info');
+        if (infoDiv) infoDiv.innerHTML = '';
         newRow.querySelector('input[name="quantity"]').value = '';
         newRow.querySelector('input[name="unit_price"]').value = '0';
         
@@ -172,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
+        attachSelectListener(newRow);
         itemsBody.appendChild(newRow);
     });
 });

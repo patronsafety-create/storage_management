@@ -1,6 +1,7 @@
 from typing import Optional
 from urllib.parse import quote
 from datetime import datetime
+import json
 
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -110,6 +111,11 @@ async def new_sales_order_form(
     count = db.query(SalesOrder).count() + 1
     generated_so_number = f"SO-TR-{count:04d}" if is_tr else f"SO-1403-{count:04d}"
 
+    product_stocks = {
+        p.id: round(InventoryService.get_total_stock_all_warehouses(db, p.id), 3)
+        for p in products
+    }
+
     return templates.TemplateResponse(
         request=request,
         name="sales_form.html",
@@ -117,6 +123,7 @@ async def new_sales_order_form(
             "request": request,
             "customers": customers,
             "products": products,
+            "product_stocks": product_stocks,
             "generated_so_number": generated_so_number,
             "user": current_user,
             "active_region": active_region,
@@ -272,6 +279,17 @@ async def view_sales_order(
 
     active_region = get_active_region(request)
 
+    stock_map = {}
+    for w in warehouses:
+        stock_map[str(w.id)] = {}
+        for it in so.items:
+            avail = InventoryService.get_available_stock(db, it.product_id, w.id)
+            cur = InventoryService.get_current_stock(db, it.product_id, w.id)
+            stock_map[str(w.id)][str(it.product_id)] = {
+                "available": round(avail, 3),
+                "current": round(cur, 3)
+            }
+
     return templates.TemplateResponse(
         request=request,
         name="sales_detail.html",
@@ -279,6 +297,8 @@ async def view_sales_order(
             "request": request,
             "order": so,
             "warehouses": warehouses,
+            "stock_map": stock_map,
+            "stock_map_json": json.dumps(stock_map),
             "total_amount": tax_info.total_payable,
             "tax_info": tax_info,
             "user": current_user,
@@ -312,9 +332,9 @@ async def deliver_sales_order(
         WeighbridgeTicket.status == WeighbridgeStatus.FIRST_WEIGHING
     ).first()
     if active_wb:
-        raise HTTPException(
-            status_code=400,
-            detail=f"کامیون این سفارش در حال حاضر روی باسکول و در مرحله توزین اول است (قبض #{active_wb.ticket_number} - پلاک {active_wb.truck_plate}). پس از ثبت توزین دوم، سند خروج به صورت خودکار به کارتابل انبار ارسال می‌شود."
+        return RedirectResponse(
+            url=f"/sales/{so.id}?error=" + quote(f"کامیون این سفارش در حال حاضر روی باسکول و در مرحله توزین اول است (قبض #{active_wb.ticket_number} - پلاک {active_wb.truck_plate}). پس از ثبت توزین دوم، سند خروج به صورت خودکار به کارتابل انبار ارسال می‌شود."),
+            status_code=303
         )
 
     try:
@@ -392,12 +412,18 @@ async def deliver_sales_order(
             url=f"/sales/{so.id}?msg=" + quote("حواله خروج موقت صادر شد و جهت تایید نهایی انباردار به کارتابل انبار ارسال گردید."),
             status_code=303
         )
-    except HTTPException:
+    except HTTPException as he:
         db.rollback()
-        raise
+        return RedirectResponse(
+            url=f"/sales/{so.id}?error=" + quote(he.detail),
+            status_code=303
+        )
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"خطا در صدور حواله خروج انبار: {str(e)}")
+        return RedirectResponse(
+            url=f"/sales/{so.id}?error=" + quote(f"خطا در صدور حواله خروج انبار: {str(e)}"),
+            status_code=303
+        )
 
 
 @router.post("/{order_id}/close-short", response_class=HTMLResponse)
@@ -408,24 +434,24 @@ async def close_short_sales_order(
     current_user: User = Depends(get_current_user)
 ):
     """ختم دستی سفارش فروش (Close Short) هنگام تحویل جزئی"""
-    so = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
-    if not so:
-        raise HTTPException(status_code=404, detail="سفارش فروش یافت نشد")
+    if po_or_so := db.query(SalesOrder).filter(SalesOrder.id == order_id).first():
+        if po_or_so.status not in (SalesOrderStatus.PARTIALLY_DELIVERED, SalesOrderStatus.CONFIRMED):
+            return RedirectResponse(
+                url=f"/sales/{order_id}?error=" + quote("تنها سفارش‌های در حال ارسال یا تایید شده قابل ختم دستی می‌باشند."),
+                status_code=303
+            )
+        po_or_so.status = SalesOrderStatus.COMPLETED
+        db.commit()
 
-    if so.status not in (SalesOrderStatus.PARTIALLY_DELIVERED, SalesOrderStatus.CONFIRMED):
-        raise HTTPException(status_code=400, detail="تنها سفارش‌های در حال ارسال یا تایید شده قابل ختم دستی می‌باشند.")
+        AuditService.log(
+            db, action="UPDATE", entity_name="SalesOrder",
+            entity_id=str(po_or_so.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
+            details=f"ختم دستی سفارش فروش {po_or_so.so_number} با وضعیت تکمیل نهایی (Close Short)"
+        )
 
-    so.status = SalesOrderStatus.COMPLETED
-    db.commit()
-
-    AuditService.log(
-        db, action="UPDATE", entity_name="SalesOrder",
-        entity_id=str(so.id), user_id=current_user.id, user_name=current_user.full_name or current_user.username,
-        details=f"ختم دستی سفارش فروش {so.so_number} با وضعیت تکمیل نهایی (Close Short)"
-    )
-
-    return RedirectResponse(
-        url=f"/sales/{so.id}?msg=" + quote("سفارش فروش به صورت دستی ختم شد و وضعیت آن تکمیل نهایی ثبت گردید."),
-        status_code=303
-    )
+        return RedirectResponse(
+            url=f"/sales/{order_id}?msg=" + quote("سفارش فروش به صورت دستی ختم شد و وضعیت آن تکمیل نهایی ثبت گردید."),
+            status_code=303
+        )
+    raise HTTPException(status_code=404, detail="سفارش فروش یافت نشد")
 
