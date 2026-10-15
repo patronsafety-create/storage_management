@@ -95,6 +95,15 @@
     transition: all 0.25s ease;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   }
+  @media (max-width: 576px) {
+    .flow-stat-pill {
+      min-width: 100% !important;
+      flex: 1 1 100% !important;
+    }
+  }
+  .whitespace-nowrap {
+    white-space: nowrap !important;
+  }
   .flow-stat-pill:hover {
     transform: translateY(-3px);
     border-color: rgba(255, 255, 255, 0.2);
@@ -285,7 +294,7 @@
 <!-- ============================================================== -->
 <div class="row g-3 mb-4">
   <!-- کارت ۱: ارزش کل دارایی موجودی ملکی یا تعداد اقلام فعال -->
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     {% if is_admin or is_finance %}
     <a href="/inventory/balance" class="kpi-card" title="مشاهده موازنه موجودی و کاردکس ریالی">
       <div class="d-flex justify-content-between align-items-start mb-2">
@@ -300,12 +309,12 @@
         </div>
       </div>
       <div class="kpi-main-val text-teal mb-2">
-        <span class="counter-animate" data-target="{{ total_owned_inventory_value }}">{{ "{:,.0f}".format(total_owned_inventory_value) }}</span> <span class="fs-6 fw-normal text-secondary">{{ currency_symbol }}</span>
+        <span class="counter-animate" data-target="{{ total_owned_inventory_value or 0 }}">{{ "{:,.0f}".format(total_owned_inventory_value or 0) }}</span> <span class="fs-6 fw-normal text-secondary">{{ currency_symbol }}</span>
       </div>
       <div class="d-flex align-items-center gap-1 flex-wrap">
         <span class="kpi-sub-badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">
           <i class="bi bi-graph-up-arrow"></i>
-          {{ 'Satış Brüt Kârı: +' if is_tr else 'سود ناخالص فروش: +' }}{{ "{:,.0f}".format(estimated_gross_profit) }} {{ currency_symbol }}
+          {{ 'Satış Brüt Kârı: +' if is_tr else 'سود ناخالص فروش: +' }}{{ "{:,.0f}".format(estimated_gross_profit or 0) }} {{ currency_symbol }}
         </span>
       </div>
     </a>
@@ -323,7 +332,7 @@
         </div>
       </div>
       <div class="kpi-main-val text-teal mb-2">
-        <span class="counter-animate" data-target="{{ active_skus_count }}">{{ active_skus_count }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Kalem' if is_tr else 'قلم فعال' }}</span>
+        <span class="counter-animate" data-target="{{ active_skus_count or 0 }}">{{ active_skus_count or 0 }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Kalem' if is_tr else 'قلم فعال' }}</span>
       </div>
       <div class="kpi-sub-badge bg-info bg-opacity-20 text-info border border-info border-opacity-25">
         <i class="bi bi-check2-circle"></i>
@@ -334,7 +343,7 @@
   </div>
 
   <!-- کارت ۲: موجودی فیزیکی کل و تفکیک آزاد/رزرو -->
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     <a href="/inventory/balance" class="kpi-card" title="مشاهده تفکیک موجودی آزاد و رزرو شده">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <span class="text-secondary small fw-bold">
@@ -348,21 +357,21 @@
         </div>
       </div>
       <div class="kpi-main-val text-purple mb-2">
-        <span class="counter-animate" data-is-float="true" data-target="{{ total_physical_stock }}">{{ "{:,.2f}".format(total_physical_stock) }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Ton/Birim' if is_tr else 'تن / واحد' }}</span>
+        <span class="counter-animate" data-is-float="true" data-target="{{ total_physical_stock or 0.0 }}">{{ "{:,.2f}".format(total_physical_stock or 0.0) }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Ton/Birim' if is_tr else 'تن / واحد' }}</span>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 py-1 px-2" style="font-size: 0.72rem;">
-          {{ 'Serbest: ' if is_tr else 'آزاد: ' }}<strong>{{ "{:,.1f}".format(total_available_stock) }}</strong>
+          {{ 'Serbest: ' if is_tr else 'آزاد: ' }}<strong>{{ "{:,.1f}".format(total_available_stock or 0.0) }}</strong>
         </span>
         <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 py-1 px-2" style="font-size: 0.72rem;">
-          {{ 'Rezerve: ' if is_tr else 'رزرو: ' }}<strong>{{ "{:,.1f}".format(total_reserved_stock) }}</strong>
+          {{ 'Rezerve: ' if is_tr else 'رزرو: ' }}<strong>{{ "{:,.1f}".format(total_reserved_stock or 0.0) }}</strong>
         </span>
       </div>
     </a>
   </div>
 
   <!-- کارت ۳: زنجیره تأمین و سفارشات در راه -->
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     <a href="{% if is_admin or is_finance or is_commercial %}/purchases?status=PARTIALLY_RECEIVED{% elif is_warehouse %}/inventory/transactions{% else %}/weighbridge{% endif %}" class="kpi-card" title="مشاهده سفارشات و بارهای در راه">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <span class="text-secondary small fw-bold">
@@ -376,17 +385,17 @@
         </div>
       </div>
       <div class="kpi-main-val text-info mb-2">
-        <span class="counter-animate" data-is-float="true" data-target="{{ in_transit_tonnage }}">{{ "{:,.1f}".format(in_transit_tonnage) }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Ton Kalan' if is_tr else 'تن مانده ورود' }}</span>
+        <span class="counter-animate" data-is-float="true" data-target="{{ in_transit_tonnage or 0.0 }}">{{ "{:,.1f}".format(in_transit_tonnage or 0.0) }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Ton Kalan' if is_tr else 'تن مانده ورود' }}</span>
       </div>
       <div class="small text-secondary font-monospace" style="font-size: 0.74rem;">
-        <span class="text-light fw-bold">{{ active_po_count }}</span> {{ 'Açık Satın Alma' if is_tr else 'سفارش خرید باز' }} |
-        <span class="text-warning fw-bold">{{ open_so_count }}</span> {{ 'Bekleyen Satış' if is_tr else 'فروش در نوبت خروج' }}
+        <span class="text-light fw-bold">{{ active_po_count or 0 }}</span> {{ 'Açık Satın Alma' if is_tr else 'سفارش خرید باز' }} |
+        <span class="text-warning fw-bold">{{ open_so_count or 0 }}</span> {{ 'Bekleyen Satış' if is_tr else 'فروش در نوبت خروج' }}
       </div>
     </a>
   </div>
 
   <!-- کارت ۴: عملیات زنده باسکول و هشدارهای موجودی -->
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="kpi-card" style="cursor: default;">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <span class="text-secondary small fw-bold">
@@ -398,21 +407,21 @@
       </div>
       <div class="d-flex align-items-baseline gap-2 mb-2">
         <a href="/inventory/alerts" class="text-decoration-none kpi-main-val text-danger" title="مشاهده اقلام بحرانی">
-          <span class="counter-animate" data-target="{{ critical_stock_count }}">{{ critical_stock_count }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Kritik Kalem' if is_tr else 'کالای بحرانی' }}</span>
+          <span class="counter-animate" data-target="{{ critical_stock_count or 0 }}">{{ critical_stock_count or 0 }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Kritik Kalem' if is_tr else 'کالای بحرانی' }}</span>
         </a>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
         {% if is_admin or is_warehouse or is_baskool %}
         <a href="/weighbridge?status=FIRST_WEIGHING" class="badge bg-warning bg-opacity-20 text-warning text-decoration-none border border-warning border-opacity-25 py-1 px-2" style="font-size: 0.72rem;">
-          <i class="bi bi-truck me-1"></i>{{ active_weighbridge_trucks }} {{ 'Kantar Sırasında' if is_tr else 'تریلی روی باسکول' }} ↗
+          <i class="bi bi-truck me-1"></i>{{ active_weighbridge_trucks or 0 }} {{ 'Kantar Sırasında' if is_tr else 'تریلی روی باسکول' }} ↗
         </a>
         {% else %}
         <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 py-1 px-2" style="font-size: 0.72rem;">
-          <i class="bi bi-truck me-1"></i>{{ active_weighbridge_trucks }} {{ 'Kantar Sırasında' if is_tr else 'تریلی روی باسکول' }}
+          <i class="bi bi-truck me-1"></i>{{ active_weighbridge_trucks or 0 }} {{ 'Kantar Sırasında' if is_tr else 'تریلی روی باسکول' }}
         </span>
         {% endif %}
         <a href="/inventory/transactions" class="badge bg-secondary bg-opacity-25 text-light text-decoration-none py-1 px-2" style="font-size: 0.72rem;">
-          {{ pending_txs | length }} {{ 'Kartabl' if is_tr else 'سند کارتابل' }} ↗
+          {{ (pending_txs or []) | length }} {{ 'Kartabl' if is_tr else 'سند کارتابل' }} ↗
         </a>
       </div>
     </div>
@@ -569,7 +578,7 @@
           </div>
           <div>
             <div class="text-secondary small" style="font-size: 0.74rem;">{{ 'Toplam Dönem Girişi' if is_tr else 'مجموع ورودی دوره' }}</div>
-            <div class="fs-5 fw-bold font-monospace text-success">+{{ "{:,.1f}".format(total_inflow_sum) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }}</span></div>
+            <div class="fs-5 fw-bold font-monospace text-success">+{{ "{:,.1f}".format(total_inflow_sum or 0.0) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }}</span></div>
           </div>
         </div>
 
@@ -579,25 +588,25 @@
           </div>
           <div>
             <div class="text-secondary small" style="font-size: 0.74rem;">{{ 'Toplam Dönem Çıkışı' if is_tr else 'مجموع خروجی / تحویل' }}</div>
-            <div class="fs-5 fw-bold font-monospace text-danger">-{{ "{:,.1f}".format(total_outflow_sum) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }}</span></div>
+            <div class="fs-5 fw-bold font-monospace text-danger">-{{ "{:,.1f}".format(total_outflow_sum or 0.0) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }}</span></div>
           </div>
         </div>
 
         <div class="flow-stat-pill">
-          <div class="flow-stat-icon {% if net_flow_sum >= 0 %}bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25{% else %}bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25{% endif %}">
-            <i class="bi {% if net_flow_sum >= 0 %}bi-plus-slash-minus{% else %}bi-dash-circle{% endif %}"></i>
+          <div class="flow-stat-icon {% if (net_flow_sum or 0.0) >= 0 %}bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25{% else %}bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25{% endif %}">
+            <i class="bi {% if (net_flow_sum or 0.0) >= 0 %}bi-plus-slash-minus{% else %}bi-dash-circle{% endif %}"></i>
           </div>
           <div>
             <div class="text-secondary small" style="font-size: 0.74rem;">{{ 'Net Depo Akış Dengesi' if is_tr else 'تراز خالص انباشت' }}</div>
-            <div class="fs-5 fw-bold font-monospace {% if net_flow_sum >= 0 %}text-teal{% else %}text-warning{% endif %}">
-              {{ "+{:,.1f}".format(net_flow_sum) if net_flow_sum > 0 else "{:,.1f}".format(net_flow_sum) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }} ({{ 'Net Artış' if net_flow_sum >= 0 else 'Net Azalış' }})</span>
+            <div class="fs-5 fw-bold font-monospace {% if (net_flow_sum or 0.0) >= 0 %}text-teal{% else %}text-warning{% endif %}">
+              {{ "+{:,.1f}".format(net_flow_sum or 0.0) if (net_flow_sum or 0.0) > 0 else "{:,.1f}".format(net_flow_sum or 0.0) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }} ({{ 'Net Artış' if (net_flow_sum or 0.0) >= 0 else 'Net Azalış' }})</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- بستر رسم نمودار تعاملی -->
-      <div class="flex-grow-1" style="min-height: 270px; position: relative;">
+      <div class="flex-grow-1 position-relative w-100" style="min-height: 280px; height: 300px; max-width: 100%;">
         <canvas id="flowBarChart"></canvas>
       </div>
     </div>
@@ -687,20 +696,20 @@
     </div>
   </div>
 
-  <div class="table-responsive">
+  <div class="table-responsive w-100 overflow-x-auto" style="max-width: 100%; -webkit-overflow-scrolling: touch;">
     <table class="table table-dark table-hover mb-0 align-middle" id="masterInventoryTable">
       <thead style="background: rgba(255, 255, 255, 0.04);">
-        <tr class="text-secondary small">
+        <tr class="text-secondary small whitespace-nowrap">
           <th class="py-3 px-3">#</th>
           <th>{{ 'Ürün & Kod' if is_tr else 'کالا و مشخصات' }}</th>
           <th>{{ 'Depo' if is_tr else 'انبار' }}</th>
-          <th>{{ 'Fiziki Mevcut' if is_tr else 'موجودی فیزیکی فعلی' }}</th>
-          <th>{{ 'Rezerve' if is_tr else 'رزرو شده فروش' }}</th>
-          <th>{{ 'Serbest Bakiye' if is_tr else 'مانده آزاد قابل فروش' }}</th>
+          <th class="text-nowrap">{{ 'Fiziki Mevcut' if is_tr else 'موجودی فیزیکی فعلی' }}</th>
+          <th class="text-nowrap">{{ 'Rezerve' if is_tr else 'رزرو شده فروش' }}</th>
+          <th class="text-nowrap">{{ 'Serbest Bakiye' if is_tr else 'مانده آزاد قابل فروش' }}</th>
           <th>{{ 'Stok Sağlık Durumu' if is_tr else 'وضعیت سلامت و نقطه سفارش' }}</th>
           {% if is_admin or is_finance %}
-          <th class="text-end">{{ 'Ort. Maliyet' if is_tr else 'فی میانگین' }}</th>
-          <th class="text-end px-3">{{ 'Toplam Değer' if is_tr else 'ارزش کل موجودی' }}</th>
+          <th class="text-end text-nowrap">{{ 'Ort. Maliyet' if is_tr else 'فی میانگین' }}</th>
+          <th class="text-end px-3 text-nowrap">{{ 'Toplam Değer' if is_tr else 'ارزش کل موجودی' }}</th>
           {% endif %}
         </tr>
       </thead>
@@ -708,32 +717,32 @@
         {% if enhanced_matrix %}
           {% for row in enhanced_matrix %}
           <tr class="matrix-row" data-health="{{ row.health_status }}" data-has-available="{{ 'true' if row.available_balance > 0 else 'false' }}" data-current="{{ row.current_balance }}">
-            <td class="px-3 text-secondary small">{{ loop.index }}</td>
+            <td class="px-3 text-secondary small whitespace-nowrap">{{ loop.index }}</td>
             <td class="fw-semibold">
               <a href="/inventory/kardex/{{ row.product_id }}" class="text-light text-decoration-none d-flex align-items-center gap-1 hover-teal" title="مشاهده کاردکس کالا">
-                <span>{{ row.name | tr_loc(is_tr) }}</span>
+                <span class="text-break">{{ row.name | tr_loc(is_tr) }}</span>
                 <i class="bi bi-box-arrow-up-right text-secondary small" style="font-size: 0.72rem;"></i>
               </a>
               {% if row.secondary_uom and row.secondary_balance %}
-                <div class="text-teal small font-monospace">{{ "{:,.0f}".format(row.secondary_balance) }} {{ row.secondary_uom | tr_loc(is_tr) }}</div>
+                <div class="text-teal small font-monospace whitespace-nowrap">{{ "{:,.0f}".format(row.secondary_balance) }} {{ row.secondary_uom | tr_loc(is_tr) }}</div>
               {% endif %}
             </td>
-            <td>
+            <td class="whitespace-nowrap">
               <a href="/inventory/balance?warehouse_id={{ row.warehouse_id }}" class="text-secondary text-decoration-none small hover-light" title="فیلتر این انبار">
                 {{ row.warehouse | tr_loc(is_tr) }}
               </a>
             </td>
-            <td class="fw-bold font-monospace text-light">
+            <td class="fw-bold font-monospace text-light whitespace-nowrap">
               {{ "{:,.2f}".format(row.current_balance) }} <span class="small text-secondary">{{ row.uom | tr_loc(is_tr) }}</span>
             </td>
-            <td class="font-monospace text-warning">
+            <td class="font-monospace text-warning whitespace-nowrap">
               {% if row.reserved_balance > 0 %}
                 {{ "{:,.2f}".format(row.reserved_balance) }}
               {% else %}
                 <span class="text-secondary">۰</span>
               {% endif %}
             </td>
-            <td>
+            <td class="whitespace-nowrap">
               <span class="badge {% if row.available_balance > 0 %}bg-success bg-opacity-25 text-success border border-success border-opacity-50{% else %}bg-secondary bg-opacity-25 text-secondary{% endif %} font-monospace fs-6 px-2 py-1">
                 {{ "{:,.2f}".format(row.available_balance) }}
               </span>
@@ -743,16 +752,16 @@
                 <div class="progress flex-grow-1 bg-dark" style="height: 6px; border-radius: 4px;">
                   <div class="progress-bar bg-{{ row.health_color }}" data-progress-pct="{{ row.health_pct }}"></div>
                 </div>
-                <span class="badge bg-{{ row.health_color }} bg-opacity-20 text-{{ row.health_color }} border border-{{ row.health_color }} border-opacity-25" style="font-size: 0.7rem;">
+                <span class="badge bg-{{ row.health_color }} bg-opacity-20 text-{{ row.health_color }} border border-{{ row.health_color }} border-opacity-25 whitespace-nowrap" style="font-size: 0.7rem;">
                   {{ row.health_label }}
                 </span>
               </div>
             </td>
             {% if is_admin or is_finance %}
-            <td class="text-end font-monospace text-secondary small">
+            <td class="text-end font-monospace text-secondary small whitespace-nowrap">
               {{ "{:,.0f}".format(row.unit_cost) if row.unit_cost > 0 else '---' }}
             </td>
-            <td class="text-end font-monospace px-3 fw-bold text-teal">
+            <td class="text-end font-monospace px-3 fw-bold text-teal whitespace-nowrap">
               {{ "{:,.0f}".format(row.total_value) if row.total_value > 0 else '---' }}
             </td>
             {% endif %}
