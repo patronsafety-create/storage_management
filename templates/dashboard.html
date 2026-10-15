@@ -4,24 +4,130 @@
 
 {% block content %}
 <style>
-  /* ===== EXECUTIVE DASHBOARD (FlowFin & Salezy Style) ===== */
+  /* ===== LUXURY EXECUTIVE DASHBOARD & MICRO-ANIMATIONS ===== */
+  @keyframes fadeInUpStagger {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulseLiveGlow {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+
+  @keyframes pulseWarningGlow {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  }
+
+  .pulse-dot-live {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: #10b981;
+    display: inline-block;
+    animation: pulseLiveGlow 2s infinite;
+  }
+
+  .pulse-dot-warn {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: #f59e0b;
+    display: inline-block;
+    animation: pulseWarningGlow 2s infinite;
+  }
+
+  /* Glassmorphic Luxury Buttons */
+  .btn-glass-lux {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.45rem 0.9rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+  }
+  .btn-glass-lux:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(20, 184, 166, 0.5);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.25);
+  }
+  .btn-glass-lux.active {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.3), rgba(14, 165, 233, 0.25));
+    border-color: #14b8a6;
+    color: #2dd4bf;
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.35);
+  }
+
+  /* Flow Balance Stat Cards */
+  .flow-stat-pill {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    padding: 0.75rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex: 1;
+    min-width: 170px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+  .flow-stat-pill:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  .flow-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+
   .kpi-card {
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(10, 15, 29, 0.95));
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(10, 15, 29, 0.96));
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 18px;
     padding: 1.4rem;
     position: relative;
     overflow: hidden;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none !important;
     display: block;
     color: inherit;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    animation: fadeInUpStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .kpi-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(0, 212, 200, 0.4);
-    box-shadow: 0 12px 28px -6px rgba(0, 212, 200, 0.2), 0 0 15px rgba(0, 212, 200, 0.1);
+    transform: translateY(-6px) scale(1.008);
+    border-color: rgba(0, 212, 200, 0.45);
+    box-shadow: 0 16px 36px -6px rgba(0, 212, 200, 0.25), 0 0 20px rgba(0, 212, 200, 0.12);
     color: inherit;
   }
   .kpi-card::before {
@@ -44,7 +150,7 @@
     font-size: 1.35rem;
     transition: transform 0.25s;
   }
-  .kpi-card:hover .kpi-icon-box { transform: scale(1.08) rotate(3deg); }
+  .kpi-card:hover .kpi-icon-box { transform: scale(1.12) rotate(4deg); }
   .kpi-main-val {
     font-size: 1.75rem;
     font-weight: 900;
@@ -79,6 +185,10 @@
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.25s;
+  }
+  .master-panel:hover {
+    border-color: rgba(255, 255, 255, 0.14);
   }
   .master-header {
     background: linear-gradient(90deg, #0f172a, #0b1329);
@@ -190,7 +300,7 @@
         </div>
       </div>
       <div class="kpi-main-val text-teal mb-2">
-        {{ "{:,.0f}".format(total_owned_inventory_value) }} <span class="fs-6 fw-normal text-secondary">{{ currency_symbol }}</span>
+        <span class="counter-animate" data-target="{{ total_owned_inventory_value }}">{{ "{:,.0f}".format(total_owned_inventory_value) }}</span> <span class="fs-6 fw-normal text-secondary">{{ currency_symbol }}</span>
       </div>
       <div class="d-flex align-items-center gap-1 flex-wrap">
         <span class="kpi-sub-badge bg-success bg-opacity-20 text-success border border-success border-opacity-25">
@@ -213,7 +323,7 @@
         </div>
       </div>
       <div class="kpi-main-val text-teal mb-2">
-        {{ active_skus_count }} <span class="fs-6 fw-normal text-secondary">{{ 'Kalem' if is_tr else 'قلم فعال' }}</span>
+        <span class="counter-animate" data-target="{{ active_skus_count }}">{{ active_skus_count }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Kalem' if is_tr else 'قلم فعال' }}</span>
       </div>
       <div class="kpi-sub-badge bg-info bg-opacity-20 text-info border border-info border-opacity-25">
         <i class="bi bi-check2-circle"></i>
@@ -238,7 +348,7 @@
         </div>
       </div>
       <div class="kpi-main-val text-purple mb-2">
-        {{ "{:,.2f}".format(total_physical_stock) }} <span class="fs-6 fw-normal text-secondary">{{ 'Ton/Birim' if is_tr else 'تن / واحد' }}</span>
+        <span class="counter-animate" data-is-float="true" data-target="{{ total_physical_stock }}">{{ "{:,.2f}".format(total_physical_stock) }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Ton/Birim' if is_tr else 'تن / واحد' }}</span>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 py-1 px-2" style="font-size: 0.72rem;">
@@ -266,7 +376,7 @@
         </div>
       </div>
       <div class="kpi-main-val text-info mb-2">
-        {{ "{:,.1f}".format(in_transit_tonnage) }} <span class="fs-6 fw-normal text-secondary">{{ 'Ton Kalan' if is_tr else 'تن مانده ورود' }}</span>
+        <span class="counter-animate" data-is-float="true" data-target="{{ in_transit_tonnage }}">{{ "{:,.1f}".format(in_transit_tonnage) }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Ton Kalan' if is_tr else 'تن مانده ورود' }}</span>
       </div>
       <div class="small text-secondary font-monospace" style="font-size: 0.74rem;">
         <span class="text-light fw-bold">{{ active_po_count }}</span> {{ 'Açık Satın Alma' if is_tr else 'سفارش خرید باز' }} |
@@ -288,7 +398,7 @@
       </div>
       <div class="d-flex align-items-baseline gap-2 mb-2">
         <a href="/inventory/alerts" class="text-decoration-none kpi-main-val text-danger" title="مشاهده اقلام بحرانی">
-          {{ critical_stock_count }} <span class="fs-6 fw-normal text-secondary">{{ 'Kritik Kalem' if is_tr else 'کالای بحرانی' }}</span>
+          <span class="counter-animate" data-target="{{ critical_stock_count }}">{{ critical_stock_count }}</span> <span class="fs-6 fw-normal text-secondary">{{ 'Kritik Kalem' if is_tr else 'کالای بحرانی' }}</span>
         </a>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -420,24 +530,73 @@
 {% endif %}
 
 <!-- ============================================================== -->
-<!-- ۳. ردیف نمودارهای تحلیلی دوگانه (Dual Analytical Charts Row) -->
+<!-- ۳. ردیف هوشمندی موازنه و پایش انبارها (Flow & Capacity Station) -->
 <!-- ============================================================== -->
 <div class="row g-4 mb-4">
-  <!-- نمودار ستونی روند ورود و خروج کالا (۸ ستون) -->
+  <!-- نمودار پایش جریان کالا (۸ ستون) -->
   <div class="col-lg-8">
     <div class="master-panel p-4 h-100 d-flex flex-column">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+      
+      <!-- هدر پنل همراه با سوئیچر شیشه‌ای حالت نمایش -->
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <h5 class="fw-bold mb-1 text-light d-flex align-items-center gap-2">
-            <i class="bi bi-bar-chart-steps text-teal"></i>
-            <span>{{ 'Malzeme Giriş ve Çıkış Akışı' if is_tr else 'روند ورود و خروج اقلام اصلی انبارها (Inbound vs Outbound Flow)' }}</span>
+            <i class="bi bi-water text-teal"></i>
+            <span>{{ 'Malzeme Giriş ve Çıkış Akışı (Flow Intelligence)' if is_tr else 'مرکز موازنه و پایش جریان کالاها (Inbound vs Outbound Flow)' }}</span>
+            <span class="pulse-dot-live ms-1" title="پایش بلادرنگ"></span>
           </h5>
-          <p class="text-secondary small mb-0">{{ 'En yüksek hareket hacmine sahip 6 kalemin karşılaştırmalı analizi' if is_tr else 'مقایسه تناژ ورودی و خروجی اقلام دارای بیشترین گردش در سال مالی فعال' }}</p>
+          <p class="text-secondary small mb-0">{{ 'Dönem içi toplam giriş, teslimat ve net akış dengesi' if is_tr else 'موازنه بلادرنگ تناژ ورودی، تحویل به مشتریان و تراز خالص انباشت در دوره جاری' }}</p>
         </div>
-        <span class="badge bg-secondary bg-opacity-25 text-teal font-monospace small px-2 py-1">
-          Live Flow
-        </span>
+        
+        <!-- سوئیچر شیشه‌ای بین اقلام پرگردش و روند ماهانه -->
+        <div class="d-flex gap-1 p-1 bg-dark bg-opacity-50 rounded-3 border border-secondary border-opacity-25">
+          <button type="button" class="btn btn-glass-lux btn-sm py-1 px-3 active" id="btnFlowCommodities" onclick="switchFlowChartMode('commodities');">
+            <i class="bi bi-boxes"></i>
+            <span>{{ 'Emtiaya Göre' if is_tr else 'اقلام پرگردش' }}</span>
+          </button>
+          <button type="button" class="btn btn-glass-lux btn-sm py-1 px-3" id="btnFlowMonthly" onclick="switchFlowChartMode('monthly');">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>{{ 'Aylık Trend' if is_tr else 'روند ماهانه' }}</span>
+          </button>
+        </div>
       </div>
+
+      <!-- ۳ باجه شیشه‌ای شفاف موازنه جریان کالا (Flow Balance Stat Pills) -->
+      <div class="d-flex gap-3 mb-3 flex-wrap">
+        <div class="flow-stat-pill">
+          <div class="flow-stat-icon bg-success bg-opacity-20 text-success border border-success border-opacity-25">
+            <i class="bi bi-arrow-down-left"></i>
+          </div>
+          <div>
+            <div class="text-secondary small" style="font-size: 0.74rem;">{{ 'Toplam Dönem Girişi' if is_tr else 'مجموع ورودی دوره' }}</div>
+            <div class="fs-5 fw-bold font-monospace text-success">+{{ "{:,.1f}".format(total_inflow_sum) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }}</span></div>
+          </div>
+        </div>
+
+        <div class="flow-stat-pill">
+          <div class="flow-stat-icon bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25">
+            <i class="bi bi-arrow-up-right"></i>
+          </div>
+          <div>
+            <div class="text-secondary small" style="font-size: 0.74rem;">{{ 'Toplam Dönem Çıkışı' if is_tr else 'مجموع خروجی / تحویل' }}</div>
+            <div class="fs-5 fw-bold font-monospace text-danger">-{{ "{:,.1f}".format(total_outflow_sum) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }}</span></div>
+          </div>
+        </div>
+
+        <div class="flow-stat-pill">
+          <div class="flow-stat-icon {% if net_flow_sum >= 0 %}bg-teal bg-opacity-20 text-teal border border-teal border-opacity-25{% else %}bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25{% endif %}">
+            <i class="bi {% if net_flow_sum >= 0 %}bi-plus-slash-minus{% else %}bi-dash-circle{% endif %}"></i>
+          </div>
+          <div>
+            <div class="text-secondary small" style="font-size: 0.74rem;">{{ 'Net Depo Akış Dengesi' if is_tr else 'تراز خالص انباشت' }}</div>
+            <div class="fs-5 fw-bold font-monospace {% if net_flow_sum >= 0 %}text-teal{% else %}text-warning{% endif %}">
+              {{ "+{:,.1f}".format(net_flow_sum) if net_flow_sum > 0 else "{:,.1f}".format(net_flow_sum) }} <span class="small" style="font-size: 0.72rem;">{{ 'Ton' if is_tr else 'تن' }} ({{ 'Net Artış' if net_flow_sum >= 0 else 'Net Azalış' }})</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- بستر رسم نمودار تعاملی -->
       <div class="flex-grow-1" style="min-height: 270px; position: relative;">
         <canvas id="flowBarChart"></canvas>
       </div>
@@ -496,15 +655,34 @@
       <p class="text-secondary small mb-0">{{ 'Tüm depoların anlık kullanılabilir, rezerve ve değer bakiye tablosu' if is_tr else 'جدول هوشمند تفکیک موجودی فیزیکی، مقادیر رزرو، مانده آزاد قابل فروش و نقطه سفارش' }}</p>
     </div>
 
+    <!-- دکمه‌های فیلتر شیشه‌ای وضعیت سلامت + جستجوی زنده -->
     <div class="d-flex gap-2 align-items-center flex-wrap">
+      <div class="d-flex gap-1 p-1 bg-dark bg-opacity-50 rounded-3 border border-secondary border-opacity-25">
+        <button type="button" class="btn btn-glass-lux btn-sm py-1 px-2 active matrix-filter-btn" data-filter="all" onclick="applyMatrixFilter('all', this);">
+          <span>{{ 'Tümü' if is_tr else 'همه' }}</span>
+        </button>
+        <button type="button" class="btn btn-glass-lux btn-sm py-1 px-2 matrix-filter-btn" data-filter="CRITICAL" onclick="applyMatrixFilter('CRITICAL', this);">
+          <span class="text-danger">●</span>
+          <span>{{ 'Kritik' if is_tr else 'بحرانی' }}</span>
+        </button>
+        <button type="button" class="btn btn-glass-lux btn-sm py-1 px-2 matrix-filter-btn" data-filter="WARNING" onclick="applyMatrixFilter('WARNING', this);">
+          <span class="text-warning">●</span>
+          <span>{{ 'Sipariş Noktası' if is_tr else 'نقطه سفارش' }}</span>
+        </button>
+        <button type="button" class="btn btn-glass-lux btn-sm py-1 px-2 matrix-filter-btn" data-filter="AVAILABLE" onclick="applyMatrixFilter('AVAILABLE', this);">
+          <span class="text-success">●</span>
+          <span>{{ 'Serbest Stok' if is_tr else 'موجودی آزاد' }}</span>
+        </button>
+      </div>
+
       <!-- جستجوی زنده -->
-      <div class="input-group input-group-sm" style="max-width: 240px;">
+      <div class="input-group input-group-sm" style="max-width: 200px;">
         <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-search"></i></span>
-        <input type="text" id="matrixSearchInput" class="form-control bg-dark border-secondary text-light" placeholder="{{ 'Ürün veya depo ara...' if is_tr else 'جستجوی کالا یا انبار...' }}" onkeyup="filterMatrixTable();">
+        <input type="text" id="matrixSearchInput" class="form-control bg-dark border-secondary text-light" placeholder="{{ 'جستجو...' if not is_tr else 'Ara...' }}" onkeyup="filterMatrixTable();">
       </div>
       <a href="/inventory/balance" class="btn btn-sm btn-outline-teal d-flex align-items-center gap-1">
         <i class="bi bi-fullscreen"></i>
-        <span>{{ 'Tam Rapor' if is_tr else 'گزارش موازنه کامل' }}</span>
+        <span>{{ 'Tam Rapor' if is_tr else 'گزارش موازنه' }}</span>
       </a>
     </div>
   </div>
@@ -529,7 +707,7 @@
       <tbody>
         {% if enhanced_matrix %}
           {% for row in enhanced_matrix %}
-          <tr class="matrix-row">
+          <tr class="matrix-row" data-health="{{ row.health_status }}" data-has-available="{{ 'true' if row.available_balance > 0 else 'false' }}" data-current="{{ row.current_balance }}">
             <td class="px-3 text-secondary small">{{ loop.index }}</td>
             <td class="fw-semibold">
               <a href="/inventory/kardex/{{ row.product_id }}" class="text-light text-decoration-none d-flex align-items-center gap-1 hover-teal" title="مشاهده کاردکس کالا">
@@ -738,22 +916,63 @@
   "flowLabels": {{ chart_flow_labels_json | safe if chart_flow_labels_json else '[]' }},
   "flowIn": {{ chart_flow_in_json | safe if chart_flow_in_json else '[]' }},
   "flowOut": {{ chart_flow_out_json | safe if chart_flow_out_json else '[]' }},
+  "flowUom": {{ chart_flow_uom_json | safe if chart_flow_uom_json else '[]' }},
+  "monthlyLabels": {{ chart_monthly_labels_json | safe if chart_monthly_labels_json else '[]' }},
+  "monthlyIn": {{ chart_monthly_in_json | safe if chart_monthly_in_json else '[]' }},
+  "monthlyOut": {{ chart_monthly_out_json | safe if chart_monthly_out_json else '[]' }},
   "overallGaugeUtilization": {{ overall_gauge_utilization if overall_gauge_utilization is defined and overall_gauge_utilization is not none else 0 }}
 }
 </script>
 <script>
+let flowChartInstance = null;
+let currentFlowMode = 'commodities';
+let activeMatrixFilter = 'all';
+
 // فیلتر جستجوی زنده جدول ماتریس
 function filterMatrixTable() {
-    var input = document.getElementById("matrixSearchInput");
-    if (!input) return;
-    var filter = input.value.toLowerCase();
+    applyMatrixFilter(activeMatrixFilter);
+}
+
+// فیلتر چندگانه دسته‌بندی و وضعیت سلامت
+function applyMatrixFilter(filterType, btnEl) {
+    if (btnEl) {
+        document.querySelectorAll('.matrix-filter-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        btnEl.classList.add('active');
+        activeMatrixFilter = filterType;
+    }
+
+    var searchInput = document.getElementById("matrixSearchInput");
+    var searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
     var rows = document.querySelectorAll("#masterInventoryTable tbody tr.matrix-row");
+
     rows.forEach(function(row) {
-        var text = row.innerText.toLowerCase();
-        row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+        var rowText = row.innerText.toLowerCase();
+        var health = row.getAttribute('data-health') || '';
+        var hasAvail = row.getAttribute('data-has-available') === 'true';
+        var curQty = parseFloat(row.getAttribute('data-current')) || 0;
+
+        var matchesSearch = searchText === "" || rowText.indexOf(searchText) > -1;
+        var matchesFilter = true;
+
+        if (activeMatrixFilter === 'CRITICAL') {
+            matchesFilter = (health === 'CRITICAL');
+        } else if (activeMatrixFilter === 'WARNING') {
+            matchesFilter = (health === 'WARNING');
+        } else if (activeMatrixFilter === 'AVAILABLE') {
+            matchesFilter = hasAvail && curQty > 0;
+        }
+
+        if (matchesSearch && matchesFilter) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
     });
 }
 
+// رد سند از کارتابل پیشخوان
 function handleRejectTx(txId) {
     var reason = prompt("علت رد سند انبار را وارد فرمایید (الزامی):", "مغایرت فاکتور یا کسری بار");
     if (reason !== null && reason.trim() !== "") {
@@ -766,44 +985,63 @@ function handleRejectTx(txId) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    // مقداردهی عرض نوارهای پیشرفت
-    document.querySelectorAll('[data-progress-pct]').forEach(function(el) {
-        el.style.width = (el.getAttribute('data-progress-pct') || '0') + '%';
-    });
+// سوئیچ بین حالت اقلام پرگردش و روند ماهانه
+function switchFlowChartMode(mode) {
+    currentFlowMode = mode;
+    const btnComm = document.getElementById('btnFlowCommodities');
+    const btnMonth = document.getElementById('btnFlowMonthly');
+    if (mode === 'commodities') {
+        if (btnComm) btnComm.classList.add('active');
+        if (btnMonth) btnMonth.classList.remove('active');
+    } else {
+        if (btnComm) btnComm.classList.remove('active');
+        if (btnMonth) btnMonth.classList.add('active');
+    }
+    renderFlowChart();
+}
+
+function renderFlowChart() {
+    const flowCanvas = document.getElementById('flowBarChart');
+    if (!flowCanvas) return;
 
     const isTurkish = document.documentElement.lang === 'tr';
-
-    let config = { flowLabels: [], flowIn: [], flowOut: [], overallGaugeUtilization: 0 };
+    let config = { flowLabels: [], flowIn: [], flowOut: [], flowUom: [], monthlyLabels: [], monthlyIn: [], monthlyOut: [] };
     const configEl = document.getElementById('dashboardConfig');
     if (configEl && configEl.textContent.trim()) {
         try { config = JSON.parse(configEl.textContent); } catch (e) { config = {}; }
     }
 
-    const flowLabels = config.flowLabels || [];
-    const flowIn = config.flowIn || [];
-    const flowOut = config.flowOut || [];
+    if (flowChartInstance) {
+        flowChartInstance.destroy();
+    }
 
-    // ۱. نمودار میله‌ای جریان ورود و خروج اقلام اصلی
-    const flowCanvas = document.getElementById('flowBarChart');
-    if (flowCanvas) {
-        new Chart(flowCanvas.getContext('2d'), {
+    const ctx = flowCanvas.getContext('2d');
+
+    if (currentFlowMode === 'commodities') {
+        const labels = config.flowLabels && config.flowLabels.length > 0 ? config.flowLabels : ['کالایی ثبت نشده'];
+        const dataIn = config.flowIn && config.flowIn.length > 0 ? config.flowIn : [0];
+        const dataOut = config.flowOut && config.flowOut.length > 0 ? config.flowOut : [0];
+        const uoms = config.flowUom || [];
+
+        flowChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: flowLabels.length > 0 ? flowLabels : ['کالایی ثبت نشده'],
+                labels: labels,
                 datasets: [
                     {
                         label: isTurkish ? 'Giriş (IN)' : 'ورود به انبار (IN)',
-                        data: flowIn.length > 0 ? flowIn : [0],
+                        data: dataIn,
                         backgroundColor: '#10b981',
-                        borderRadius: 6,
+                        hoverBackgroundColor: '#34d399',
+                        borderRadius: 8,
                         borderSkipped: false
                     },
                     {
-                        label: isTurkish ? 'Çıkış (OUT)' : 'خروج از انبار (OUT)',
-                        data: flowOut.length > 0 ? flowOut : [0],
+                        label: isTurkish ? 'Çıkış (OUT)' : 'خروج / تحویل (OUT)',
+                        data: dataOut,
                         backgroundColor: '#f43f5e',
-                        borderRadius: 6,
+                        hoverBackgroundColor: '#fb7185',
+                        borderRadius: 8,
                         borderSkipped: false
                     }
                 ]
@@ -811,6 +1049,7 @@ document.addEventListener("DOMContentLoaded", function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 900, easing: 'easeOutQuart' },
                 plugins: {
                     legend: {
                         position: 'top',
@@ -821,13 +1060,108 @@ document.addEventListener("DOMContentLoaded", function() {
                     },
                     tooltip: {
                         rtl: !isTurkish,
-                        titleFont: { family: 'Vazirmatn' },
-                        bodyFont: { family: 'Vazirmatn' }
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { family: 'Vazirmatn', weight: 'bold' },
+                        bodyFont: { family: 'Vazirmatn' },
+                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function(ctx) {
+                                const idx = ctx.dataIndex;
+                                const uomStr = uoms[idx] || (isTurkish ? 'Ton' : 'تن');
+                                return ` ${ctx.dataset.label}: ${Number(ctx.parsed.y).toLocaleString()} ${uomStr}`;
+                            }
+                        }
                     }
                 },
                 scales: {
                     x: {
+                        ticks: { color: '#94a3b8', font: { family: 'Vazirmatn', size: 11 } },
+                        grid: { display: false }
+                    },
+                    y: {
                         ticks: { color: '#64748b', font: { family: 'Vazirmatn', size: 11 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
+                }
+            }
+        });
+    } else {
+        // حالت روند زمانی ماهانه (Area Chart with Gradients)
+        const mLabels = config.monthlyLabels && config.monthlyLabels.length > 0 ? config.monthlyLabels : ['فروردین'];
+        const mIn = config.monthlyIn && config.monthlyIn.length > 0 ? config.monthlyIn : [0];
+        const mOut = config.monthlyOut && config.monthlyOut.length > 0 ? config.monthlyOut : [0];
+
+        const gradIn = ctx.createLinearGradient(0, 0, 0, 260);
+        gradIn.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+        gradIn.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+        const gradOut = ctx.createLinearGradient(0, 0, 0, 260);
+        gradOut.addColorStop(0, 'rgba(244, 63, 94, 0.45)');
+        gradOut.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+
+        flowChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: mLabels,
+                datasets: [
+                    {
+                        label: isTurkish ? 'Aylık Giriş Akışı' : 'روند ورود ماهانه (IN)',
+                        data: mIn,
+                        borderColor: '#10b981',
+                        backgroundColor: gradIn,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#ffffff',
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: isTurkish ? 'Aylık Çıkış Akışı' : 'روند خروج ماهانه (OUT)',
+                        data: mOut,
+                        borderColor: '#f43f5e',
+                        backgroundColor: gradOut,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#f43f5e',
+                        pointBorderColor: '#ffffff',
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1000, easing: 'easeOutCubic' },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { family: 'Vazirmatn', size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        rtl: !isTurkish,
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleFont: { family: 'Vazirmatn', weight: 'bold' },
+                        bodyFont: { family: 'Vazirmatn' },
+                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function(ctx) {
+                                return ` ${ctx.dataset.label}: ${Number(ctx.parsed.y).toLocaleString()} ${isTurkish ? 'Ton' : 'تن'}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { family: 'Vazirmatn', size: 11 } },
                         grid: { display: false }
                     },
                     y: {
@@ -838,6 +1172,23 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // مقداردهی عرض نوارهای پیشرفت
+    document.querySelectorAll('[data-progress-pct]').forEach(function(el) {
+        el.style.width = (el.getAttribute('data-progress-pct') || '0') + '%';
+    });
+
+    const isTurkish = document.documentElement.lang === 'tr';
+    let config = { flowLabels: [], flowIn: [], flowOut: [], overallGaugeUtilization: 0 };
+    const configEl = document.getElementById('dashboardConfig');
+    if (configEl && configEl.textContent.trim()) {
+        try { config = JSON.parse(configEl.textContent); } catch (e) { config = {}; }
+    }
+
+    // ۱. رندر اولیه نمودار هوشمندی موازنه کالا
+    renderFlowChart();
 
     // ۲. نمودار گیج نیم‌دایره ظرفیت انبارها (Salezy 70.8% Gauge Style)
     const gaugeCanvas = document.getElementById('capacityGaugeChart');
@@ -875,6 +1226,35 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+
+    // ۳. انیمیشن شمارنده روان اعداد (CountUp Animation)
+    document.querySelectorAll('.counter-animate').forEach(function(el) {
+        var rawTarget = el.getAttribute('data-target');
+        if (!rawTarget) return;
+        var target = parseFloat(rawTarget);
+        if (isNaN(target) || target <= 0) return;
+        
+        var isFloat = el.getAttribute('data-is-float') === 'true';
+        var startTime = performance.now();
+        var duration = 1200;
+        
+        function updateCount(now) {
+            var progress = Math.min((now - startTime) / duration, 1);
+            var ease = 1 - Math.pow(1 - progress, 3);
+            var current = target * ease;
+            el.textContent = isFloat
+                ? current.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})
+                : Math.round(current).toLocaleString();
+            if (progress < 1) {
+                requestAnimationFrame(updateCount);
+            } else {
+                el.textContent = isFloat
+                    ? target.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})
+                    : Math.round(target).toLocaleString();
+            }
+        }
+        requestAnimationFrame(updateCount);
+    });
 });
 </script>
 {% endblock %}
