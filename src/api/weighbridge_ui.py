@@ -199,6 +199,27 @@ async def create_weighbridge_ticket(
         else:
             is_over = (initial_weight > max_allowed_weight) if weighing_mode == "INBOUND" else False
 
+        # فاز ۱.۲: اتصال خودکار از بالا به پایین سفارشات (Top-Down Blind Binding)
+        if purchase_order_id and purchase_order_id > 0:
+            po = db.query(PurchaseOrder).filter(PurchaseOrder.id == purchase_order_id).first()
+            if po:
+                supplier_id = po.supplier_id
+                weighing_mode = "INBOUND"
+                if (not product_id or product_id <= 0) and po.items:
+                    product_id = po.items[0].product_id
+                if (not warehouse_id or warehouse_id <= 0) and po.destination_warehouse_id:
+                    warehouse_id = po.destination_warehouse_id
+
+        elif sales_order_id and sales_order_id > 0:
+            so = db.query(SalesOrder).filter(SalesOrder.id == sales_order_id).first()
+            if so:
+                customer_id = so.customer_id
+                weighing_mode = "OUTBOUND"
+                if (not product_id or product_id <= 0) and so.items:
+                    product_id = so.items[0].product_id
+                if (not warehouse_id or warehouse_id <= 0) and so.source_warehouse_id:
+                    warehouse_id = so.source_warehouse_id
+
         gross = initial_weight if weighing_mode == "INBOUND" else 0.0
         tare = initial_weight if weighing_mode == "OUTBOUND" else 0.0
 

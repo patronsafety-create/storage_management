@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}تاریخچه نگارش‌ها و انتشارات سازمانی | NexusPour ERP v{{ current_version }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header Banner -->
+  <div class="glass-card p-4 mb-4 border-0 shadow-sm rounded-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">
+            <i class="bi bi-patch-check-fill me-1"></i>نسخه فعال: v{{ current_version }}
+          </span>
+          <span class="badge bg-dark-subtle text-light border border-secondary px-3 py-2 rounded-pill small">
+            Enterprise Architecture Edition
+          </span>
+        </div>
+        <h2 class="h3 fw-bold text-light mb-1">
+          <i class="bi bi-journal-code text-primary me-2"></i>شناسنامه و تاریخچه نگارش‌های نکسوس‌پور (Changelog)
+        </h2>
+        <p class="text-secondary mb-0 small">
+          سیر تکامل مهندسی، امنیت، تفکیک دسترسی (RBAC)، کنترل‌های متالورژی و موتور مالی سامانه ERP
+        </p>
+      </div>
+
+      {% if is_admin %}
+      <div>
+        <button type="button" class="btn btn-outline-primary px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#bumpModal">
+          <i class="bi bi-plus-circle me-1"></i>ثبت نسخه جدید / Release Bump
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Timeline Container -->
+  <div class="row">
+    <div class="col-lg-10 mx-auto">
+      <div class="timeline position-relative ps-4 ps-md-5">
+
+        {% for release in history %}
+        <div class="timeline-item position-relative mb-5">
+          <!-- Timeline Pin -->
+          <div class="timeline-pin position-absolute top-0 start-0 translate-middle-x rounded-circle d-flex align-items-center justify-content-center shadow"
+               style="width: 44px; height: 44px; background: #1e293b; border: 3px solid var(--bs-{{ release.badge_color or 'primary' }}); z-index: 2;">
+            <i class="bi bi-tag-fill text-{{ release.badge_color or 'primary' }} small"></i>
+          </div>
+
+          <!-- Card Content -->
+          <div class="glass-card ms-3 ms-md-4 p-4 rounded-4 border-0 shadow-sm">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom border-secondary border-opacity-25 pb-3 mb-3">
+              <div>
+                <span class="badge bg-{{ release.badge_color or 'primary' }} px-3 py-1 rounded-pill me-2 fw-bold">
+                  v{{ release.version }}
+                </span>
+                <span class="badge bg-dark border border-secondary border-opacity-50 text-light rounded-pill px-2 py-1 small">
+                  {{ release.badge }}
+                </span>
+                <h4 class="h5 fw-bold text-light mt-2 mb-0">{{ release.title }}</h4>
+              </div>
+              <div class="text-secondary small d-flex align-items-center gap-1">
+                <i class="bi bi-calendar3"></i>
+                <span>{{ release.date }}</span>
+              </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="row g-3">
+              {% for category, items in release.categories.items() %}
+              <div class="col-12">
+                <div class="p-3 rounded-3" style="background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.05);">
+                  <h6 class="fw-bold mb-2 text-info d-flex align-items-center gap-2">
+                    {{ category }}
+                  </h6>
+                  <ul class="mb-0 ps-3 text-secondary small" style="line-height: 1.8;">
+                    {% for item in items %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Bump Release Note (Admin Only) -->
+{% if is_admin %}
+<div class="modal fade" id="bumpModal" tabindex="-1" aria-labelledby="bumpModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content glass-card border-0 shadow-lg text-light rounded-4">
+      <form action="/admin/changelog/bump" method="POST">
+        <div class="modal-header border-secondary border-opacity-25">
+          <h5 class="modal-title fw-bold" id="bumpModalLabel">
+            <i class="bi bi-arrow-up-circle text-primary me-2"></i>ثبت و انتشار نسخه جدید (Release Bump)
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary">نوع افزایش نسخه (Bump Type)</label>
+              <select name="bump_type" class="form-select bg-dark text-light border-secondary">
+                <option value="patch">Patch (+0.0.1) - باگ‌گیری و نگهداری دوره‌ای</option>
+                <option value="minor">Minor (+0.1.0) - ویژگی جدید و معماری تکمیلی</option>
+                <option value="major">Major (+1.0.0) - ارتقای کلان زیرساخت سیستم</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary">عنوان اصلی انتشار</label>
+              <input type="text" name="title" required class="form-control bg-dark text-light border-secondary" placeholder="مثال: پایدارسازی کارتابل و پروتکل محرمانگی مالی">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small text-secondary">🚀 معماری و ویژگی‌های جدید (هر سطر یک مورد)</label>
+              <textarea name="arch_notes" rows="2" class="form-control bg-dark text-light border-secondary" placeholder="شرح تغییرات معماری و فیچرها..."></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small text-secondary">🛡️ امنیت، دسترسی‌ها و هاردنینگ (RBAC)</label>
+              <textarea name="sec_notes" rows="2" class="form-control bg-dark text-light border-secondary" placeholder="شرح دسترسی‌ها و دیوارهای امنیتی..."></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small text-secondary">⚖️ محاسبات مالی، کاردکس و قوانین مالیاتی</label>
+              <textarea name="fin_notes" rows="2" class="form-control bg-dark text-light border-secondary" placeholder="شرح تغییرات مالی و مالیاتی..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary border-opacity-25">
+          <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check2-circle me-1"></i>ثبت و انتشار نسخه
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<style>
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    bottom: 20px;
+    right: 0px;
+    width: 3px;
+    background: linear-gradient(180deg, #3b82f6 0%, rgba(59, 130, 246, 0.1) 100%);
+    border-radius: 2px;
+  }
+  @media (min-width: 768px) {
+    .timeline::before {
+      right: 21px;
+    }
+  }
+  .timeline-pin {
+    right: -22px;
+    left: auto !important;
+  }
+  @media (min-width: 768px) {
+    .timeline-pin {
+      right: 0px;
+      left: auto !important;
+    }
+  }
+</style>
+{% endblock %}

@@ -224,9 +224,9 @@ def run_layer_2_ui_rbac_mismatch():
 
     # ۲. راستی‌آزمایی قفل امنیتی دسترسی کاربران غیرمجاز به مسیرهای حفاظت‌شده (RBAC Security Wall)
     security_barriers = [
-        ("baskool", ["/purchases", "/purchases/new", "/sales", "/sales/new", "/inventory/transaction", "/admin/users", "/admin/audit-logs", "/inventory/fiscal-years"]),
-        ("commercial", ["/inventory/transaction", "/inventory/transfer", "/inventory/stocktaking", "/admin/users", "/admin/audit-logs", "/inventory/fiscal-years"]),
-        ("warehouse", ["/admin/users", "/admin/audit-logs", "/inventory/fiscal-years"]),
+        ("baskool", ["/purchases", "/purchases/new", "/sales", "/sales/new", "/inventory/transaction", "/admin/users", "/admin/audit-logs", "/inventory/fiscal-years", "/admin/changelog"]),
+        ("commercial", ["/inventory/transaction", "/inventory/transfer", "/inventory/stocktaking", "/admin/users", "/admin/audit-logs", "/inventory/fiscal-years", "/admin/changelog"]),
+        ("warehouse", ["/admin/users", "/admin/audit-logs", "/inventory/fiscal-years", "/inventory/fiscal-year-close", "/purchases", "/purchases/new", "/sales", "/sales/new", "/admin/changelog"]),
         ("finance", ["/admin/users", "/admin/audit-logs", "/inventory/transaction"])
     ]
 
@@ -242,6 +242,35 @@ def run_layer_2_ui_rbac_mismatch():
                     severity="CRITICAL"
                 )
         log_ok(f"دیوار امنیتی RBAC برای کاربر «{username}» در {len(forbidden_routes)} مسیر حساس راستی‌آزمایی شد")
+
+    # ۳. راستی‌آزمایی Zero Ghost UI و پروتکل Blind Receiving & Weighing در لایه DOM
+    wh_client = get_client("warehouse")
+    res_wh_tx = wh_client.get("/inventory/transaction")
+    if res_wh_tx.status_code == 200:
+        ghost_fields = ['name="unit_price"', 'name="freight_cost"', 'name="insurance_cost"', 'name="weighbridge_cost"']
+        for gf in ghost_fields:
+            if gf in res_wh_tx.text:
+                record_bug(
+                    "LAYER_2_GHOST_UI",
+                    f"نقص محرمانگی مالی (Ghost UI): فیلد مالی {gf} در فرم ثبت تراکنش انباردار نمایش داده شده است!",
+                    f"کاربر: warehouse، مسیر: /inventory/transaction",
+                    severity="HIGH"
+                )
+        log_ok("پروتکل محرمانگی مالی فرم انباردار (عدم نمایش فیلدهای نرخ و هزینه) راستی‌آزمایی شد")
+
+    bask_client = get_client("baskool")
+    res_bask_wb = bask_client.get("/weighbridge/new")
+    if res_bask_wb.status_code == 200:
+        bask_ghosts = ['name="supplier_id"', 'name="customer_id"']
+        for bg in bask_ghosts:
+            if bg in res_bask_wb.text:
+                record_bug(
+                    "LAYER_2_GHOST_UI",
+                    f"نقص محرمانگی باسکول (Blind Weighing Ghost UI): فیلد {bg} در فرم باسکول‌دار فعال است!",
+                    f"کاربر: baskool، مسیر: /weighbridge/new",
+                    severity="HIGH"
+                )
+        log_ok("پروتکل توزین کور باسکول (توزین بر اساس سند عطف سفارش) راستی‌آزمایی شد")
 
 
 # =====================================================================
@@ -426,7 +455,7 @@ def run_layer_3_e2e_workflows(wh_id: int, prod_id: int):
     log_ok("تست ۳.۱ پاس شد: سیستم مانع از ثبت مجدد قبض باسکول بسته‌شده گردید")
 
     # تلاش برای رسید مستقیم دستی مازاد بر مانده سفارش خرید (مانده = ۷۵ تن + ۵٪ تلورانس = ۷۸.۷۵ تن)
-    res_over_rcv = wh_client.post(
+    res_over_rcv = comm_client.post(
         f"/purchases/{po_id}/receive",
         data={
             "warehouse_id": wh_id,
@@ -678,9 +707,9 @@ def run_layer_3_e2e_workflows(wh_id: int, prod_id: int):
     res_close_fy = fin_client.post(
         "/inventory/fiscal-year-close",
         data={
-            "new_year_name": f"سال مالی ۱۴۰۴ {run_id}",
-            "new_year_start_date": "1404-01-01",
-            "new_year_end_date": "1404-12-29"
+            "new_year_name": f"سال مالی ۱۴۰۶ {run_id}",
+            "new_year_start_date": "1406-01-01",
+            "new_year_end_date": "1406-12-29"
         }
     )
     if res_close_fy.status_code != 303:

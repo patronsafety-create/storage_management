@@ -62,7 +62,7 @@ def setup_initial_database_fixtures():
         # سال مالی فعال
         fy = db.query(FiscalYear).filter(FiscalYear.is_active == True, FiscalYear.is_closed == False).first()
         if not fy:
-            fy = FiscalYear(name="سال مالی ۱۴۰۳", start_date="1403/01/01", end_date="1403/12/29", is_active=True, is_closed=False)
+            fy = FiscalYear(name="سال مالی ۱۴۰۵", start_date="1405/01/01", end_date="1405/12/29", is_active=True, is_closed=False)
             db.add(fy)
             db.flush()
 

@@ -138,8 +138,13 @@ def normalize_form_urlencoded_body(body_bytes: bytes) -> bytes:
     new_pairs = []
 
     for key, val in pairs:
-        if not val:
-            new_pairs.append((key, val))
+        # اگر فیلد خالی است
+        if not val or val.strip() == "":
+            # برای فیلدهای عددی، شناسه‌ها یا هزینه‌ها، ارسال کلید با مقدار خالی "" باعث کرش ۴۲۲ در Pydantic می‌شود.
+            # با حذف این کلید از بادی، فاست‌ای‌پی به صورت خودکار مقدار پیش‌فرض Form(None) یا Form(0.0) را اعمال می‌کند.
+            if is_numeric_field_name(key) or key.endswith("_id") or key in ("secondary_quantity", "unit_price", "quantity", "exchange_rate"):
+                continue
+            new_pairs.append((key, ""))
             continue
 
         # در تمامی فیلدها، ارقام فارسی و عربی را به انگلیسی تبدیل می‌کنیم (مانند تلفن، کد ملی، شماره بارنامه و ...)

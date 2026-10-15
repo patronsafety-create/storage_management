@@ -80,7 +80,7 @@
 
                 <!-- مقدار، پارت و سند عطف -->
                 <div class="row g-3 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-{% if is_admin or is_finance %}3{% else %}4{% endif %}">
                         <label for="quantity" id="qty_label" class="form-label fw-bold">
                             مقدار / تعداد <span class="text-danger">*</span>
                         </label>
@@ -90,22 +90,57 @@
                         </div>
                     </div>
 
+                    {% if is_admin or is_finance %}
                     <div class="col-md-3">
                         <label for="unit_price" class="form-label">نرخ واحد / فی خرید (ریال)</label>
                         <input type="number" step="1" min="0" class="form-control" id="unit_price" name="unit_price" placeholder="برای کاردکس ریالی">
                     </div>
+                    {% endif %}
 
-                    <div class="col-md-3">
+                    <div class="col-md-{% if is_admin or is_finance %}3{% else %}4{% endif %}">
                         <label for="batch_number" class="form-label">شماره بچ / پارت (اختیاری)</label>
                         <input type="text" class="form-control" id="batch_number" name="batch_number" placeholder="مثلاً: LOT-2026-X">
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-{% if is_admin or is_finance %}3{% else %}4{% endif %}">
                         <label for="reference_document" class="form-label">شماره سفارش / سند عطف</label>
                         <input type="text" class="form-control" id="reference_document" name="reference_document" placeholder="مثلاً: PO-9941">
                     </div>
                 </div>
 
+                <!-- انتخاب سفارش مرجع خرید (PO) یا فروش (SO) جهت اتصال خودکار و دریافت محرمانه -->
+                <div class="row g-3 mb-4 p-3 rounded-3" style="background: rgba(0, 212, 200, 0.05); border: 1px dashed rgba(0, 212, 200, 0.3);">
+                    <div class="col-md-6" id="poSelectBox">
+                        <label for="purchase_order_id" class="form-label fw-bold text-teal">
+                            <i class="bi bi-cart-check me-1"></i>سفارش خرید مرجع (PO)
+                        </label>
+                        <select class="form-select border-teal" id="purchase_order_id" name="purchase_order_id">
+                            <option value="">-- بدون سفارش خرید (یا مصرف داخلی / اول دوره) --</option>
+                            {% for po in purchase_orders %}
+                            <option value="{{ po.id }}" data-po="{{ po.po_number }}">
+                                {{ po.po_number }} {% if not is_warehouse and po.supplier %}- {{ po.supplier.name }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-secondary small">با انتخاب سفارش، اطلاعات قیمت و طرف تجاری به صورت سیستمی ثبت می‌گردد.</div>
+                    </div>
+                    <div class="col-md-6" id="soSelectBox">
+                        <label for="sales_order_id" class="form-label fw-bold text-info">
+                            <i class="bi bi-receipt me-1"></i>سفارش فروش مرجع (SO)
+                        </label>
+                        <select class="form-select border-info" id="sales_order_id" name="sales_order_id">
+                            <option value="">-- بدون سفارش فروش (یا مصرف داخلی) --</option>
+                            {% for so in sales_orders %}
+                            <option value="{{ so.id }}" data-so="{{ so.so_number }}">
+                                {{ so.so_number }} {% if not is_warehouse and so.customer %}- {{ so.customer.name }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-secondary small">با انتخاب سفارش، اطلاعات قیمت و طرف تجاری به صورت سیستمی ثبت می‌گردد.</div>
+                    </div>
+                </div>
+
+                {% if not is_warehouse %}
                 <!-- طرف حساب تجاری (تأمین‌کننده در رسید / مشتری در حواله) -->
                 <div class="row g-3 mb-4" id="partyContainer">
                     <div class="col-md-12 d-none" id="supplierBox">
@@ -134,6 +169,7 @@
                         <div class="form-text text-secondary small">{% if is_tr %}Sevk irsaliyesini müşteri veya şantiye projesine bağlayarak cari hesap ve sevk belgesine yazdırın.{% else %}انتساب حواله به خریدار یا کارگاه جهت ثبت در کاردکس مشتری و چاپ روی برگه رسمی خروج{% endif %}</div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- پنل‌های تخصصی صنایع سنگین و متالورژی (آکاردئون پیشرفته) -->
                 <div class="accordion mb-4" id="industrialAccordion">
@@ -174,16 +210,17 @@
                     <div class="accordion-item bg-dark border-secondary border-opacity-25">
                         <h2 class="accordion-header" id="headingLandedCost">
                             <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLandedCost">
-                                <i class="bi bi-truck-front-fill me-2"></i>لجستیک، بهای تمام‌شده تجمیعی و تلورانس بارنامه
+                                <i class="bi bi-truck-front-fill me-2"></i>{% if is_admin or is_finance %}لجستیک، بهای تمام‌شده تجمیعی و تلورانس بارنامه{% else %}لجستیک و وزن مبدأ بارنامه کارخانه{% endif %}
                             </button>
                         </h2>
                         <div id="collapseLandedCost" class="accordion-collapse collapse" data-bs-parent="#industrialAccordion">
                             <div class="accordion-body border-top border-secondary border-opacity-25">
                                 <div class="row g-3">
-                                    <div class="col-md-3">
+                                    <div class="col-md-{% if is_admin or is_finance %}3{% else %}12{% endif %}">
                                         <label for="bill_of_lading_qty" class="form-label">وزن مبدأ طبق بارنامه</label>
                                         <input type="number" step="0.001" class="form-control font-monospace" id="bill_of_lading_qty" name="bill_of_lading_qty" placeholder="وزن بارنامه کارخانه">
                                     </div>
+                                    {% if is_admin or is_finance %}
                                     <div class="col-md-3">
                                         <label for="freight_cost" class="form-label">کرایه حمل تریلی (ریال)</label>
                                         <input type="number" step="1000" class="form-control font-monospace" id="freight_cost" name="freight_cost" value="0">
@@ -196,6 +233,7 @@
                                         <label for="weighbridge_cost" class="form-label">حق باسکول (ریال)</label>
                                         <input type="number" step="1000" class="form-control font-monospace" id="weighbridge_cost" name="weighbridge_cost" value="0">
                                     </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

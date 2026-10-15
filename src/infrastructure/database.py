@@ -21,20 +21,20 @@ try:
         _test_engine = create_engine(
             DATABASE_URL,
             pool_pre_ping=True,
-            pool_recycle=300,
+            pool_recycle=1800,
             connect_args={"connect_timeout": 2}
         )
         with _test_engine.connect() as _conn:
             pass
         engine = _test_engine
     else:
-        engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+        engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=1800)
 except Exception as _db_err:
     # فال‌بک خودکار به SQLite جهت اطمینان از بالا آمدن بی‌نقص سرور در محیط توسعه لوکال ویندوز بدون داکر
     print(f"\n[NexusPour ERP] PostgreSQL is not reachable locally: {_db_err}")
     print("[NexusPour ERP] Active Engine: Local SQLite (storage_erp.db) enabled for seamless local execution.\n")
     DATABASE_URL = "sqlite:///storage_erp.db"
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=1800, connect_args={"check_same_thread": False})
 
 # کارخانه تولید نشست‌های دیتابیس
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -43,9 +43,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
-    """تزریق وابستگی برای مدیریت امن نشست‌های پایگاه‌داده"""
+    """تزریق وابستگی برای مدیریت امن نشست‌های پایگاه‌داده با محافظت کامل در برابر قفل‌شدگی"""
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()

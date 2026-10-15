@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+{% set user_roles = (user.roles | map(attribute='name') | list) if (user and user.roles) else [] %}
+{% set is_admin = ('Admin' in user_roles) or (user and user.username == 'admin') %}
+{% set is_finance = ('Finance_Manager' in user_roles) or (user and user.username == 'finance') %}
+{% set is_baskool = (('Weighbridge_Operator' in user_roles) or (user and user.username == 'baskool')) and not (is_admin or is_finance) %}
 <html lang="{{ 'tr' if is_tr else 'fa' }}" dir="{{ 'ltr' if is_tr else 'rtl' }}">
 <head>
   <meta charset="UTF-8">
@@ -102,7 +106,7 @@
     </div>
     <div class="text-end small">
       <div><strong>{{ 'Mülkiyet:' if is_tr else 'مالکیت:' }}</strong> Omid Pourmahmoud</div>
-      <div class="text-muted">{{ 'Sürüm:' if is_tr else 'نسخه نرم‌افزار:' }} NexusPour 2.0</div>
+      <div class="text-muted">{{ 'Sürüm:' if is_tr else 'نسخه نرم‌افزار:' }} NexusPour v3.1.0 Enterprise</div>
     </div>
   </div>
 
@@ -143,14 +147,18 @@
           <td><strong>{{ (ticket.warehouse.name | tr_loc(is_tr)) if ticket.warehouse else '-' }}</strong></td>
         </tr>
         <tr>
-          <td class="text-muted">{{ 'Cari Hesap:' if is_tr else 'طرف حساب:' }}</td>
+          <td class="text-muted">{{ 'Sipariş / Cari:' if is_tr else 'سفارش مرجع / طرف حساب:' }}</td>
           <td>
-            {% if ticket.supplier %}
-              <span>{{ 'Tedarikçi:' if is_tr else 'تأمین‌کننده:' }} {{ ticket.supplier.name | tr_loc(is_tr) }}</span>
-            {% elif ticket.customer %}
-              <span>{{ 'Müşteri:' if is_tr else 'مشتری:' }} {{ ticket.customer.name | tr_loc(is_tr) }}</span>
+            {% if is_baskool %}
+              <span class="font-monospace text-primary fw-bold">{{ ticket.reference_doc or (ticket.purchase_order.po_number if ticket.purchase_order else (ticket.sales_order.so_number if ticket.sales_order else '---')) }}</span>
             {% else %}
-              <span>{{ 'Genel / Serbest' if is_tr else 'عمومی / آزاد' }}</span>
+              {% if ticket.supplier %}
+                <span>{{ 'Tedarikçi:' if is_tr else 'تأمین‌کننده:' }} {{ ticket.supplier.name | tr_loc(is_tr) }}</span>
+              {% elif ticket.customer %}
+                <span>{{ 'Müşteri:' if is_tr else 'مشتری:' }} {{ ticket.customer.name | tr_loc(is_tr) }}</span>
+              {% else %}
+                <span>{{ 'Genel / Serbest' if is_tr else 'عمومی / آزاد' }}</span>
+              {% endif %}
             {% endif %}
           </td>
         </tr>

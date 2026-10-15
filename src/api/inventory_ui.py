@@ -149,6 +149,37 @@ async def process_transaction(
         tx_enum = TransactionType.IN if transaction_type == "IN" else TransactionType.OUT
         src_val = (transaction_source or "").strip()
 
+        # فاز ۱: اتصال خودکار و از بالا به پایین سفارشات (Top-Down Binding)
+        user_roles = [r.name for r in current_user.roles] if hasattr(current_user, "roles") else []
+        is_wh_role = ("Warehouse_Supervisor" in user_roles or current_user.username == "warehouse") and not ("Admin" in user_roles or "Finance_Manager" in user_roles or current_user.username in ("admin", "finance"))
+
+        if purchase_order_id:
+            po = db.query(PurchaseOrder).filter(PurchaseOrder.id == purchase_order_id).first()
+            if po:
+                supplier_id = po.supplier_id
+                if not reference_document:
+                    reference_document = po.po_number
+                if is_wh_role or not unit_price or unit_price <= 0:
+                    po_item = next((item for item in po.items if item.product_id == product_id), (po.items[0] if po.items else None))
+                    if po_item:
+                        unit_price = po_item.unit_price or 0.0
+
+        elif sales_order_id:
+            so = db.query(SalesOrder).filter(SalesOrder.id == sales_order_id).first()
+            if so:
+                customer_id = so.customer_id
+                if not reference_document:
+                    reference_document = so.so_number
+                if is_wh_role or not unit_price or unit_price <= 0:
+                    unit_price = InventoryService.get_weighted_average_cost(db, product_id, warehouse_id)
+
+        if is_wh_role:
+            freight_cost = 0.0
+            insurance_cost = 0.0
+            weighbridge_cost = 0.0
+            if not unit_price or unit_price <= 0:
+                unit_price = InventoryService.get_weighted_average_cost(db, product_id, warehouse_id)
+
         # قفل هوشمند فرم دستی: ثبت مستقیم بدون شماره سفارش فقط برای موجودی اول دوره یا مصرف داخلی
         if tx_enum == TransactionType.IN:
             if not purchase_order_id and src_val not in (TransactionSource.OPENING_BALANCE.value, TransactionSource.INTERNAL_USE.value, TransactionSource.IN_ADJUSTMENT.value, TransactionSource.TRANSFER.value, TransactionSource.RETURN.value):

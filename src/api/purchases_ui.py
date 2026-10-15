@@ -32,7 +32,7 @@ from src.core.localization.regions import get_active_region, Region, localize_di
 router = APIRouter(
     prefix="/purchases",
     tags=["Purchase Orders"],
-    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager", "Warehouse_Supervisor"))]
+    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))]
 )
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name

@@ -1,0 +1,18 @@
+# NexusPour ERP - Engineering & Architectural Rules
+# Intellectual Property & Architecture: Omid Pourmahmoud
+
+## 1. MANDATORY ZERO GHOST UI RULE
+- Whenever a role's permission or business logic changes, YOU MUST UPDATE ALL CORRESPONDING JINJA2 HTML TEMPLATES, FORMS, TABLES, MODALS, AND PRINT SLIPS.
+- NEVER leave a button, menu link, form `<input>`, or table `<th>/<td>` visible to a user who lacks permission to use or view it.
+- Relying solely on backend `403 Forbidden` is considered a CRITICAL BUG. Wrap restricted elements in strict Jinja2 role conditionals (`{% if ... %}`).
+
+## 2. STRICT TOP-DOWN HIERARCHY & BLIND RECEIVING/WEIGHING
+- Warehouse Supervisor (`warehouse`) operates blind to financial figures (unit price, total cost, landed cost, financial kardex).
+- Weighbridge Operator (`baskool`) operates blind to counterparty identities (supplier/customer names) and financial prices. Weighing is bound to reference orders (`PO-xxxx` / `SO-xxxx`).
+
+## 3. SEMANTIC VERSIONING & AUTO-BUMP RULE
+- Whenever a new feature, architectural change, or bug-fix cycle is completed, automatically increment the patch/minor version in `src/core/version.py` and append a professional enterprise release note entry to `RELEASE_HISTORY` with the current timestamp.
+
+## 4. ONE-WORD `/hunt` AUDIT TRIGGER
+- Typing `/hunt` or `hunt` triggers the complete 4-layer audit (`tests/deep_bug_hunter.py`).
+- All tests must pass 100% with zero bugs, zero 500/422 errors, zero ghost UI leaks, and full E2E workflow integrity.

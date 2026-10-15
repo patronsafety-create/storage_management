@@ -350,9 +350,9 @@ async def lifespan(app: FastAPI):
         # ۱. سال مالی پیش‌فرض
         if not db.query(inventory_models.FiscalYear).filter(inventory_models.FiscalYear.is_active == True).first():
             db.add(inventory_models.FiscalYear(
-                name="سال مالی ۱۴۰۳",
-                start_date="1403-01-01",
-                end_date="1403-12-29",
+                name="سال مالی ۱۴۰۵",
+                start_date="1405-01-01",
+                end_date="1405-12-29",
                 is_active=True,
                 is_closed=False
             ))
@@ -800,10 +800,14 @@ async def lifespan(app: FastAPI):
     yield
 
 
+from src.core.version import CURRENT_VERSION
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 app = FastAPI(
     title="NexusPour ERP API",
     description="سامانه یکپارچه انبارداری نکسوس‌پور (NexusPour ERP) — طراحی و مهندسی: امید پورمحمود",
-    version="2.0.0",
+    version=CURRENT_VERSION,
     lifespan=lifespan
 )
 
@@ -820,12 +824,50 @@ for router_mod in [auth, ui, inventory_ui, master_data_ui, admin_ui, parties_ui,
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 401:
         return RedirectResponse(url="/login")
-    return templates.TemplateResponse(
-        request=request,
-        name="error.html",
-        context={"request": request, "status_code": exc.status_code, "detail": exc.detail},
-        status_code=exc.status_code
-    )
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or not request.url.path.startswith("/api/"):
+        return templates.TemplateResponse(
+            request=request,
+            name="error.html",
+            context={"request": request, "status_code": exc.status_code, "detail": exc.detail},
+            status_code=exc.status_code
+        )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    accept = request.headers.get("accept", "")
+    err_msgs = []
+    for err in exc.errors():
+        loc = " -> ".join(str(l) for l in err.get("loc", []))
+        msg = err.get("msg", "")
+        err_msgs.append(f"{loc}: {msg}")
+    detail_msg = "خطای اعتبارسنجی مقادیر فرم: " + " | ".join(err_msgs)
+    if "text/html" in accept or not request.url.path.startswith("/api/"):
+        return templates.TemplateResponse(
+            request=request,
+            name="error.html",
+            context={"request": request, "status_code": 422, "detail": detail_msg},
+            status_code=422
+        )
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    traceback.print_exc()
+    accept = request.headers.get("accept", "")
+    detail_msg = f"خطای پیش‌بینی‌نشده در سرور (۵۰۰): {str(exc)}"
+    if "text/html" in accept or not request.url.path.startswith("/api/"):
+        return templates.TemplateResponse(
+            request=request,
+            name="error.html",
+            context={"request": request, "status_code": 500, "detail": detail_msg},
+            status_code=500
+        )
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
 os.makedirs("static", exist_ok=True)

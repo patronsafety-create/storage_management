@@ -81,7 +81,7 @@
             {{ 'Yeni Mali Yıl Adı' if is_tr else 'عنوان سال مالی جدید' }} <span class="text-danger">*</span>
           </label>
           <input type="text" name="new_year_name" class="form-control bg-dark border-secondary text-light font-monospace"
-                 value="{{ '2025 Mali Yılı' if is_tr else 'سال مالی ۱۴۰۴' }}" required>
+                 value="{{ '2026 Mali Yılı' if is_tr else 'سال مالی ۱۴۰۶' }}" required>
         </div>
 
         <div class="row g-2 mb-4">
@@ -90,14 +90,14 @@
               {{ 'Başlangıç Tarihi' if is_tr else 'تاریخ شروع دوره' }} <span class="text-danger">*</span>
             </label>
             <input type="text" name="new_year_start_date" class="form-control bg-dark border-secondary text-light font-monospace"
-                   value="{{ '2025-01-01' if is_tr else '1404-01-01' }}" required>
+                   value="{{ '2026-01-01' if is_tr else '1406-01-01' }}" required>
           </div>
           <div class="col-6">
             <label class="form-label small fw-bold text-light">
               {{ 'Bitiş Tarihi' if is_tr else 'تاریخ پایان دوره' }} <span class="text-danger">*</span>
             </label>
             <input type="text" name="new_year_end_date" class="form-control bg-dark border-secondary text-light font-monospace"
-                   value="{{ '2025-12-31' if is_tr else '1404-12-29' }}" required>
+                   value="{{ '2026-12-31' if is_tr else '1406-12-29' }}" required>
           </div>
         </div>
 

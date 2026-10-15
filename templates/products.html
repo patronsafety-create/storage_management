@@ -277,11 +277,13 @@
                                             <i class="bi bi-receipt text-info me-2"></i>{% if is_tr %}Miktar Stok Kartı{% else %}کاردکس مقداری{% endif %}
                                         </a>
                                     </li>
+                                    {% if is_admin or is_finance %}
                                     <li>
                                         <a class="dropdown-item py-2" href="/inventory/financial-kardex/{{ p.id }}">
                                             <i class="bi bi-cash-stack text-warning me-2"></i>{% if is_tr %}Mali Stok Kartı{% else %}کاردکس ریالی{% endif %}
                                         </a>
                                     </li>
+                                    {% endif %}
                                     <li>
                                         <a class="dropdown-item py-2 text-info" href="/inventory/products/{{ p.id }}/label" target="_blank">
                                             <i class="bi bi-upc-scan me-2"></i>{% if is_tr %}Barkod ve Bağ Etiketi Yazdır{% else %}چاپ برچسب بارکد و اتیکت بندیل{% endif %}

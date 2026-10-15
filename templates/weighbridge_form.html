@@ -165,11 +165,11 @@
                         data-supplier-id="{{ po.supplier_id }}" 
                         data-product-id="{{ first_item.product_id if first_item else '' }}"
                         data-warehouse-id="{{ po.destination_warehouse_id or '' }}">
-                  {{ po.order_number }} - {{ po.supplier.name | tr_loc(is_tr) }} {% if first_item %}({{ first_item.product.name | tr_loc(is_tr) }}){% endif %}
+                  {{ po.order_number }} {% if not is_baskool and po.supplier %}- {{ po.supplier.name | tr_loc(is_tr) }}{% endif %} {% if first_item %}({{ first_item.product.name | tr_loc(is_tr) }}){% endif %}
                 </option>
               {% endfor %}
             </select>
-            <div class="form-text text-secondary small">با انتخاب PO، تأمین‌کننده، کالا و نوع عملیات «ورود بار» خودکار پر می‌شوند.</div>
+            <div class="form-text text-secondary small">با انتخاب PO، ردیف کالا و نوع عملیات «ورود بار» خودکار تنظیم می‌شوند.</div>
           </div>
 
           <div class="col-md-6">
@@ -185,11 +185,11 @@
                         data-customer-id="{{ so.customer_id }}" 
                         data-product-id="{{ first_item.product_id if first_item else '' }}"
                         data-warehouse-id="{{ so.source_warehouse_id or '' }}">
-                  {{ so.order_number }} - {{ so.customer.name | tr_loc(is_tr) }} {% if first_item %}({{ first_item.product.name | tr_loc(is_tr) }}){% endif %}
+                  {{ so.order_number }} {% if not is_baskool and so.customer %}- {{ so.customer.name | tr_loc(is_tr) }}{% endif %} {% if first_item %}({{ first_item.product.name | tr_loc(is_tr) }}){% endif %}
                 </option>
               {% endfor %}
             </select>
-            <div class="form-text text-secondary small">با انتخاب SO، مشتری، کالا و نوع عملیات «خروج بار» خودکار پر می‌شوند.</div>
+            <div class="form-text text-secondary small">با انتخاب SO، ردیف کالا و نوع عملیات «خروج بار» خودکار تنظیم می‌شوند.</div>
           </div>
         </div>
 
@@ -233,7 +233,8 @@
           </div>
         </div>
 
-        <!-- طرف‌های تجاری -->
+        {% if not is_baskool %}
+        <!-- طرف‌های تجاری (مخصوص مدیر و بازرگانی) -->
         <div class="row g-3 mb-4">
           <div class="col-md-6">
             <label for="supplier_id" class="form-label">
@@ -259,6 +260,7 @@
             </select>
           </div>
         </div>
+        {% endif %}
 
         <!-- اندیکاتور وزن و هشدار راهداری / KGM -->
         <div class="p-4 rounded-3 mb-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);">

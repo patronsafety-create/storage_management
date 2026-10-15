@@ -60,9 +60,9 @@
             <th>منبع سند</th>
             <th>کالا</th>
             <th>انبار</th>
-            <th>طرف تجاری</th>
-            <th>مقدار</th>
-            <th>شماره عطف / قبض</th>
+            <th>طرف تجاری و آدرس</th>
+            <th>مقدار (اصلی / فرعی)</th>
+            <th>سفارش مرجع / عطف</th>
             <th>ثبت‌کننده</th>
             <th class="text-center" style="min-width: 230px;">اقدام انباردار</th>
           </tr>
@@ -81,9 +81,26 @@
             <td><span class="badge bg-secondary font-monospace">{{ pt.transaction_source or '---' }}</span></td>
             <td class="fw-bold text-light">{{ pt.product.name | tr_loc(is_tr) if pt.product else '-' }}</td>
             <td>{{ pt.warehouse.name | tr_loc(is_tr) if pt.warehouse else '-' }}</td>
-            <td class="small">{{ pt.supplier.name if pt.supplier else (pt.customer.name if pt.customer else '---') }}</td>
-            <td class="fw-bold text-warning font-monospace fs-6">{{ "{:,.3f}".format(pt.quantity) }} {{ pt.product.uom if pt.product else '' }}</td>
-            <td class="font-monospace small text-teal">{{ pt.reference_document or '---' }}</td>
+            <td class="small">
+              {% if pt.supplier %}
+                <strong class="text-success"><i class="bi bi-box-arrow-in-down me-1"></i>{{ pt.supplier.name }}</strong>
+                {% if pt.supplier.address %}<div class="text-secondary small">{{ pt.supplier.address }}</div>{% endif %}
+              {% elif pt.customer %}
+                <strong class="text-info"><i class="bi bi-box-arrow-up-right me-1"></i>{{ pt.customer.name }}</strong>
+                {% if pt.customer.address %}<div class="text-secondary small">{{ pt.customer.address }}</div>{% endif %}
+              {% else %}
+                <span class="text-secondary">---</span>
+              {% endif %}
+            </td>
+            <td class="fw-bold text-warning font-monospace fs-6">
+              <div>{{ "{:,.3f}".format(pt.quantity) }} {{ pt.product.uom if pt.product else '' }}</div>
+              {% if pt.secondary_quantity %}
+                <div class="small text-teal fw-normal">{{ "{:,.0f}".format(pt.secondary_quantity) }} {{ pt.secondary_uom or 'بسته/بندیل' }}</div>
+              {% endif %}
+            </td>
+            <td class="font-monospace small text-teal">
+              {{ pt.reference_document or (pt.purchase_order.po_number if pt.purchase_order else (pt.sales_order.so_number if pt.sales_order else '---')) }}
+            </td>
             <td class="small text-secondary">{{ pt.created_by.full_name or pt.created_by.username if pt.created_by else 'سیستم' }}</td>
             <td class="text-center">
               <div class="d-flex gap-2 justify-content-center">

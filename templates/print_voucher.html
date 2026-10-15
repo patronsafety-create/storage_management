@@ -1,5 +1,9 @@
 <!doctype html>
 {% set is_tr = (active_region and active_region.code == 'TR') or (is_tr) %}
+{% set user_roles = (user.roles | map(attribute='name') | list) if (user and user.roles) else [] %}
+{% set is_admin = ('Admin' in user_roles) or (user and user.username == 'admin') %}
+{% set is_finance = ('Finance_Manager' in user_roles) or (user and user.username == 'finance') %}
+{% set is_warehouse = (('Warehouse_Supervisor' in user_roles) or (user and user.username == 'warehouse')) and not (is_admin or is_finance) %}
 <html lang="{{ 'tr' if is_tr else 'fa' }}" dir="{{ 'ltr' if is_tr else 'rtl' }}">
 <head>
     <meta charset="utf-8">
@@ -129,8 +133,10 @@
                     <th>{{ 'Birim' if is_tr else 'واحد سنجش' }}</th>
                     <th>{{ 'Miktar' if is_tr else 'تعداد / مقدار' }}</th>
                     <th>{{ 'Parti / Şarj No' if is_tr else 'شماره لات / پارت' }}</th>
+                    {% if not is_warehouse %}
                     <th>{{ 'Birim Fiyat (' ~ ('₺' if is_tr else 'ریال') ~ ')' if is_tr else 'نرخ واحد (ریال)' }}</th>
                     <th>{{ 'Toplam Tutar (' ~ ('₺' if is_tr else 'ریال') ~ ')' if is_tr else 'مبلغ کل (ریال)' }}</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -141,8 +147,10 @@
                     <td>{{ (tx.product.uom | tr_loc(is_tr)) if tx.product else '-' }}</td>
                     <td class="fw-bold fs-6 font-monospace">{{ "{:,.2f}".format(tx.quantity) }}</td>
                     <td>{{ tx.batch_number or '---' }}</td>
+                    {% if not is_warehouse %}
                     <td>{{ "{:,.0f}".format(tx.unit_price) if tx.unit_price and tx.unit_price > 0 else '---' }}</td>
                     <td class="fw-bold">{{ "{:,.0f}".format(tx.quantity * tx.unit_price) if tx.unit_price and tx.unit_price > 0 else '---' }}</td>
+                    {% endif %}
                 </tr>
             </tbody>
         </table>

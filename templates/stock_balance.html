@@ -70,9 +70,11 @@
                                 <a href="/inventory/kardex/{{ item.product_id }}{% if item.warehouse_id %}?warehouse_id={{ item.warehouse_id }}{% endif %}" class="btn btn-sm btn-outline-info" title="{% if is_tr %}Miktar Ekstresi{% else %}کاردکس مقداری{% endif %}">
                                     <i class="bi bi-receipt me-1"></i>{% if is_tr %}Miktar{% else %}مقداری{% endif %}
                                 </a>
+                                {% if is_admin or is_finance %}
                                 <a href="/inventory/financial-kardex/{{ item.product_id }}{% if item.warehouse_id %}?warehouse_id={{ item.warehouse_id }}{% endif %}" class="btn btn-sm btn-outline-warning" title="{% if is_tr %}Mali Ekstre{% else %}کاردکس ریالی{% endif %}">
                                     <i class="bi bi-cash-stack me-1"></i>{% if is_tr %}Mali ({{ active_region.currency_label }}){% else %}ریالی{% endif %}
                                 </a>
+                                {% endif %}
                             </div>
                             {% endif %}
                         </td>
