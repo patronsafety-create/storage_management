@@ -559,14 +559,16 @@
     {% set is_admin = ('Admin' in user_role_names) or (user.username == 'admin') %}
     {% set is_finance = ('Finance_Manager' in user_role_names) or (user.username == 'finance') %}
     {% set is_warehouse = ('Warehouse_Supervisor' in user_role_names) or (user.username == 'warehouse') %}
-    {% set is_buyer = ('Procurement_Officer' in user_role_names) or (user.username == 'buyer') %}
-    {% set is_seller = ('Sales_Officer' in user_role_names) or (user.username == 'seller') %}
+    {% set is_commercial = ('Commercial_Officer' in user_role_names) or ('Procurement_Officer' in user_role_names) or ('Sales_Officer' in user_role_names) or (user.username in ['commercial', 'buyer', 'seller']) %}
+    {% set is_buyer = is_commercial %}
+    {% set is_seller = is_commercial %}
     {% set is_baskool = ('Weighbridge_Operator' in user_role_names) or (user.username == 'baskool') %}
-    {% set is_workshop = ('Production_Operator' in user_role_names) or (user.username == 'workshop') %}
+    {% set is_workshop = is_warehouse %}
   {% else %}
     {% set is_admin = false %}
     {% set is_finance = false %}
     {% set is_warehouse = false %}
+    {% set is_commercial = false %}
     {% set is_buyer = false %}
     {% set is_seller = false %}
     {% set is_baskool = false %}
@@ -639,8 +641,7 @@
           {% if is_admin or is_baskool or is_warehouse %}
           <a href="/weighbridge" class="sidebar-item"><i class="bi bi-truck text-warning me-2"></i>{{ 'Elektronik Tır Kantarı' if is_tr else 'باسکول دیجیتال تریلی و قبض' }}</a>
           {% endif %}
-          {% if is_admin or is_workshop %}
-          <a href="/cutting" class="sidebar-item"><i class="bi bi-scissors text-info me-2"></i>{{ 'Demir Kesim ve Parça Deposu' if is_tr else 'دستور برش و انبار ته‌شاخه آهن' }}</a>
+          {% if is_admin or is_warehouse %}
           <a href="/bagging" class="sidebar-item"><i class="bi bi-box2 text-success me-2"></i>{{ 'Üre Torbalama ve Paketleme' if is_tr else 'کیسه‌گیری فله به جامبوبگ اوره' }}</a>
           {% endif %}
           {% if is_admin or is_warehouse %}
@@ -750,10 +751,7 @@
             <a class="nav-link" href="/weighbridge"><i class="bi bi-truck me-1"></i>{{ 'Kantar' if is_tr else 'باسکول' }}</a>
           </li>
           {% endif %}
-          {% if is_admin or is_workshop %}
-          <li class="nav-item">
-            <a class="nav-link" href="/cutting"><i class="bi bi-scissors me-1"></i>{{ 'Kesim' if is_tr else 'کارگاه برش' }}</a>
-          </li>
+          {% if is_admin or is_warehouse %}
           <li class="nav-item">
             <a class="nav-link" href="/bagging"><i class="bi bi-box2 me-1"></i>{{ 'Torbalama' if is_tr else 'کیسه‌گیری' }}</a>
           </li>

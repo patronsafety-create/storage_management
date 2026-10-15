@@ -114,13 +114,10 @@
                     <i class="bi bi-truck me-2 text-warning"></i>{{ 'Tır Kantarı ve Satın Alma' if is_tr else 'باسکول تریلی و سفارش خرید' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-cutting-bagging">
-                    <i class="bi bi-scissors me-2 text-teal"></i>{{ 'Demir Kesimi ve Torbalama' if is_tr else 'برش آهن و کیسه‌گیری اوره' }}
+                    <i class="bi bi-box2 me-2 text-teal"></i>{{ 'Üre Torbalama' if is_tr else 'کیسه‌گیری اوره' }}
                 </button>
                 <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-inventory">
                     <i class="bi bi-arrow-left-right me-2 text-primary"></i>{{ 'Depo Hareketleri ve Kardeks' if is_tr else 'عملیات انبار و کاردکس' }}
-                </button>
-                <button class="nav-link text-start py-2 px-3 small" data-bs-toggle="pill" data-bs-target="#ch-compliance">
-                    <i class="bi bi-bank2 me-2 text-danger"></i>{{ 'MTC ve Yasal Mevzuat' if is_tr else 'سرتیفیکیت MTC و سامانه صمت' }}
                 </button>
             </div>
             <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
@@ -228,18 +225,12 @@
                 </div>
             </div>
 
-            <!-- تب ۵: برش و کیسه‌گیری -->
+            <!-- تب ۵: کیسه‌گیری اوره -->
             <div class="tab-pane fade" id="ch-cutting-bagging">
                 <div class="glass-card p-4 mb-4">
-                    <h4 class="fw-bold text-teal mb-3"><i class="bi bi-scissors me-2"></i>ماژول‌های تخصصی برش آهن‌آلات و کیسه‌گیری اوره</h4>
+                    <h4 class="fw-bold text-teal mb-3"><i class="bi bi-box2 me-2"></i>ماژول تخصصی کیسه‌گیری اوره</h4>
                     <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <h6 class="fw-bold text-info">✂️ دستور برش و انبار ته‌شاخه (/cutting)</h6>
-                            <p class="text-secondary small">
-                                تحویل سفارش‌های خرد میلگرد و تیرآهن بدون از بین رفتن شاخه‌های باقیمانده. سیستم طول ته‌شاخه را محاسبه کرده و به صورت خودکار به «انبار ته‌شاخه‌ها» واریز می‌کند تا به عنوان سرمایه جاری در سفارش‌های بعدی مصرف گردد.
-                            </p>
-                        </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12">
                             <h6 class="fw-bold text-success">🌾 کیسه‌گیری فله به جامبوبگ (/bagging)</h6>
                             <p class="text-secondary small">
                                 تبدیل محموله‌های فله اوره به جامبوبگ‌های ۱ تنی؛ محاسبه اتوماتیک درصد افت غبار و پرتی (Dust Loss)، تسهیم هزینه کیسه و اجرت در هر تن، و بروزرسانی بهای تمام‌شده بسته نهایی در کاردکس.

@@ -1,5 +1,5 @@
 """
-مدیریت و تزریق کاربران و نقش‌های آزمایشی و پیش‌فرض سامانه NexusPour ERP
+مدیریت و تزریق کاربران و ۵ نقش استاندارد سازمانی سامانه NexusPour ERP
 رمز عبور پیش‌فرض تمام کاربران آزمایشی: 1234
 طراحی و مهندسی: امید پورمحمود (Omid Pourmahmoud)
 """
@@ -12,54 +12,42 @@ TEST_USERS_DATA = [
         "username": "admin",
         "full_name": "مدیر ارشد سیستم (امید پورمحمود)",
         "role_name": "Admin",
-        "role_desc": "مدیر کل و معمار ارشد سیستم - دسترسی کامل به تمامی بخش‌ها"
+        "role_desc": "مدیر ارشد سیستم - دسترسی کامل به همه بخش‌ها"
     },
     {
         "username": "finance",
-        "full_name": "مدیر مالی و حسابرسی",
+        "full_name": "مدیر مالی و حسابداری",
         "role_name": "Finance_Manager",
-        "role_desc": "مدیریت حسابداری، کاردکس ریالی، اصلاحیه‌ها، بستن سال مالی، گزارشات مالی خرید و فروش"
+        "role_desc": "مدیر مالی و حسابداری (کاردکس ریالی، اصلاحیه، سال مالی، مرجوعی، گزارشات خرید/فروش)"
     },
     {
         "username": "warehouse",
-        "full_name": "سرپرست انبار مرکزی",
+        "full_name": "سرپرست انبار",
         "role_name": "Warehouse_Supervisor",
-        "role_desc": "کارتابل تأیید اسناد انبار، موجودی لحظه‌ای، حواله انتقال، انبارگردانی، مرجوعی کالا"
+        "role_desc": "سرپرست انبار (کارتابل تایید/رد اسناد انبار، ثبت رسید/حواله، انتقال، انبارگردانی، مرجوعی، کیسه‌گیری اوره)"
     },
     {
-        "username": "buyer",
-        "full_name": "کارشناس بازرگانی خرید",
-        "role_name": "Procurement_Officer",
-        "role_desc": "مدیریت تأمین‌کنندگان، ثبت سفارشات خرید (PO) و پیگیری ورود بار"
-    },
-    {
-        "username": "seller",
-        "full_name": "کارشناس بازرگانی فروش",
-        "role_name": "Sales_Officer",
-        "role_desc": "مدیریت مشتریان، صدور پیش‌فاکتور و سفارشات فروش (SO) و حواله تحویل"
+        "username": "commercial",
+        "full_name": "کارشناس بازرگانی (خرید و فروش)",
+        "role_name": "Commercial_Officer",
+        "role_desc": "کارشناس بازرگانی (خرید و فروش) (تعریف و ویرایش تامین‌کننده و مشتری، ثبت و مدیریت سفارشات خرید PO و سفارشات فروش SO)"
     },
     {
         "username": "baskool",
         "full_name": "اپراتور باسکول دیجیتال",
         "role_name": "Weighbridge_Operator",
-        "role_desc": "عملیات توزین اول و دوم ناوگان سنگین و ثبت قبوض باسکول"
-    },
-    {
-        "username": "workshop",
-        "full_name": "مسئول کارگاه برش و کیسه‌گیری",
-        "role_name": "Production_Operator",
-        "role_desc": "دستورات برش آهن و پروفیل، مدیریت ته‌شاخه و کیسه‌گیری فله اوره"
+        "role_desc": "اپراتور باسکول دیجیتال (ثبت نوبت و توزین اول و دوم باسکول)"
     }
 ]
 
 def seed_enterprise_users(db: Session):
     """
-    ایجاد خودکار یا به‌روزرسانی ۷ نقش و کاربر کلیدی سامانه با رمز عبور ۱۲۳۴
-    جهت تست سریع، تفکیک وظایف (SoD) و بررسی سناریوهای واقعی ERP.
+    ایجاد خودکار یا به‌روزرسانی ۵ نقش و کاربر کلیدی سامانه با رمز عبور ۱۲۳۴
+    جهت تست سریع، تفکیک وظایف (SoD) و انطباق با استاندارد ERP.
     """
     hashed_pwd = get_password_hash("1234")
 
-    # ۱. ایجاد یا به‌روزرسانی نقش‌ها
+    # ۱. ایجاد یا به‌روزرسانی نقش‌های ۵ گانه
     for item in TEST_USERS_DATA:
         role = db.query(Role).filter_by(name=item["role_name"]).first()
         if not role:
@@ -69,12 +57,9 @@ def seed_enterprise_users(db: Session):
         else:
             role.description = item["role_desc"]
 
-    # همچنین نقش پیش‌فرض Warehouse_Operator اگر قبلاً بوده
-    if not db.query(Role).filter_by(name="Warehouse_Operator").first():
-        db.add(Role(name="Warehouse_Operator", description="اپراتور انبار"))
     db.flush()
 
-    # ۲. ایجاد یا به‌روزرسانی کاربران با رمز 1234
+    # ۲. ایجاد یا به‌روزرسانی ۵ کاربر با رمز 1234
     for item in TEST_USERS_DATA:
         role = db.query(Role).filter_by(name=item["role_name"]).first()
         user = db.query(User).filter_by(username=item["username"]).first()
@@ -89,7 +74,6 @@ def seed_enterprise_users(db: Session):
                 user.roles.append(role)
             db.add(user)
         else:
-            # همواره برای تست سریع، رمز به 1234 تنظیم و فعال باشد
             user.hashed_password = hashed_pwd
             user.full_name = item["full_name"]
             user.is_active = True

@@ -248,12 +248,10 @@
                         </label>
                         <select class="form-select bg-dark border-secondary text-light fw-bold py-2" id="username" name="username" required autofocus>
                             <option value="admin" selected>👨‍💼 {{ 'admin — Sistem Yöneticisi (Omid Pourmahmoud)' if is_tr else 'مدیر ارشد سیستم (admin) — امید پورمحمود' }}</option>
-                            <option value="finance">💰 {{ 'finance — Mali ve Finans Müdürü' if is_tr else 'مدیر مالی و حسابرسی (finance)' }}</option>
-                            <option value="warehouse">📦 {{ 'warehouse — Merkez Depo Amiri' if is_tr else 'سرپرست انبار مرکزی (warehouse)' }}</option>
-                            <option value="buyer">🛒 {{ 'buyer — Satın Alma ve İthalat Uzmanı' if is_tr else 'کارشناس بازرگانی خرید (buyer)' }}</option>
-                            <option value="seller">📈 {{ 'seller — Satış ve Pazarlama Uzmanı' if is_tr else 'کارشناس بازرگانی فروش (seller)' }}</option>
+                            <option value="finance">💰 {{ 'finance — Mali ve Muhasebe Müdürü' if is_tr else 'مدیر مالی و حسابداری (finance)' }}</option>
+                            <option value="warehouse">📦 {{ 'warehouse — Depo Amiri' if is_tr else 'سرپرست انبار (warehouse)' }}</option>
+                            <option value="commercial">🤝 {{ 'commercial — Ticaret ve Satış/Satın Alma Uzmanı' if is_tr else 'کارشناس بازرگانی (خرید و فروش) (commercial)' }}</option>
                             <option value="baskool">⚖️ {{ 'baskool — Elektronik Kantar Operatörü' if is_tr else 'اپراتور باسکول دیجیتال (baskool)' }}</option>
-                            <option value="workshop">✂️ {{ 'workshop — Kesim ve Torbalama Sorumlusu' if is_tr else 'مسئول کارگاه برش و کیسه‌گیری (workshop)' }}</option>
                         </select>
                         <div class="form-text text-secondary small">
                             {{ 'Yetki seviyenize göre sistem arayüzü dinamik olarak özelleştirilecektir.' if is_tr else 'با انتخاب هر کاربر، منوها و دسترسی‌های متناسب با سمت وی بارگذاری می‌شود.' }}

@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from src.infrastructure.database import get_db
-from src.api.auth import get_current_user
+from src.core.dependencies import allow_roles
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import AuditLog
 
@@ -20,7 +20,7 @@ templates.env.filters["tr_loc"] = localize_display_name
 async def list_audit_logs(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(allow_roles("Admin")),
     action_filter: Optional[str] = Query(None),
     entity_filter: Optional[str] = Query(None)
 ):

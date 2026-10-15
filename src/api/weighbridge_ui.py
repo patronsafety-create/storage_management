@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
 from src.infrastructure.database import get_db
+from src.core.dependencies import allow_roles
 from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import (
@@ -33,7 +34,11 @@ from src.core.localization.tr_rules import (
     check_kgm_weight_limit
 )
 
-router = APIRouter(prefix="/weighbridge", tags=["Weighbridge Engine"])
+router = APIRouter(
+    prefix="/weighbridge",
+    tags=["Weighbridge Engine"],
+    dependencies=[Depends(allow_roles("Admin", "Weighbridge_Operator", "Warehouse_Supervisor"))]
+)
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
 

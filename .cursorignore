@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.db
+*.sqlite3
+*.pdf
+backups/
+*.sql
+*.sql.gz
+tunnel.log

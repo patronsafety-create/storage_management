@@ -15,7 +15,7 @@ from src.core.localization.regions import register_jinja_filters
 
 from src.api import (
     auth, ui, inventory_ui, master_data_ui, admin_ui, stock_api, parties_ui,
-    purchases_ui, sales_ui, alerts_ui, weighbridge_ui, cutting_ui, bagging_ui, compliance_ui, audit_ui
+    purchases_ui, sales_ui, alerts_ui, weighbridge_ui, bagging_ui, compliance_ui, audit_ui
 )
 from src.infrastructure.database import engine, SessionLocal, Base
 from src.domain_model import inventory_models, auth_models
@@ -810,7 +810,7 @@ app = FastAPI(
 app.add_middleware(NumberNormalizationMiddleware)
 
 # ثبت سراسری فیلترهای بومی‌سازی دو زبانه (format_date, tr_loc, format_currency) در تمام قالب‌ها
-for router_mod in [auth, ui, inventory_ui, master_data_ui, admin_ui, parties_ui, purchases_ui, sales_ui, alerts_ui, weighbridge_ui, cutting_ui, bagging_ui, compliance_ui, audit_ui]:
+for router_mod in [auth, ui, inventory_ui, master_data_ui, admin_ui, parties_ui, purchases_ui, sales_ui, alerts_ui, weighbridge_ui, bagging_ui, compliance_ui, audit_ui]:
     if hasattr(router_mod, "templates"):
         register_jinja_filters(router_mod.templates)
 
@@ -839,7 +839,7 @@ app.include_router(parties_ui.router)
 app.include_router(purchases_ui.router)
 app.include_router(sales_ui.router)
 app.include_router(weighbridge_ui.router)
-app.include_router(cutting_ui.router)
+# app.include_router(cutting_ui.router) -- ماژول برش آهن غیرفعال شد
 app.include_router(bagging_ui.router)
 app.include_router(alerts_ui.router)
 app.include_router(compliance_ui.router)

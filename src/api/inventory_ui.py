@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 
-from src.core.dependencies import get_db, get_current_user
+from src.core.dependencies import get_db, get_current_user, allow_roles
 from src.services.inventory_service import InventoryService
 from src.services.audit_service import AuditService
 from src.domain_model.inventory_models import (
@@ -56,7 +56,7 @@ def require_roles(user: User, allowed_roles: set[str], action_desc: str = ""):
 async def get_transaction_form(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor"))
 ):
     products = db.query(Product).filter(Product.is_active == True).order_by(Product.name).all()
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
@@ -125,7 +125,7 @@ async def process_transaction(
     currency: Optional[str] = Form(None),
     exchange_rate: Optional[float] = Form(1.0),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor"))
 ):
     def error_response(msg: str):
         return templates.TemplateResponse(
@@ -419,7 +419,7 @@ async def kardex(
 async def get_transfer_form(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     products = db.query(Product).order_by(Product.name).all()
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
@@ -449,7 +449,7 @@ async def process_transfer(
     secondary_quantity: Optional[float] = Form(None),
     reference_document: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     active_region = get_active_region(request)
     is_tr = (active_region.code == "TR")
@@ -539,7 +539,7 @@ async def get_stocktaking_form(
     warehouse_id: Optional[int] = Query(None),
     msg: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
     selected_warehouse = db.query(Warehouse).filter_by(id=warehouse_id).first() if warehouse_id else None
@@ -575,7 +575,7 @@ async def process_stocktaking(
     request: Request,
     warehouse_id: int = Form(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     form_data = await request.form()
     wh = db.query(Warehouse).filter_by(id=warehouse_id).first()
@@ -667,7 +667,7 @@ async def get_stocktaking_blind_sheet(
     request: Request,
     warehouse_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     """چاپ فرم شمارش کور انبارگردانی بدون نمایش موجودی دفتری سیستم"""
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
@@ -701,7 +701,7 @@ async def financial_kardex(
     product_id: int,
     warehouse_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Finance_Manager"))
 ):
     product = db.query(Product).filter_by(id=product_id).first()
     if not product:
@@ -860,10 +860,10 @@ async def export_transactions_csv(
 async def approve_transaction(
     tx_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     """تایید نهایی سند و اعمال در کاردکس موجودی و به‌روزرسانی پیشرفت سفارشات خرید/فروش"""
-    require_roles(current_user, {"Admin", "Warehouse_Supervisor"})
+    require_roles(current_user, {"Admin", "Warehouse_Supervisor", "Finance_Manager"})
 
     tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
     if not tx:
@@ -946,7 +946,7 @@ async def adjust_transaction(
     new_unit_price: Optional[float] = Form(None),
     adjustment_reason: str = Form(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Finance_Manager"))
 ):
     """ثبت سند اصلاحیه ورودی/خروجی بر مبنای مابه‌التفاوت با سند مرجع"""
     require_roles(current_user, {"Admin", "Finance_Manager"})
@@ -1181,7 +1181,7 @@ async def adjust_transaction(
 async def list_fiscal_years(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Finance_Manager"))
 ):
     """مدیریت دوره‌ها و سال‌های مالی"""
     years = db.query(FiscalYear).order_by(FiscalYear.id.desc()).all()
@@ -1207,7 +1207,7 @@ async def list_fiscal_years(
 async def get_fiscal_year_close_review(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Finance_Manager"))
 ):
     """صفحه پیش‌نمایش و چک‌لیست قبل از بستن سال مالی"""
     require_roles(current_user, {"Admin", "Finance_Manager"})
@@ -1277,7 +1277,7 @@ async def execute_fiscal_year_close(
     new_year_start_date: str = Form(...),
     new_year_end_date: str = Form(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Finance_Manager"))
 ):
     """اجرای قطعی عملیات پایان سال مالی و انتقال موجودی به دوره جدید"""
     require_roles(current_user, {"Admin", "Finance_Manager"})
@@ -1366,10 +1366,10 @@ async def reject_transaction(
     tx_id: int,
     rejection_reason: str = Form("عدم تطابق فاکتور یا کسری بار"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     """رد سند انبار با ثبت دلیل رسمی"""
-    require_roles(current_user, {"Admin", "Warehouse_Supervisor"})
+    require_roles(current_user, {"Admin", "Warehouse_Supervisor", "Finance_Manager"})
 
     tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
     if not tx:
@@ -1391,10 +1391,10 @@ async def reject_transaction(
 async def cancel_transaction(
     tx_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     """ابطال سند انبار"""
-    require_roles(current_user, {"Admin", "Warehouse_Supervisor"})
+    require_roles(current_user, {"Admin", "Warehouse_Supervisor", "Finance_Manager"})
     tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
     if not tx:
         raise HTTPException(status_code=404, detail="سند یافت نشد")
@@ -1417,7 +1417,7 @@ async def cancel_transaction(
 async def new_return_form(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     """فرم ثبت سند برگشت از خرید و برگشت از فروش"""
     candidates = (
@@ -1456,7 +1456,7 @@ async def process_return_transaction(
     return_reason: str = Form(...),
     notes: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
     """ثبت سند برگشتی و اعمال در کاردکس معکوس با کنترل سقف مرجوعی و حفظ واحد فرعی"""
     parent = db.query(StockTransaction).filter(StockTransaction.id == parent_transaction_id).first()

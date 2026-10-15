@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_
 
-from src.core.dependencies import get_db, require_admin, get_current_user
+from src.core.dependencies import get_db, require_admin, get_current_user, allow_roles
 from src.core.localization.regions import get_active_region, Region, localize_display_name
 from src.core.localization.tr_rules import validate_turkish_party_data
 from src.domain_model.inventory_models import (
@@ -18,7 +18,8 @@ from src.domain_model.auth_models import User
 
 router = APIRouter(
     prefix="/master-data",
-    tags=["Business Partners"]
+    tags=["Business Partners"],
+    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))]
 )
 
 templates = Jinja2Templates(directory="templates")

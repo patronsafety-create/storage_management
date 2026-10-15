@@ -29,9 +29,41 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)) -> U
     return user
 
 
+def allow_roles(*allowed_roles: str):
+    """
+    گارد مرکزی امنیتی مبتنی بر نقش (RBAC)
+    نقش Admin همواره دسترسی کامل و نامحدود دارد.
+    """
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        user_role_names = [role.name for role in current_user.roles]
+        
+        # ۱. ادمین همیشه دسترسی کامل دارد
+        if "Admin" in user_role_names or current_user.username == "admin":
+            return current_user
+        
+        # ۲. بررسی سایر نقش‌ها و سازگاری با نگاشت نقش‌های کاربر
+        for role in allowed_roles:
+            if role in user_role_names:
+                return current_user
+            if role == "Commercial_Officer" and current_user.username in ["commercial", "buyer", "seller"]:
+                return current_user
+            if role == "Finance_Manager" and current_user.username == "finance":
+                return current_user
+            if role == "Warehouse_Supervisor" and current_user.username in ["warehouse", "operator"]:
+                return current_user
+            if role == "Weighbridge_Operator" and current_user.username == "baskool":
+                return current_user
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"دسترسی غیرمجاز. این بخش نیازمند دسترسی یکی از نقش‌های {', '.join(allowed_roles)} می‌باشد."
+        )
+    return role_checker
+
+
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """قفل RBAC: فقط کاربران با نقش Admin مجاز هستند"""
-    if not any(role.name == "Admin" for role in current_user.roles):
+    if not any(role.name == "Admin" for role in current_user.roles) and current_user.username != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="دسترسی غیرمجاز. این عملیات فقط برای مدیر کل سیستم امکان‌پذیر است."

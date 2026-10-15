@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
 from src.infrastructure.database import get_db
+from src.core.dependencies import allow_roles
 from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import BaggingOrder, Product, Warehouse, StockTransaction, TransactionType
@@ -16,7 +17,11 @@ from src.services.audit_service import AuditService
 from src.services.inventory_service import InventoryService
 from src.core.localization.regions import get_active_region, Region, localize_display_name
 
-router = APIRouter(prefix="/bagging", tags=["Bagging Operations"])
+router = APIRouter(
+    prefix="/bagging",
+    tags=["Bagging Operations"],
+    dependencies=[Depends(allow_roles("Admin", "Warehouse_Supervisor"))]
+)
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
 

@@ -341,10 +341,6 @@
                 <a href="/inventory/transaction/{{ t.id }}/print" target="_blank" class="btn btn-sm btn-outline-warning" title="{% if is_tr %}Resmi İrsaliye Yazdır{% else %}چاپ حواله رسمی سند{% endif %}">
                   <i class="bi bi-printer"></i>
                 </a>
-                <!-- چاپ شناسنامه متالورژی MTC -->
-                <a href="/inventory/transactions/{{ t.id }}/mtc" target="_blank" class="btn btn-sm btn-outline-info" title="{% if is_tr %}MTC Sertifikası{% else %}شناسنامه متالورژی MTC{% endif %}">
-                  <i class="bi bi-file-earmark-medical"></i>
-                </a>
                 <!-- چاپ لیبل بارکد کالا -->
                 {% if t.product_id %}
                 <a href="/inventory/products/{{ t.product_id }}/label" target="_blank" class="btn btn-sm btn-outline-success" title="{% if is_tr %}Barkod Etiketi Yazdır{% else %}چاپ برچسب بارکد{% endif %}">
