@@ -132,6 +132,7 @@ async def lifespan(app: FastAPI):
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS is_return BOOLEAN DEFAULT FALSE;
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS return_reason VARCHAR;
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS parent_transaction_id INTEGER REFERENCES stock_transactions(id);
+                ALTER TABLE stock_transactions DROP CONSTRAINT IF EXISTS check_quantity_positive;
 
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS secondary_quantity FLOAT;
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS secondary_uom VARCHAR;
