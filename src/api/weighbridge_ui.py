@@ -316,9 +316,28 @@ async def complete_second_weighing(
             if ticket.gross_weight > ticket.max_allowed_weight:
                 ticket.is_overweight = True
 
-        # محاسبه وزن متناسب با واحد کالا (تن یا کیلوگرم)
-        is_ton = ticket.product and ticket.product.uom in ("تن", "Ton", "ton")
-        net_qty = (ticket.net_weight / 1000.0) if is_ton else ticket.net_weight
+        # محاسبه وزن متناسب با واحد کالا (شاخه/عدد، تن، یا کیلوگرم)
+        prod = ticket.product
+        uom_clean = (prod.uom or "").strip().lower() if prod and prod.uom else ""
+        nom_weight = (prod.nominal_weight or 0.0) if prod else 0.0
+
+        sec_qty = None
+        sec_uom = None
+
+        if uom_clean in ("شاخه", "عدد", "adet", "çubuk", "piece", "pcs") and nom_weight > 0:
+            # کالا شاخه‌ای/عددی است: خالص باسکول بر وزن استاندارد هر شاخه تقسیم می‌شود تا کیلوگرم به اشتباه شاخه ثبت نشود
+            net_qty = round(ticket.net_weight / nom_weight, 2)
+            sec_qty = ticket.net_weight
+            sec_uom = "کیلوگرم"
+        elif uom_clean in ("تن", "ton"):
+            net_qty = round(ticket.net_weight / 1000.0, 3)
+            sec_qty = ticket.net_weight
+            sec_uom = "کیلوگرم"
+        else:
+            net_qty = ticket.net_weight
+            if nom_weight > 0 and prod and prod.secondary_uom:
+                sec_qty = round(ticket.net_weight / nom_weight, 2)
+                sec_uom = prod.secondary_uom
 
         # بازیابی سال مالی فعال
         active_fy = InventoryService.get_active_fiscal_year(db)
@@ -362,6 +381,9 @@ async def complete_second_weighing(
         if pending_tx:
             # به‌روزرسانی همان سند کارتابل با وزن باسکول و تخصصی‌سازی مشخصات
             pending_tx.quantity = round(net_qty, 3)
+            if sec_qty is not None:
+                pending_tx.secondary_quantity = sec_qty
+                pending_tx.secondary_uom = sec_uom
             pending_tx.weighbridge_ticket_id = ticket.id
             pending_tx.reference_document = f"{pending_tx.reference_document or ''} | قبض باسکول {ticket.ticket_number}".strip(" |")
             if po_item:
@@ -385,6 +407,8 @@ async def complete_second_weighing(
                 product_id=ticket.product_id,
                 warehouse_id=ticket.warehouse_id,
                 quantity=round(net_qty, 3),
+                secondary_quantity=sec_qty,
+                secondary_uom=sec_uom,
                 unit_price=unit_price,
                 supplier_id=ticket.supplier_id,
                 customer_id=ticket.customer_id,

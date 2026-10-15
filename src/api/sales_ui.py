@@ -19,9 +19,10 @@ from src.domain_model.inventory_models import (
     Product,
     Warehouse,
     StockTransaction,
-    TransactionType
+    TransactionType,
+    WeighbridgeTicket
 )
-from src.domain_model.enums import SalesOrderStatus, DocumentStatus, TransactionSource
+from src.domain_model.enums import SalesOrderStatus, DocumentStatus, TransactionSource, WeighbridgeStatus
 from src.services.audit_service import AuditService
 from src.services.tax_service import TaxService
 from src.services.inventory_service import InventoryService
@@ -286,6 +287,17 @@ async def deliver_sales_order(
     so = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
     if not so:
         raise HTTPException(status_code=404, detail="سفارش فروش یافت نشد")
+
+    # جلوگیری از ثبت مضاعف بین باسکول و حواله خروج سفارش:
+    active_wb = db.query(WeighbridgeTicket).filter(
+        WeighbridgeTicket.sales_order_id == so.id,
+        WeighbridgeTicket.status == WeighbridgeStatus.FIRST_WEIGHING
+    ).first()
+    if active_wb:
+        raise HTTPException(
+            status_code=400,
+            detail=f"کامیون این سفارش در حال حاضر روی باسکول و در مرحله توزین اول است (قبض #{active_wb.ticket_number} - پلاک {active_wb.truck_plate}). پس از ثبت توزین دوم، سند خروج به صورت خودکار به کارتابل انبار ارسال می‌شود."
+        )
 
     try:
         active_fy = InventoryService.get_active_fiscal_year(db)

@@ -20,9 +20,10 @@ from src.domain_model.inventory_models import (
     Product,
     Warehouse,
     StockTransaction,
-    TransactionType
+    TransactionType,
+    WeighbridgeTicket
 )
-from src.domain_model.enums import PurchaseOrderStatus, DocumentStatus, TransactionSource
+from src.domain_model.enums import PurchaseOrderStatus, DocumentStatus, TransactionSource, WeighbridgeStatus
 from src.services.audit_service import AuditService
 from src.services.tax_service import TaxService
 from src.services.inventory_service import InventoryService
@@ -315,6 +316,17 @@ async def receive_purchase_order(
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="سفارش خرید یافت نشد")
+
+    # جلوگیری از ثبت مضاعف بین باسکول و دریافت سفارش:
+    active_wb = db.query(WeighbridgeTicket).filter(
+        WeighbridgeTicket.purchase_order_id == po.id,
+        WeighbridgeTicket.status == WeighbridgeStatus.FIRST_WEIGHING
+    ).first()
+    if active_wb:
+        raise HTTPException(
+            status_code=400,
+            detail=f"کامیون این سفارش در حال حاضر روی باسکول و در مرحله توزین اول است (قبض #{active_wb.ticket_number} - پلاک {active_wb.truck_plate}). پس از ثبت توزین دوم، سند به صورت خودکار به کارتابل انبار ارسال می‌شود."
+        )
 
     try:
         active_fy = InventoryService.get_active_fiscal_year(db)

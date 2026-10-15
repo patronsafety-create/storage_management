@@ -24,12 +24,14 @@
 </div>
 
 <!-- بخش متمایز و برجسته: کارتابل اسناد در انتظار تایید انباردار -->
-{% set pending_txs = [] %}
-{% for t in transactions %}
-  {% if t.status and t.status.value == 'PENDING_APPROVAL' %}
-    {% set _ = pending_txs.append(t) %}
-  {% endif %}
-{% endfor %}
+{% if pending_txs is not defined or pending_txs is none %}
+  {% set pending_txs = [] %}
+  {% for t in transactions %}
+    {% if t.status and t.status.value == 'PENDING_APPROVAL' %}
+      {% set _ = pending_txs.append(t) %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
 
 {% if pending_txs | length > 0 %}
 <div class="card border-warning shadow-lg mb-4" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(13, 17, 23, 0.95)); border: 2px solid #f59e0b !important; border-radius: 16px;">

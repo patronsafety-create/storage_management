@@ -333,6 +333,21 @@ async def list_transactions(
     page = min(page, total_pages)
     transactions = query.offset((page - 1) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE).all()
 
+    # کوئری مستقل کارتابل اسناد در انتظار تأیید (تا با رفتن به صفحات بعدی غیب نشوند)
+    pending_txs = (
+        db.query(StockTransaction)
+        .options(
+            joinedload(StockTransaction.product),
+            joinedload(StockTransaction.warehouse),
+            joinedload(StockTransaction.supplier),
+            joinedload(StockTransaction.customer),
+            joinedload(StockTransaction.created_by)
+        )
+        .filter(StockTransaction.status == DocumentStatus.PENDING_APPROVAL)
+        .order_by(StockTransaction.created_at.desc())
+        .all()
+    )
+
     products = db.query(Product).order_by(Product.name).all()
     active_region = get_active_region(request)
     is_tr = (active_region.code == "TR")
@@ -343,6 +358,7 @@ async def list_transactions(
         context={
             "request": request,
             "transactions": transactions,
+            "pending_txs": pending_txs,
             "products": products,
             "user": current_user,
             "page": page,
@@ -883,19 +899,21 @@ async def approve_transaction(
     tx.approved_at = datetime.now(timezone.utc)
 
     # ۱. به‌روزرسانی سفارش خرید مرتبط (received_quantity)
-    if tx.purchase_order_id:
-        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == tx.purchase_order_id).first()
+    po_id = tx.purchase_order_id or (tx.parent_transaction.purchase_order_id if tx.parent_transaction else None)
+    if po_id:
+        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
         if po:
-            item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == tx.purchase_order_item_id).first() if tx.purchase_order_item_id else next((it for it in po.items if it.product_id == tx.product_id), None)
+            po_item_id = tx.purchase_order_item_id or (tx.parent_transaction.purchase_order_item_id if tx.parent_transaction else None)
+            item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == po_item_id).first() if po_item_id else next((it for it in po.items if it.product_id == tx.product_id), None)
             if item:
                 if tx.is_return:
                     # در اسناد مرجوعی خرید، مقدار از دریافتی کسر می‌شود
-                    item.received_quantity = max(0.0, item.received_quantity - tx.quantity)
+                    item.received_quantity = max(0.0, (item.received_quantity or 0.0) - tx.quantity)
                 else:
-                    item.received_quantity += tx.quantity
+                    item.received_quantity = (item.received_quantity or 0.0) + tx.quantity
             
             total_ordered = sum(it.quantity for it in po.items)
-            total_rcvd = sum(it.received_quantity for it in po.items)
+            total_rcvd = sum(it.received_quantity or 0.0 for it in po.items)
             if total_rcvd >= total_ordered:
                 po.status = PurchaseOrderStatus.COMPLETED
             elif total_rcvd > 0:
@@ -904,19 +922,21 @@ async def approve_transaction(
                 po.status = PurchaseOrderStatus.CONFIRMED
 
     # ۲. به‌روزرسانی سفارش فروش مرتبط (delivered_quantity)
-    if tx.sales_order_id:
-        so = db.query(SalesOrder).filter(SalesOrder.id == tx.sales_order_id).first()
+    so_id = tx.sales_order_id or (tx.parent_transaction.sales_order_id if tx.parent_transaction else None)
+    if so_id:
+        so = db.query(SalesOrder).filter(SalesOrder.id == so_id).first()
         if so:
-            item = db.query(SalesOrderItem).filter(SalesOrderItem.id == tx.sales_order_item_id).first() if tx.sales_order_item_id else next((it for it in so.items if it.product_id == tx.product_id), None)
+            so_item_id = tx.sales_order_item_id or (tx.parent_transaction.sales_order_item_id if tx.parent_transaction else None)
+            item = db.query(SalesOrderItem).filter(SalesOrderItem.id == so_item_id).first() if so_item_id else next((it for it in so.items if it.product_id == tx.product_id), None)
             if item:
                 if tx.is_return:
                     # در اسناد مرجوعی فروش، مقدار از تحویلی کسر می‌شود
-                    item.delivered_quantity = max(0.0, item.delivered_quantity - tx.quantity)
+                    item.delivered_quantity = max(0.0, (item.delivered_quantity or 0.0) - tx.quantity)
                 else:
-                    item.delivered_quantity += tx.quantity
+                    item.delivered_quantity = (item.delivered_quantity or 0.0) + tx.quantity
             
             total_ordered = sum(it.quantity for it in so.items)
-            total_deliv = sum(it.delivered_quantity for it in so.items)
+            total_deliv = sum(it.delivered_quantity or 0.0 for it in so.items)
             if total_deliv >= total_ordered:
                 so.status = SalesOrderStatus.COMPLETED
             elif total_deliv > 0:
