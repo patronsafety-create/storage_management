@@ -200,7 +200,13 @@ def test_3_commercial_actions(wh_id: int, prod_id: int):
     with SessionLocal() as db:
         po = db.query(PurchaseOrder).filter(PurchaseOrder.po_number == po_num).first()
         assert po is not None, "سفارش خرید در دیتابیس ایجاد نشد!"
+        po_id = po.id
         log_success(f"سفارش خرید «{po_num}» با موفقیت ثبت گردید (مبلغ: {po.total_amount:,.0f} ریال)")
+
+    # راستی‌آزمایی بارگذاری صفحه مشاهده جزئیات سفارش خرید (جلوگیری از خطای ۵۰۰)
+    res_po_view = commercial_client.get(f"/purchases/{po_id}")
+    assert res_po_view.status_code == 200, f"صفحه جزئیات سفارش خرید با خطای {res_po_view.status_code} مواجه شد!"
+    log_success(f"صفحه جزئیات سفارش خرید #{po_id} با موفقیت بارگذاری شد (200 OK)")
 
     # ۴. ثبت سفارش فروش (SO)
     so_num = f"SO-COMM-{run_id}"
@@ -220,7 +226,13 @@ def test_3_commercial_actions(wh_id: int, prod_id: int):
     with SessionLocal() as db:
         so = db.query(SalesOrder).filter(SalesOrder.so_number == so_num).first()
         assert so is not None, "سفارش فروش در دیتابیس ایجاد نشد!"
+        so_id = so.id
         log_success(f"سفارش فروش «{so_num}» با موفقیت ثبت گردید (مبلغ: {so.total_amount:,.0f} ریال)")
+
+    # راستی‌آزمایی بارگذاری صفحه مشاهده جزئیات سفارش فروش (رفع باگ ۵۰۰ در قالب sales_detail.html)
+    res_so_view = commercial_client.get(f"/sales/{so_id}")
+    assert res_so_view.status_code == 200, f"صفحه جزئیات سفارش فروش با خطای {res_so_view.status_code} مواجه شد!"
+    log_success(f"صفحه جزئیات سفارش فروش #{so_id} با موفقیت بارگذاری شد (200 OK - بدون خطای tax_info)")
 
     return supplier_id, customer_id
 
@@ -364,8 +376,47 @@ def test_4_full_lifecycle_workflow(wh_id: int, prod_id: int, supplier_id: int):
         log_success(f"گام ۷.۲ (تکمیل سفارش خرید): سفارش خرید {po.po_number} پس از دریافت کامل اقلام در وضعیت COMPLETED بسته شد")
 
 
+def test_5_full_matrix_get_routes(wh_id: int, prod_id: int):
+    """۵. ممیزی ماتریس کامل تمام مسیرهای GET برای هر ۵ نقش سازمانی بدون ایجاد خطای ۵۰۰"""
+    log_step("۵. ممیزی ماتریس کامل تمام صفحات سیستم برای هر ۵ نقش (تضمین عدم وقوع خطای ۵۰۰)")
+    
+    role_routes = {
+        "admin": [
+            "/dashboard", "/inventory/balance", "/inventory/transaction", "/inventory/transactions",
+            "/inventory/transfer", "/inventory/stocktaking", "/inventory/returns/new", "/inventory/fiscal-years",
+            "/purchases", "/purchases/new", "/sales", "/sales/new", "/master-data/parties",
+            "/weighbridge", "/weighbridge/new", "/bagging", "/bagging/new", "/admin/users",
+            "/admin/audit-logs", "/inventory/alerts"
+        ],
+        "finance": [
+            "/dashboard", "/inventory/balance", "/inventory/transactions", "/inventory/transfer",
+            "/inventory/stocktaking", "/inventory/returns/new", "/inventory/fiscal-years",
+            "/purchases", "/sales", "/master-data/parties"
+        ],
+        "warehouse": [
+            "/dashboard", "/inventory/balance", "/inventory/transaction", "/inventory/transactions",
+            "/inventory/transfer", "/inventory/stocktaking", "/inventory/returns/new",
+            "/bagging", "/bagging/new", "/weighbridge"
+        ],
+        "commercial": [
+            "/dashboard", "/purchases", "/purchases/new", "/sales", "/sales/new", "/master-data/parties"
+        ],
+        "baskool": [
+            "/dashboard", "/weighbridge", "/weighbridge/new"
+        ]
+    }
+
+    for username, routes in role_routes.items():
+        client = get_auth_client(username, "1234")
+        for route in routes:
+            res = client.get(route)
+            assert res.status_code != 500, f"خطای ۵۰۰ در مسیر {route} برای نقش {username} رخ داد! متن: {res.text[:200]}"
+            assert res.status_code in (200, 303), f"کد غیرمنتظره {res.status_code} در مسیر {route} برای نقش {username}"
+        log_success(f"تمام {len(routes)} مسیر مجاز نقش «{username}» بدون هیچ خطای ۵۰۰ با موفقیت بارگذاری شدند")
+
+
 def run_all_inspections():
-    """اجرای سرتاسری تمام آزمون‌های ۴ گانه بازرس خودکار"""
+    """اجرای سرتاسری تمام آزمون‌های ۵ گانه بازرس خودکار"""
     print(f"\n{CYAN}{BOLD}{'='*70}{RESET}")
     print(f"{CYAN}{BOLD}  🚀 آغاز ممیزی خودکار سامانه NexusPour Enterprise ERP (Phase 4 Inspector){RESET}")
     print(f"{CYAN}{BOLD}{'='*70}{RESET}")
@@ -378,16 +429,20 @@ def run_all_inspections():
     # ۲. آزمون RBAC
     test_2_rbac_security_barriers()
 
-    # ۳. آزمون اختیارات تجاری بازرگانی
+    # ۳. آزمون اختیارات تجاری بازرگانی + بررسی ویوهای جزئیات سفارش خرید و فروش
     sup_id, cust_id = test_3_commercial_actions(wh_id, prod_id)
 
     # ۴. آزمون چرخه کامل
     test_4_full_lifecycle_workflow(wh_id, prod_id, sup_id)
 
+    # ۵. ممیزی ماتریسی صفحات برای هر ۵ نقش
+    test_5_full_matrix_get_routes(wh_id, prod_id)
+
     print(f"\n{GREEN}{BOLD}{'='*70}{RESET}")
-    print(f"{GREEN}{BOLD}  🎉 تمام آزمون‌های ۴ گانه با موفقیت ۱۰۰٪ پاس شدند (ALL INSPECTIONS PASSED){RESET}")
+    print(f"{GREEN}{BOLD}  🎉 تمام آزمون‌های ۵ گانه با موفقیت ۱۰۰٪ پاس شدند (ALL INSPECTIONS PASSED){RESET}")
     print(f"{GREEN}{BOLD}{'='*70}{RESET}\n")
 
 
 if __name__ == "__main__":
     run_all_inspections()
+

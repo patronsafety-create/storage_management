@@ -34,7 +34,7 @@ async def view_stock_alerts(
     over_stock = []
     dead_stock = []
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     thirty_days_ago = now - timedelta(days=30)
 
     for p in products:
@@ -48,6 +48,10 @@ async def view_stock_alerts(
             .first()
         )
 
+        last_dt = None
+        if last_tx and last_tx.created_at:
+            last_dt = last_tx.created_at.replace(tzinfo=None) if last_tx.created_at.tzinfo else last_tx.created_at
+
         item_data = {
             "product": p,
             "current_balance": total_balance,
@@ -55,7 +59,7 @@ async def view_stock_alerts(
             "reorder_point": p.reorder_point or 0.0,
             "max_stock": p.max_stock or 0.0,
             "last_movement": last_tx.created_at if last_tx else None,
-            "days_since_last_tx": (now - last_tx.created_at.replace(tzinfo=None)).days if last_tx and last_tx.created_at else None
+            "days_since_last_tx": (now - last_dt).days if last_dt else None
         }
 
         # ۱. اتمام موجودی
@@ -70,7 +74,7 @@ async def view_stock_alerts(
             over_stock.append(item_data)
 
         # ۴. کالاهای راکد (Dead Stock): بدون گردش در ۳۰ روز گذشته یا بدون هرگونه تراکنش
-        if not last_tx or (last_tx.created_at and last_tx.created_at.replace(tzinfo=None) < thirty_days_ago):
+        if not last_tx or (last_dt and last_dt < thirty_days_ago):
             dead_stock.append(item_data)
 
     return templates.TemplateResponse(

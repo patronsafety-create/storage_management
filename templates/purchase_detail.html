@@ -119,6 +119,7 @@
           <span class="text-warning">{{ order.delivery_due_date or ('Belirtilmemiş' if is_tr else 'تعیین نشده') }}</span>
         </div>
         <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+          {% if tax_info %}
           <div class="d-flex justify-content-between mb-1 small">
             <span class="text-secondary">{% if is_tr %}Matrah (Net Tutar):{% else %}مبلغ خالص پایه:{% endif %}</span>
             <span class="font-monospace text-light">{{ "{:,.2f}".format(tax_info.base_amount) if is_tr else "{:,.0f}".format(tax_info.base_amount) }} {{ tax_info.currency_symbol }}</span>
@@ -144,6 +145,12 @@
             <span class="fw-bold text-light">{% if is_tr %}Toplam Ödenecek:{% else %}مبلغ نهایی فاکتور:{% endif %}</span>
             <span class="text-teal fw-bold fs-6 font-monospace">{{ "{:,.2f}".format(tax_info.total_payable) if is_tr else "{:,.0f}".format(tax_info.total_payable) }} {{ tax_info.currency_symbol }}</span>
           </div>
+          {% else %}
+          <div class="d-flex justify-content-between">
+            <span class="fw-bold text-light">{% if is_tr %}Toplam Tutar:{% else %}مبلغ کل سفارش:{% endif %}</span>
+            <span class="text-teal fw-bold fs-6 font-monospace">{{ "{:,.0f}".format(order.total_amount or 0.0) }}</span>
+          </div>
+          {% endif %}
         </div>
         {% if order.notes %}
         <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">

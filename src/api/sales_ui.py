@@ -253,8 +253,24 @@ async def view_sales_order(
         raise HTTPException(status_code=404, detail="سفارش فروش یافت نشد")
 
     warehouses = db.query(Warehouse).all()
+    subtotal = so.subtotal_amount or sum(item.total_price for item in so.items)
+    is_tr = (so.currency == "TRY") or (so.customer and so.customer.country_code == "TR") or (request.cookies.get("nexus_region") == "TR")
+    has_steel = any(
+        TaxService.is_steel_tevkifat_eligible(
+            gtip_code=it.product.gtip_code if it.product else None,
+            category_code=it.product.category.code if it.product and it.product.category else None,
+            product_name=it.product.name if it.product else None
+        ) for it in so.items
+    )
+    tax_info = TaxService.calculate_tax(
+        base_amount=subtotal,
+        region_code="TR" if is_tr else "IR",
+        is_steel=has_steel,
+        custom_vat_rate=so.vat_rate if so.vat_rate else None,
+        tevkifat_ratio=so.tevkifat_rate
+    )
+
     active_region = get_active_region(request)
-    is_tr = (active_region.code == Region.TR)
 
     return templates.TemplateResponse(
         request=request,
@@ -263,6 +279,8 @@ async def view_sales_order(
             "request": request,
             "order": so,
             "warehouses": warehouses,
+            "total_amount": tax_info.total_payable,
+            "tax_info": tax_info,
             "user": current_user,
             "active_region": active_region,
             "is_tr": is_tr
