@@ -239,7 +239,7 @@ async def create_supplier(
     tax_office: Optional[str] = Form(None),
     mersis_no: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
+    current_user: User = Depends(allow_roles("Admin", "Commercial_Officer"))
 ):
     """ایجاد تأمین‌کننده جدید با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
     active_region = get_active_region(request)
@@ -311,7 +311,7 @@ async def edit_supplier(
     tax_office: Optional[str] = Form(None),
     mersis_no: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
+    current_user: User = Depends(allow_roles("Admin", "Commercial_Officer"))
 ):
     """ویرایش اطلاعات تأمین‌کننده با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
     supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
@@ -452,7 +452,7 @@ async def create_customer(
     mersis_no: Optional[str] = Form(None),
     credit_limit: Optional[float] = Form(0.0),
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
+    current_user: User = Depends(allow_roles("Admin", "Commercial_Officer"))
 ):
     """ایجاد مشتری جدید با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
     active_region = get_active_region(request)
@@ -526,7 +526,7 @@ async def edit_customer(
     mersis_no: Optional[str] = Form(None),
     credit_limit: Optional[float] = Form(0.0),
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
+    current_user: User = Depends(allow_roles("Admin", "Commercial_Officer"))
 ):
     """ویرایش اطلاعات مشتری با پشتیبانی از سیستم مالیاتی ایران و ترکیه"""
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
