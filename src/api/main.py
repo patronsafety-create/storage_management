@@ -28,6 +28,22 @@ from sqlalchemy import text
 # ساخت تمام جداول دیتابیس
 Base.metadata.create_all(bind=engine)
 
+# اطمینان از اعمال فیلدهای جدید در SQLite لوکال هنگام لود ماژول
+if engine.dialect.name == "sqlite":
+    with engine.connect() as _conn:
+        for _stmt in [
+            "ALTER TABLE sales_orders ADD COLUMN delivery_address TEXT;",
+            "ALTER TABLE purchase_orders ADD COLUMN ownership_type TEXT DEFAULT 'OWNED';",
+            "ALTER TABLE stock_transactions ADD COLUMN ownership_type TEXT DEFAULT 'OWNED';",
+            "ALTER TABLE stock_transactions ADD COLUMN qc_approved BOOLEAN DEFAULT 1;",
+            "ALTER TABLE stock_transactions ADD COLUMN qc_notes TEXT;"
+        ]:
+            try:
+                _conn.execute(text(_stmt))
+                _conn.commit()
+            except Exception:
+                pass
+
 templates = Jinja2Templates(directory="templates")
 register_jinja_filters(templates)
 
@@ -322,6 +338,12 @@ async def lifespan(app: FastAPI):
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS weighbridge_ticket_id INTEGER REFERENCES weighbridge_tickets(id);
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS transaction_source VARCHAR;
                 ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS transaction_date TIMESTAMPTZ;
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS ownership_type VARCHAR DEFAULT 'OWNED';
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS qc_approved BOOLEAN DEFAULT TRUE;
+                ALTER TABLE stock_transactions ADD COLUMN IF NOT EXISTS qc_notes VARCHAR;
+
+                ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS ownership_type VARCHAR DEFAULT 'OWNED';
+                ALTER TABLE sales_orders ADD COLUMN IF NOT EXISTS delivery_address VARCHAR;
 
                 ALTER TABLE weighbridge_tickets ADD COLUMN IF NOT EXISTS purchase_order_id INTEGER REFERENCES purchase_orders(id);
                 ALTER TABLE weighbridge_tickets ADD COLUMN IF NOT EXISTS sales_order_id INTEGER REFERENCES sales_orders(id);
@@ -343,7 +365,22 @@ async def lifespan(app: FastAPI):
             """))
             conn.commit()
     except Exception as e:
-        print(f"Auto-migration check notice: {e}")
+        print(f"Auto-migration check notice (PG): {e}")
+
+    # مایگریشن خودکار SQLite در صورت اجرای لوکال
+    for stmt in [
+        "ALTER TABLE sales_orders ADD COLUMN delivery_address TEXT;",
+        "ALTER TABLE purchase_orders ADD COLUMN ownership_type TEXT DEFAULT 'OWNED';",
+        "ALTER TABLE stock_transactions ADD COLUMN ownership_type TEXT DEFAULT 'OWNED';",
+        "ALTER TABLE stock_transactions ADD COLUMN qc_approved BOOLEAN DEFAULT 1;",
+        "ALTER TABLE stock_transactions ADD COLUMN qc_notes TEXT;"
+    ]:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text(stmt))
+                conn.commit()
+        except Exception:
+            pass
 
     db = SessionLocal()
     try:

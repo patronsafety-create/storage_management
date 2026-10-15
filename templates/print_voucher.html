@@ -121,6 +121,27 @@
                 <td style="width: 25%;">{{ 'Referans Belge:' if is_tr else 'سند عطف / سفارش:' }} <strong>{{ tx.reference_document or '---' }}</strong></td>
                 <td style="width: 25%;">{{ 'Düzenleyen Kullanıcı:' if is_tr else 'کاربر ثبت‌کننده:' }} <strong>{{ tx.created_by.full_name if tx.created_by else ('Sistem' if is_tr else 'سیستم') }}</strong></td>
             </tr>
+            {% set d_addr = (tx.sales_order.delivery_address if tx.sales_order and tx.sales_order.delivery_address else (tx.customer.address if tx.customer else None)) %}
+            {% if d_addr or (tx.ownership_type and tx.ownership_type.value == 'CONSIGNMENT') %}
+            <tr style="background: #f1f5f9;">
+                {% if d_addr %}
+                <td colspan="3">
+                    <span class="text-muted">{{ 'Teslimat / Boşaltma Adresi:' if is_tr else 'آدرس و محل دقیق تخلیه / تحویل بار:' }}</span>
+                    <strong>{{ d_addr }}</strong>
+                </td>
+                {% else %}
+                <td colspan="3"></td>
+                {% endif %}
+                <td class="text-end">
+                    <span class="text-muted">{{ 'Mülkiyet:' if is_tr else 'نوع مالکیت:' }}</span>
+                    {% if tx.ownership_type and tx.ownership_type.value == 'CONSIGNMENT' %}
+                    <span class="badge bg-warning text-dark border border-dark">امانی دیگران (Consignment)</span>
+                    {% else %}
+                    <span class="badge bg-secondary text-white">ملکی شرکت (Owned)</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
         </table>
 
         <!-- جدول اقلام -->
@@ -183,7 +204,7 @@
 
         <!-- پاورقی حقوق مالکیت معنوی -->
         <div class="text-center text-muted border-top pt-2 mt-4" style="font-size: 0.72rem;">
-            {{ 'NexusPour ERP v2.0 Otomasyonu | Fikri Mülkiyet Sahibi ve Yazılım Mimarı: Omid Pourmahmoud' if is_tr else 'سامانه مکانیزه انبارداری نکسوس‌پـور (NexusPour ERP v2.0) | صاحب امتیاز، طراح و مهندس نرم‌افزار: امید پورمحمود (Omid Pourmahmoud)' }}
+            {{ 'NexusPour ERP v3.2.0 Otomasyonu | Fikri Mülkiyet Sahibi ve Yazılım Mimarı: Omid Pourmahmoud' if is_tr else 'سامانه مکانیزه انبارداری نکسوس‌پـور (NexusPour ERP v3.2.0) | صاحب امتیاز، طراح و مهندس نرم‌افزار: امید پورمحمود (Omid Pourmahmoud)' }}
         </div>
     </div>
 </body>

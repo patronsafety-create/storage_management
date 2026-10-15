@@ -108,6 +108,21 @@
                     </div>
                 </div>
 
+                <!-- نوع مالکیت (ملکی / امانی) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="ownership_type" class="form-label fw-bold">
+                            <i class="bi bi-shield-check text-warning me-1"></i>
+                            {% if is_tr %}Mülkiyet Türü (Sahiplik){% else %}نوع مالکیت کالا (ملکی / امانی){% endif %}
+                        </label>
+                        <select class="form-select" id="ownership_type" name="ownership_type">
+                            <option value="OWNED" selected>{% if is_tr %}Şirket Öz Malı (OWNED - Varlık Değerlemesine Dahil){% else %}ملکی شرکت (خرید قطعی - سرمایه‌ای و ارزیابی در دارایی){% endif %}</option>
+                            <option value="CONSIGNMENT">{% if is_tr %}Emanet / Konsinye (CONSIGNMENT - Stokta Sayılır, Maliyet Dışı){% else %}امانی دیگران (کنسینیه - شمارش فیزیکی بدون تغییر ارزش مالی){% endif %}</option>
+                        </select>
+                        <div class="form-text text-secondary small">{% if is_tr %}Konsinye mallar depo stoğunda yer alır ancak şirket mali bilançosuna dahil edilmez.{% else %}کالای امانی در موجودی انبار شمارش می‌شود اما در ارزش مالی دارایی و میانگین موزون شرکت لحاظ نمی‌گردد.{% endif %}</div>
+                    </div>
+                </div>
+
                 <!-- انتخاب سفارش مرجع خرید (PO) یا فروش (SO) جهت اتصال خودکار و دریافت محرمانه -->
                 <div class="row g-3 mb-4 p-3 rounded-3" style="background: rgba(0, 212, 200, 0.05); border: 1px dashed rgba(0, 212, 200, 0.3);">
                     <div class="col-md-6" id="poSelectBox">

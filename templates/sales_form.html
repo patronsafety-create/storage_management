@@ -55,7 +55,7 @@
             <select class="form-select" id="customer_id" name="customer_id" required>
               <option value="" selected disabled>{{ 'Müşteri seçiniz...' if is_tr else 'انتخاب مشتری...' }}</option>
               {% for c in customers %}
-              <option value="{{ c.id }}">{{ c.name | tr_loc(is_tr) }} {% if c.code %}({{ c.code }}){% endif %}</option>
+              <option value="{{ c.id }}" data-address="{{ c.address or '' }}">{{ c.name | tr_loc(is_tr) }} {% if c.code %}({{ c.code }}){% endif %}</option>
               {% endfor %}
             </select>
           </div>
@@ -79,12 +79,25 @@
           </div>
         </div>
 
-        <div class="mb-4">
-          <label for="notes" class="form-label">
-            {{ 'Sözleşme Notları ve Sevkiyat Koşulları' if is_tr else 'توضیحات و شرایط قرارداد فروش' }}
-          </label>
-          <textarea class="form-control" id="notes" name="notes" rows="2"
-                    placeholder="{{ 'Ödeme vadesi, tolerans şartları, nakliye veya teslim yeri...' if is_tr else 'شرایط تسویه، تلورانس باسکول، هزینه باربری و محل تحویل کالا...' }}"></textarea>
+        <div class="row g-3 mb-4">
+          <div class="col-md-7">
+            <label for="delivery_address" class="form-label fw-bold">
+              <i class="bi bi-geo-alt-fill text-warning me-1"></i>
+              {{ 'Teslimat / Boşaltma Adresi (Şantiye / Liman)' if is_tr else 'آدرس و محل دقیق تخلیه / تحویل بار (پروژه خریدار)' }}
+            </label>
+            <input type="text" class="form-control" id="delivery_address" name="delivery_address"
+                   placeholder="{{ 'Müşteri adresi veya özel proje/şantiye boşaltma konumu...' if is_tr else 'آدرس دقیق کارگاه، پروژه، گمرک یا بندر مقصد جهت درج در بارنامه و حواله خروج...' }}">
+            <div class="form-text text-secondary small">
+              {{ 'Müşteri seçildiğinde kayıtlı adresi otomatik yüklenir ve dilerseniz düzenleyebilirsiniz.' if is_tr else 'با انتخاب مشتری، آدرس پیش‌فرض مشتری به‌صورت خودکار درج شده و قابل ویرایش است.' }}
+            </div>
+          </div>
+          <div class="col-md-5">
+            <label for="notes" class="form-label">
+              {{ 'Sözleşme Notları ve Sevkiyat Koşulları' if is_tr else 'توضیحات و شرایط قرارداد فروش' }}
+            </label>
+            <textarea class="form-control" id="notes" name="notes" rows="2"
+                      placeholder="{{ 'Ödeme vadesi, tolerans şartları, nakliye veya teslim yeri...' if is_tr else 'شرایط تسویه، تلورانس باسکول، هزینه باربری و محل تحویل کالا...' }}"></textarea>
+          </div>
         </div>
 
         <!-- اقلام سفارش فروش -->
@@ -157,6 +170,20 @@
 document.addEventListener("DOMContentLoaded", function() {
     const addRowBtn = document.getElementById('addRowBtn');
     const itemsBody = document.getElementById('itemsBody');
+    const customerSelect = document.getElementById('customer_id');
+    const deliveryAddressInput = document.getElementById('delivery_address');
+
+    if (customerSelect && deliveryAddressInput) {
+        customerSelect.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            if (opt) {
+                const addr = opt.getAttribute('data-address');
+                if (addr) {
+                    deliveryAddressInput.value = addr;
+                }
+            }
+        });
+    }
 
     function attachSelectListener(row) {
         const sel = row.querySelector('.product-select');

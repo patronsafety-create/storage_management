@@ -270,6 +270,10 @@ class InventoryService:
                     StockTransaction.status == DocumentStatus.APPROVED,
                     StockTransaction.status == None
                 ),
+                or_(
+                    StockTransaction.ownership_type == "OWNED",
+                    StockTransaction.ownership_type == None
+                ),
                 fy_filter
             )
             .order_by(StockTransaction.transaction_date.asc(), StockTransaction.id.asc())

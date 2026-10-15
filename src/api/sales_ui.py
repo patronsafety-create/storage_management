@@ -75,6 +75,28 @@ async def list_sales_orders(
 
     total_value = sum(o.total_amount for o in orders)
 
+    # تعیین نقش‌ها جهت نمایش حاشیه سود
+    user_role_names = [role.name for role in current_user.roles]
+    is_admin = ("Admin" in user_role_names) or (current_user.username == "admin")
+    is_finance = ("Finance_Manager" in user_role_names) or (current_user.username == "finance")
+
+    # محاسبه سود ناخالص لحظه‌ای سفارشات فروش (فقط برای مدیر ارشد و مدیر مالی)
+    orders_profit_map = {}
+    total_sales_profit = 0.0
+    if is_admin or is_finance:
+        for o in orders:
+            o_profit = 0.0
+            for it in o.items:
+                c = InventoryService.get_weighted_average_cost(db, it.product_id)
+                o_profit += (it.unit_price - c) * it.quantity
+            o_subtotal = o.subtotal_amount or sum(it.total_price for it in o.items)
+            o_margin = (o_profit / o_subtotal * 100.0) if o_subtotal > 0 else 0.0
+            total_sales_profit += o_profit
+            orders_profit_map[o.id] = {
+                "profit": o_profit,
+                "margin_pct": round(o_margin, 1)
+            }
+
     return templates.TemplateResponse(
         request=request,
         name="sales.html",
@@ -88,6 +110,10 @@ async def list_sales_orders(
             "pending_delivery": pending_delivery,
             "completed_orders": completed_orders,
             "total_value": total_value,
+            "total_sales_profit": total_sales_profit,
+            "orders_profit_map": orders_profit_map,
+            "is_admin": is_admin,
+            "is_finance": is_finance,
             "user": current_user,
             "active_region": active_region,
             "is_tr": is_tr
@@ -140,12 +166,13 @@ async def create_sales_order(
     so_number: str = Form(...),
     customer_id: int = Form(...),
     delivery_due_date: Optional[str] = Form(None),
+    delivery_address: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
     product_id: list[int] = Form(...),
     quantity: list[float] = Form(...),
     unit_price: list[float] = Form(...)
 ):
-    """ثبت و ذخیره سفارش فروش با تفکیک توقیف مالیاتی آهن‌آلات"""
+    """ثبت و ذخیره سفارش فروش با تفکیک توقیف مالیاتی آهن‌آلات و آدرس پروژه تخلیه"""
     try:
         # تشخیص منطقه جغرافیایی سفارش منحصراً از روی کشور مشتری (حذف وابستگی به کوکی مرورگر)
         customer = db.query(Customer).filter(Customer.id == customer_id).first()
@@ -178,10 +205,13 @@ async def create_sales_order(
             steel_base_amount=steel_subtotal
         )
 
+        resolved_delivery_addr = delivery_address.strip() if delivery_address else (customer.address if customer and customer.address else None)
+
         so = SalesOrder(
             so_number=so_number.strip(),
             customer_id=customer_id,
             delivery_due_date=delivery_due_date.strip() if delivery_due_date else None,
+            delivery_address=resolved_delivery_addr,
             status=SalesOrderStatus.CONFIRMED,
             notes=notes.strip() if notes else None,
             subtotal_amount=tax_res.base_amount,
@@ -290,6 +320,33 @@ async def view_sales_order(
                 "current": round(cur, 3)
             }
 
+    user_role_names = [role.name for role in current_user.roles]
+    is_admin = ("Admin" in user_role_names) or (current_user.username == "admin")
+    is_finance = ("Finance_Manager" in user_role_names) or (current_user.username == "finance")
+
+    # محاسبه بهای تمام‌شده موزون، سود ناخالص و حاشیه سود لحظه‌ای (مخصوص مدیر ارشد و مالی)
+    item_profits = {}
+    total_order_cost = 0.0
+    total_order_profit = 0.0
+    if is_admin or is_finance:
+        for it in so.items:
+            avg_cost = InventoryService.get_weighted_average_cost(db, it.product_id)
+            unit_prof = it.unit_price - avg_cost
+            line_cost = avg_cost * it.quantity
+            line_prof = unit_prof * it.quantity
+            margin_p = (unit_prof / it.unit_price * 100.0) if it.unit_price > 0 else 0.0
+            total_order_cost += line_cost
+            total_order_profit += line_prof
+            item_profits[it.id] = {
+                "avg_cost": avg_cost,
+                "unit_profit": unit_prof,
+                "line_cost": line_cost,
+                "line_profit": line_prof,
+                "margin_pct": round(margin_p, 1)
+            }
+
+    order_margin_pct = (total_order_profit / tax_info.base_amount * 100.0) if tax_info.base_amount > 0 else 0.0
+
     return templates.TemplateResponse(
         request=request,
         name="sales_detail.html",
@@ -301,6 +358,12 @@ async def view_sales_order(
             "stock_map_json": json.dumps(stock_map),
             "total_amount": tax_info.total_payable,
             "tax_info": tax_info,
+            "item_profits": item_profits,
+            "total_order_cost": total_order_cost,
+            "total_order_profit": total_order_profit,
+            "order_margin_pct": round(order_margin_pct, 1),
+            "is_admin": is_admin,
+            "is_finance": is_finance,
             "user": current_user,
             "active_region": active_region,
             "is_tr": is_tr

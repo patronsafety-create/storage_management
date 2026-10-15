@@ -55,4 +55,9 @@ class TransactionSource(str, Enum):
     STOCKTAKING = "STOCKTAKING"              # انبارگردانی
     RETURN = "RETURN"                        # مرجوعی
     INTERNAL_USE = "INTERNAL_USE"            # مصرف داخلی
+
+class OwnershipType(str, Enum):
+    OWNED = "OWNED"                          # ملکی شرکت
+    CONSIGNMENT = "CONSIGNMENT"              # امانی دیگران
+
 

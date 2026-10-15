@@ -122,6 +122,7 @@ async def process_transaction(
     # ۱۲. سامانه تجارت
     waybill_number: Optional[str] = Form(None),
     tracking_code: Optional[str] = Form(None),
+    ownership_type: Optional[str] = Form("OWNED"),
     currency: Optional[str] = Form(None),
     exchange_rate: Optional[float] = Form(1.0),
     db: Session = Depends(get_db),
@@ -239,11 +240,19 @@ async def process_transaction(
         tx_currency = currency or (wh_target.currency if wh_target and wh_target.currency else "IRR")
         tx_exchange_rate = exchange_rate if (exchange_rate and exchange_rate > 0) else 1.0
 
+        resolved_ownership = (ownership_type or "OWNED").strip()
+        if purchase_order_id:
+            po_ref = db.query(PurchaseOrder).filter(PurchaseOrder.id == purchase_order_id).first()
+            if po_ref and getattr(po_ref, "ownership_type", None):
+                resolved_ownership = po_ref.ownership_type
+
         new_transaction = StockTransaction(
             transaction_type=tx_enum,
             transaction_source=src_val,
             product_id=product_id,
             warehouse_id=warehouse_id,
+            ownership_type=resolved_ownership,
+            qc_approved=True,
             quantity=quantity,
             unit_price=unit_price or 0.0,
             currency=tx_currency,
@@ -906,10 +915,12 @@ async def export_transactions_csv(
 @router.post("/transactions/{tx_id}/approve")
 async def approve_transaction(
     tx_id: int,
+    qc_approved: Optional[bool] = Form(True),
+    qc_notes: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
 ):
-    """تایید نهایی سند و اعمال در کاردکس موجودی و به‌روزرسانی پیشرفت سفارشات خرید/فروش"""
+    """تایید نهایی سند و اعمال در کاردکس موجودی، ثبت کنترل کیفیت QC و به‌روزرسانی پیشرفت سفارشات خرید/فروش"""
     require_roles(current_user, {"Admin", "Warehouse_Supervisor", "Finance_Manager"})
 
     tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
@@ -926,6 +937,9 @@ async def approve_transaction(
             raise HTTPException(status_code=400, detail=f"موجودی انبار ({cur_stock}) برای تایید سند خروج #{tx.id} به مقدار {tx.quantity} کافی نیست!")
 
     tx.status = DocumentStatus.APPROVED
+    tx.qc_approved = bool(qc_approved)
+    if qc_notes:
+        tx.qc_notes = qc_notes.strip()
     tx.approved_by_id = current_user.id
     tx.approved_at = datetime.now(timezone.utc)
 

@@ -87,10 +87,18 @@
                 {% if pt.supplier.address %}<div class="text-secondary small">{{ pt.supplier.address }}</div>{% endif %}
               {% elif pt.customer %}
                 <strong class="text-info"><i class="bi bi-box-arrow-up-right me-1"></i>{{ pt.customer.name }}</strong>
-                {% if pt.customer.address %}<div class="text-secondary small">{{ pt.customer.address }}</div>{% endif %}
+                {% set d_addr = (pt.sales_order.delivery_address if pt.sales_order and pt.sales_order.delivery_address else pt.customer.address) %}
+                {% if d_addr %}<div class="text-warning small text-truncate" style="max-width: 200px;" title="{{ d_addr }}"><i class="bi bi-geo-alt-fill me-1"></i>{{ d_addr }}</div>{% endif %}
               {% else %}
                 <span class="text-secondary">---</span>
               {% endif %}
+              <div class="mt-1">
+                {% if pt.ownership_type and pt.ownership_type.value == 'CONSIGNMENT' %}
+                  <span class="badge bg-warning bg-opacity-25 text-warning border border-warning" style="font-size: 0.68rem;">امانی دیگران</span>
+                {% else %}
+                  <span class="badge bg-secondary bg-opacity-25 text-light" style="font-size: 0.68rem;">ملکی شرکت</span>
+                {% endif %}
+              </div>
             </td>
             <td class="fw-bold text-warning font-monospace fs-6">
               <div>{{ "{:,.3f}".format(pt.quantity) }} {{ pt.product.uom if pt.product else '' }}</div>
@@ -103,11 +111,17 @@
             </td>
             <td class="small text-secondary">{{ pt.created_by.full_name or pt.created_by.username if pt.created_by else 'سیستم' }}</td>
             <td class="text-center">
-              <div class="d-flex gap-2 justify-content-center">
-                <form action="/inventory/transactions/{{ pt.id }}/approve" method="post" class="d-inline">
+              <div class="d-flex gap-2 justify-content-center align-items-center">
+                <form action="/inventory/transactions/{{ pt.id }}/approve" method="post" class="d-inline-flex align-items-center">
+                  <div class="form-check form-switch d-inline-block me-2 text-start" title="تایید بازرسی و کنترل کیفیت QC">
+                    <input class="form-check-input" type="checkbox" name="qc_approved" id="qcCheck{{ pt.id }}" checked value="true">
+                    <label class="form-check-label small text-info fw-bold" for="qcCheck{{ pt.id }}" style="font-size: 0.72rem;">
+                      <i class="bi bi-shield-check me-1"></i>QC OK
+                    </label>
+                  </div>
                   <button type="submit" class="btn btn-sm btn-success px-2 py-1 fw-bold shadow-sm d-flex align-items-center gap-1" title="تایید نهایی و ورود به کاردکس">
                     <i class="bi bi-check2-circle"></i>
-                    <span>تایید نهایی (ورود به کاردکس)</span>
+                    <span>تایید نهایی</span>
                   </button>
                 </form>
                 <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1 d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#rejectModal{{ pt.id }}" title="رد سند">

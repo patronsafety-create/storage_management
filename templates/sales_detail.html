@@ -118,6 +118,13 @@
           <span class="text-secondary d-block">{{ 'Teslim Tarihi:' if is_tr else 'مهلت تحویل بار:' }}</span>
           <span class="text-warning">{{ order.delivery_due_date or ('Belirtilmemiş' if is_tr else 'تعیین نشده') }}</span>
         </div>
+        <div>
+          <span class="text-secondary d-block">{{ 'Teslimat / Boşaltma Adresi:' if is_tr else 'آدرس و محل دقیق تخلیه / تحویل بار:' }}</span>
+          <span class="text-warning">
+            <i class="bi bi-geo-alt-fill text-warning me-1"></i>
+            {{ order.delivery_address or (order.customer.address if order.customer else None) or ('ثبت نشده' if not is_tr else 'Belirtilmemiş') }}
+          </span>
+        </div>
         <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
           {% if tax_info %}
           <div class="d-flex justify-content-between mb-1 small">
@@ -152,6 +159,31 @@
           </div>
           {% endif %}
         </div>
+
+        {% if is_admin or is_finance %}
+        <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="small fw-bold text-success">
+              <i class="bi bi-graph-up-arrow me-1"></i>
+              {{ 'Tahmini Brüt Kâr (Gross Profit):' if is_tr else 'تحلیل سود ناخالص معامله:' }}
+            </span>
+            <span class="badge {% if total_order_profit >= 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-25 {% if total_order_profit >= 0 %}text-success{% else %}text-danger{% endif %} border border-success border-opacity-50">
+              {{ "{:+.1f}%".format(order_margin_pct) }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between mb-1 small">
+            <span class="text-secondary">{{ 'Toplam Maliyet (WAC):' if is_tr else 'بهای تمام‌شده کالا (WAC):' }}</span>
+            <span class="font-monospace text-light">{{ "{:,.0f}".format(total_order_cost) }}</span>
+          </div>
+          <div class="d-flex justify-content-between border-top border-secondary border-opacity-25 pt-2 mt-1">
+            <span class="fw-bold {% if total_order_profit >= 0 %}text-success{% else %}text-danger{% endif %}">{{ 'Net Brüt Kâr:' if is_tr else 'سود ناخالص تخمینی:' }}</span>
+            <span class="fw-bold font-monospace fs-6 {% if total_order_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+              {{ "{:,.0f}".format(total_order_profit) }} {{ '₺' if is_tr else 'ریال' }}
+            </span>
+          </div>
+        </div>
+        {% endif %}
+
         {% if order.notes %}
         <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
           <span class="text-secondary d-block mb-1">{{ 'Notlar ve Koşullar:' if is_tr else 'یادداشت و شرایط:' }}</span>
@@ -181,6 +213,9 @@
               <th>{% if is_tr %}Kalan{% else %}باقیمانده{% endif %}</th>
               <th>{% if is_tr %}Birim Fiyat (₺){% else %}نرخ واحد (ریال){% endif %}</th>
               <th>{% if is_tr %}Toplam Tutar (₺){% else %}مبلغ کل (ریال){% endif %}</th>
+              {% if is_admin or is_finance %}
+              <th>{% if is_tr %}Birim Maliyet / Kâr{% else %}بهای واحد / سود ناخالص{% endif %}</th>
+              {% endif %}
             </tr>
           </thead>
           <tbody>
@@ -195,6 +230,19 @@
               </td>
               <td class="font-monospace small">{{ "{:,.2f}".format(it.unit_price) if is_tr else "{:,.0f}".format(it.unit_price) }}</td>
               <td class="font-monospace small text-teal">{{ "{:,.2f}".format(it.total_price) if is_tr else "{:,.0f}".format(it.total_price) }}</td>
+              {% if is_admin or is_finance %}
+              {% set prof = item_profits.get(it.id) %}
+              <td class="font-monospace small">
+                {% if prof %}
+                  <div><span class="text-secondary" style="font-size: 0.72rem;">{{ 'Maliyet:' if is_tr else 'بها:' }}</span> {{ "{:,.0f}".format(prof.unit_cost) }}</div>
+                  <div class="{% if prof.profit >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                    {{ "{:,.0f}".format(prof.profit) }} ({{ "{:+.1f}%".format(prof.margin_pct) }})
+                  </div>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              {% endif %}
             </tr>
             {% endfor %}
           </tbody>

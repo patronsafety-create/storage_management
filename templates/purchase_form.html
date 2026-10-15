@@ -41,14 +41,14 @@
       <form action="/purchases" method="post" id="poForm">
         <!-- سربرگ سفارش -->
         <div class="row g-3 mb-4">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="po_number" class="form-label fw-bold">
-              {{ 'Sipariş Numarası (PO No)' if is_tr else 'شماره سفارش خرید (PO Number)' }} <span class="text-danger">*</span>
+              {{ 'Sipariş Numarası (PO No)' if is_tr else 'شماره سفارش خرید (PO)' }} <span class="text-danger">*</span>
             </label>
             <input type="text" class="form-control font-monospace" id="po_number" name="po_number" value="{{ generated_po_number }}" required>
           </div>
 
-          <div class="col-md-5">
+          <div class="col-md-4">
             <label for="supplier_id" class="form-label fw-bold">
               {{ 'Tedarikçi / Üretici Fabrika' if is_tr else 'تأمین‌کننده / کارخانه تولیدی' }} <span class="text-danger">*</span>
             </label>
@@ -60,9 +60,20 @@
             </select>
           </div>
 
+          <div class="col-md-2">
+            <label for="ownership_type" class="form-label fw-bold">
+              <i class="bi bi-shield-check text-info me-1"></i>
+              {{ 'Mülkiyet Türü' if is_tr else 'مالکیت کالا' }} <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="ownership_type" name="ownership_type" required>
+              <option value="OWNED" selected>{{ 'Öz Malı' if is_tr else 'ملکی شرکت' }}</option>
+              <option value="CONSIGNMENT">{{ 'Konsinye' if is_tr else 'امانی دیگران' }}</option>
+            </select>
+          </div>
+
           <div class="col-md-3">
             <label for="delivery_due_date" class="form-label fw-bold">
-              {{ 'Teslim Tarihi' if is_tr else 'مهلت تحویل بار (تقویم)' }}
+              {{ 'Teslim Tarihi' if is_tr else 'مهلت تحویل بار' }}
             </label>
             {% if is_tr %}
             <input type="date" class="form-control font-monospace" id="delivery_due_date" name="delivery_due_date">
@@ -74,7 +85,7 @@
                 <i class="bi bi-calendar3"></i>
               </button>
             </div>
-            <div class="form-text text-secondary small">کلیک جهت انتخاب از تقویم خورشیدی</div>
+            <div class="form-text text-secondary small">کلیک جهت تقویم خورشیدی</div>
             {% endif %}
           </div>
         </div>

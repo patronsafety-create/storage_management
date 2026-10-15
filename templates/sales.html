@@ -63,7 +63,7 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6">
+  <div class="{% if is_admin or is_finance %}col-md-3 col-xl-2{% else %}col-md-3{% endif %} col-sm-6">
     <div class="stat-card">
       <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -74,6 +74,19 @@
       </div>
     </div>
   </div>
+  {% if is_admin or is_finance %}
+  <div class="col-md-3 col-xl-3 col-sm-6">
+    <div class="stat-card" style="border-inline-start: 3px solid #10b981;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-secondary small mb-1">{{ 'Tahmini Brüt Kâr' if is_tr else 'سود ناخالص تخمینی' }}</div>
+          <div class="fs-4 fw-bold text-success">{{ "{:,.0f}".format(total_sales_profit) }} <small class="fs-6 text-secondary">{{ '₺' if is_tr else 'ریال' }}</small></div>
+        </div>
+        <div class="fs-2 text-success opacity-75"><i class="bi bi-graph-up-arrow"></i></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 
 <!-- جدول سفارشات فروش -->
@@ -88,6 +101,9 @@
           <th>{{ 'Teslim Tarihi' if is_tr else 'موعد تحویل' }}</th>
           <th>{{ 'Kalem Sayısı' if is_tr else 'تعداد اقلام' }}</th>
           <th>{{ 'Toplam Tutar' if is_tr else 'مبلغ کل' }}</th>
+          {% if is_admin or is_finance %}
+          <th>{{ 'Tahmini Brüt Kâr' if is_tr else 'سود ناخالص تخمینی' }}</th>
+          {% endif %}
           <th>{{ 'Durum' if is_tr else 'وضعیت سفارش' }}</th>
           <th>{{ 'İşlemler' if is_tr else 'عملیات' }}</th>
         </tr>
@@ -98,7 +114,13 @@
           <td class="fw-bold font-monospace text-teal">{{ o.so_number }}</td>
           <td>
             <div class="fw-semibold text-light">{{ o.customer.name }}</div>
-            <div class="text-secondary small">{{ o.customer.phone or o.customer.national_id or '' }}</div>
+            {% if o.delivery_address %}
+              <div class="text-warning small text-truncate" style="max-width: 220px;" title="{{ o.delivery_address }}">
+                <i class="bi bi-geo-alt-fill me-1"></i>{{ o.delivery_address }}
+              </div>
+            {% else %}
+              <div class="text-secondary small">{{ o.customer.phone or o.customer.national_id or '' }}</div>
+            {% endif %}
           </td>
           <td class="small font-monospace">{{ o.created_at | format_date(include_time=True) }}</td>
           <td class="small">{{ o.delivery_due_date or '---' }}</td>
@@ -108,6 +130,21 @@
           <td class="fw-bold text-light">
             {{ "{:,.0f}".format(o.total_amount) }} <small class="text-secondary">{{ '₺' if o.currency == 'TRY' else 'ریال' }}</small>
           </td>
+          {% if is_admin or is_finance %}
+          {% set pdata = orders_profit_map.get(o.id) %}
+          <td class="font-monospace small">
+            {% if pdata %}
+            <span class="{% if pdata.profit >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+              {{ "{:,.0f}".format(pdata.profit) }}
+            </span>
+            <span class="badge {% if pdata.profit >= 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-25 {% if pdata.profit >= 0 %}text-success{% else %}text-danger{% endif %} ms-1" style="font-size: 0.68rem;">
+              {{ "{:+.1f}%".format(pdata.margin_pct) }}
+            </span>
+            {% else %}
+            -
+            {% endif %}
+          </td>
+          {% endif %}
           <td>
             {% if o.status.value == 'CONFIRMED' %}
             <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50">
@@ -137,7 +174,7 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="8" class="text-center py-5 text-secondary">
+          <td colspan="{% if is_admin or is_finance %}9{% else %}8{% endif %}" class="text-center py-5 text-secondary">
             <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
             {{ 'Kayıtlı satış siparişi bulunamadı.' if is_tr else 'هیچ سفارش فروشی در سامانه یافت نشد.' }}
           </td>

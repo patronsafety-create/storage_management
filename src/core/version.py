@@ -8,16 +8,40 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any
 
-CURRENT_VERSION = "3.1.0"
+CURRENT_VERSION = "3.2.0"
 CHANGELOG_FILE = "storage_changelog.json"
 
 DEFAULT_RELEASE_HISTORY: List[Dict[str, Any]] = [
     {
+        "version": "3.2.0",
+        "date": "۱۴۰۵/۰۷/۲۴ - 2026-10-15",
+        "title": "داشبورد مدیریتی SaaS (الهام‌گرفته از FlowFin و Salezy) و ۴ ارتقاء سازمانی نوسا (Nosa ERP)",
+        "badge": "Current Enterprise",
+        "badge_color": "success",
+        "categories": {
+            "🚀 Architecture & Features": [
+                "بازطراحی کامل داشبورد مدیریتی با ۴ کارت شاخص کلیدی تصمیم‌گیری (ارزش دارایی، موجودی آزاد، خط لوله تامین و هشدارهای زنده) و هایپرلینک‌های دریل‌داون.",
+                "ماتریس جامع دارایی و موجودی انبارها (Centerpiece Navy Matrix) با قابلیت جستجو، فیلتر انبار و میله پیشرفت نقطه سفارش.",
+                "نمودارهای تحلیلی دوگانه سبک Salezy: مقایسه میله‌ای ورود و خروج کالا و گیج نیم‌دایره‌ای ظرفیت انبارها (70.8%).",
+                "تفکیک و شخصی‌سازی آدرس و محل تخلیه/تحویل بار در سفارشات فروش (Delivery Address).",
+                "پشتیبانی از تفکیک کالای ملکی شرکت از کالای امانی دیگران (Consignment vs. Owned) بدون اختلال در ارزیابی مالی دارایی‌ها.",
+                "فرآیند بازرسی و تایید کنترل کیفیت (QC / Quarantine) در کارتابل پیش از ثبت قطعی موجودی."
+            ],
+            "🛡️ Security & RBAC Hardening": [
+                "حفظ اصل Zero Ghost UI: مخفی‌سازی کامل ارزش مالی و سود ناخالص برای کاربران عملیاتی انبار و باسکول.",
+                "هدایت هوشمند هایپرلینک‌های داشبورد بر اساس نقش کاربری جهت جلوگیری از خطای ۴۰۳."
+            ],
+            "⚖️ Financial & Tax Engine": [
+                "محاسبه برخط و نمایش حاشیه سود ناخالص معاملات (Real-Time Gross Profit & Margin %) در جزئیات و لیست سفارشات فروش بر اساس بهای تمام‌شده میانگین موزون برای مدیران ارشد و مالی."
+            ]
+        }
+    },
+    {
         "version": "3.1.0",
         "date": "۱۴۰۵/۰۷/۲۴ - 2026-10-15",
         "title": "پروتکل محرمانگی مالی و جریان داده‌های بالادستی (Blind Warehouse & Top-Down Binding)",
-        "badge": "Current Enterprise",
-        "badge_color": "success",
+        "badge": "Stable Release",
+        "badge_color": "primary",
         "categories": {
             "🚀 Architecture & Features": [
                 "پیاده‌سازی پروتکل محرمانگی مالی برای سرپرست انبار و اپراتور باسکول (Blind Inventory & Weighbridge).",

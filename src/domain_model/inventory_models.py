@@ -171,6 +171,13 @@ class StockTransaction(Base):
     # 🏷️ منبع تراکنش (Transaction Source)
     transaction_source = Column(String, default="INTERNAL_USE", nullable=True)
 
+    # 🏢 نوع مالکیت کالا (ملکی یا امانی - Nosa ERP Inspired)
+    ownership_type = Column(String, default="OWNED", nullable=True)
+
+    # 🔬 کنترل کیفیت و قرنطینه کارتابل (Quality Control)
+    qc_approved = Column(Boolean, default=True, nullable=True)
+    qc_notes = Column(String, nullable=True)
+
     # 📅 سال مالی
     fiscal_year_id = Column(Integer, ForeignKey("fiscal_years.id"), nullable=True)
 
@@ -263,6 +270,7 @@ class PurchaseOrder(Base):
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
     order_date = Column(DateTime(timezone=True), server_default=func.now())
     delivery_due_date = Column(String, nullable=True)
+    ownership_type = Column(String, default="OWNED", nullable=True)  # ملکی (OWNED) یا امانی (CONSIGNMENT)
     status = Column(Enum(PurchaseOrderStatus), default=PurchaseOrderStatus.CONFIRMED, nullable=False)
     notes = Column(String, nullable=True)
 
@@ -312,6 +320,7 @@ class SalesOrder(Base):
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     order_date = Column(DateTime(timezone=True), server_default=func.now())
     delivery_due_date = Column(String, nullable=True)
+    delivery_address = Column(String, nullable=True)  # آدرس تفکیکی پروژه یا محل تخلیه کالا
     status = Column(Enum(SalesOrderStatus), default=SalesOrderStatus.CONFIRMED, nullable=False)
     notes = Column(String, nullable=True)
 

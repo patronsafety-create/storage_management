@@ -139,12 +139,13 @@ async def create_purchase_order(
     po_number: str = Form(...),
     supplier_id: int = Form(...),
     delivery_due_date: Optional[str] = Form(None),
+    ownership_type: Optional[str] = Form("OWNED"),
     notes: Optional[str] = Form(None),
     product_id: list[int] = Form(...),
     quantity: list[float] = Form(...),
     unit_price: list[float] = Form(...)
 ):
-    """ذخیره سفارش خرید و اقلام مربوطه با محاسبه خودکار مالیات و توقیف آهن‌آلات"""
+    """ذخیره سفارش خرید و اقلام مربوطه با محاسبه خودکار مالیات و تفکیک ملکی/امانی"""
     try:
         # تشخیص منطقه جغرافیایی سفارش منحصراً از روی کشور تأمین‌کننده (حذف وابستگی به کوکی مرورگر)
         supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
@@ -179,10 +180,13 @@ async def create_purchase_order(
             steel_base_amount=steel_subtotal
         )
 
+        resolved_ownership = ownership_type.strip() if ownership_type else "OWNED"
+
         po = PurchaseOrder(
             po_number=po_number.strip(),
             supplier_id=supplier_id,
             delivery_due_date=delivery_due_date.strip() if delivery_due_date else None,
+            ownership_type=resolved_ownership,
             status=PurchaseOrderStatus.CONFIRMED,
             notes=notes.strip() if notes else None,
             subtotal_amount=tax_res.base_amount,
