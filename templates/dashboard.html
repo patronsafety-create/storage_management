@@ -403,7 +403,7 @@
                 </form>
                 <form id="rejectForm_{{ pt.id }}" action="/inventory/transactions/{{ pt.id }}/reject" method="post" class="d-inline">
                   <input type="hidden" name="rejection_reason" id="rejectionReason_{{ pt.id }}" value="رد از کارتابل پیشخوان">
-                  <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1 d-flex align-items-center gap-1" onclick="handleRejectTx({{ pt.id }});" title="رد سند">
+                  <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1 d-flex align-items-center gap-1" data-tx-id="{{ pt.id }}" onclick="handleRejectTx(this.getAttribute('data-tx-id'));" title="رد سند">
                     <i class="bi bi-x-circle"></i>
                     <span>رد</span>
                   </button>
@@ -417,16 +417,6 @@
     </div>
   </div>
 </div>
-
-<script>
-function handleRejectTx(txId) {
-    var reason = prompt("علت رد سند انبار را وارد فرمایید (الزامی):", "مغایرت فاکتور یا کسری بار");
-    if (reason !== null && reason.trim() !== "") {
-        document.getElementById("rejectionReason_" + txId).value = reason.trim();
-        document.getElementById("rejectForm_" + txId).submit();
-    }
-}
-</script>
 {% endif %}
 
 <!-- ============================================================== -->
@@ -484,7 +474,7 @@ function handleRejectTx(txId) {
           </div>
           <div class="progress bg-dark" style="height: 6px; border-radius: 4px;">
             <div class="progress-bar {% if wb.utilization_pct > 85 %}bg-danger{% elif wb.utilization_pct > 65 %}bg-warning{% else %}bg-teal{% endif %}"
-                 style="width: {{ wb.utilization_pct }}%;"></div>
+                 data-progress-pct="{{ wb.utilization_pct }}"></div>
           </div>
         </div>
         {% endfor %}
@@ -573,7 +563,7 @@ function handleRejectTx(txId) {
             <td style="min-width: 170px;">
               <div class="d-flex align-items-center gap-2">
                 <div class="progress flex-grow-1 bg-dark" style="height: 6px; border-radius: 4px;">
-                  <div class="progress-bar bg-{{ row.health_color }}" style="width: {{ row.health_pct }}%;"></div>
+                  <div class="progress-bar bg-{{ row.health_color }}" data-progress-pct="{{ row.health_pct }}"></div>
                 </div>
                 <span class="badge bg-{{ row.health_color }} bg-opacity-20 text-{{ row.health_color }} border border-{{ row.health_color }} border-opacity-25" style="font-size: 0.7rem;">
                   {{ row.health_label }}
@@ -743,10 +733,19 @@ function handleRejectTx(txId) {
 {% endblock %}
 
 {% block scripts %}
+<script id="dashboardConfig" type="application/json">
+{
+  "flowLabels": {{ chart_flow_labels_json | safe if chart_flow_labels_json else '[]' }},
+  "flowIn": {{ chart_flow_in_json | safe if chart_flow_in_json else '[]' }},
+  "flowOut": {{ chart_flow_out_json | safe if chart_flow_out_json else '[]' }},
+  "overallGaugeUtilization": {{ overall_gauge_utilization if overall_gauge_utilization is defined and overall_gauge_utilization is not none else 0 }}
+}
+</script>
 <script>
 // فیلتر جستجوی زنده جدول ماتریس
 function filterMatrixTable() {
     var input = document.getElementById("matrixSearchInput");
+    if (!input) return;
     var filter = input.value.toLowerCase();
     var rows = document.querySelectorAll("#masterInventoryTable tbody tr.matrix-row");
     rows.forEach(function(row) {
@@ -755,14 +754,37 @@ function filterMatrixTable() {
     });
 }
 
+function handleRejectTx(txId) {
+    var reason = prompt("علت رد سند انبار را وارد فرمایید (الزامی):", "مغایرت فاکتور یا کسری بار");
+    if (reason !== null && reason.trim() !== "") {
+        var reasonInput = document.getElementById("rejectionReason_" + txId);
+        var form = document.getElementById("rejectForm_" + txId);
+        if (reasonInput && form) {
+            reasonInput.value = reason.trim();
+            form.submit();
+        }
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
-    const isTurkish = {{ 'true' if is_tr else 'false' }};
+    // مقداردهی عرض نوارهای پیشرفت
+    document.querySelectorAll('[data-progress-pct]').forEach(function(el) {
+        el.style.width = (el.getAttribute('data-progress-pct') || '0') + '%';
+    });
+
+    const isTurkish = document.documentElement.lang === 'tr';
+
+    let config = { flowLabels: [], flowIn: [], flowOut: [], overallGaugeUtilization: 0 };
+    const configEl = document.getElementById('dashboardConfig');
+    if (configEl && configEl.textContent.trim()) {
+        try { config = JSON.parse(configEl.textContent); } catch (e) { config = {}; }
+    }
+
+    const flowLabels = config.flowLabels || [];
+    const flowIn = config.flowIn || [];
+    const flowOut = config.flowOut || [];
 
     // ۱. نمودار میله‌ای جریان ورود و خروج اقلام اصلی
-    const flowLabels = {{ chart_flow_labels_json | safe }};
-    const flowIn = {{ chart_flow_in_json | safe }};
-    const flowOut = {{ chart_flow_out_json | safe }};
-
     const flowCanvas = document.getElementById('flowBarChart');
     if (flowCanvas) {
         new Chart(flowCanvas.getContext('2d'), {
@@ -820,7 +842,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // ۲. نمودار گیج نیم‌دایره ظرفیت انبارها (Salezy 70.8% Gauge Style)
     const gaugeCanvas = document.getElementById('capacityGaugeChart');
     if (gaugeCanvas) {
-        const utilVal = {{ overall_gauge_utilization }};
+        const utilVal = Number(config.overallGaugeUtilization) || 0;
         const remainingVal = Math.max(0, 100 - utilVal);
 
         new Chart(gaugeCanvas.getContext('2d'), {

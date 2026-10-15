@@ -17,13 +17,17 @@
     {% endif %}
     <style>
         body {
-            font-family: {% if is_tr %}'Inter', sans-serif{% else %}'Vazirmatn', Tahoma, sans-serif{% endif %};
+            font-family: 'Vazirmatn', 'Inter', Tahoma, sans-serif;
             background: #f8fafc;
             color: #1e293b;
-            {% if not is_tr %}
-            font-feature-settings: "ss01" 1;
-            {% endif %}
             padding: 30px;
+        }
+        html[lang="tr"] body {
+            font-family: 'Inter', sans-serif;
+        }
+        html[lang="fa"] body {
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            font-feature-settings: "ss01" 1;
         }
         .voucher-box {
             background: #ffffff;
