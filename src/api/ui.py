@@ -275,6 +275,8 @@ async def dashboard(
             "active_weighbridge_trucks": active_weighbridge_trucks,
             # ماتریس جامع انبارها
             "enhanced_matrix": enhanced_matrix,
+            "stock_balances": enhanced_matrix,
+            "tx_count": len(recent_transactions) if recent_transactions else 0,
             "warehouses": warehouses,
             "categories": categories,
             # داده‌های تفصیلی جریان و موازنه انبار

@@ -8,16 +8,34 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any
 
-CURRENT_VERSION = "3.2.0"
+CURRENT_VERSION = "3.2.1"
 CHANGELOG_FILE = "storage_changelog.json"
 
 DEFAULT_RELEASE_HISTORY: List[Dict[str, Any]] = [
     {
+        "version": "3.2.1",
+        "date": "۱۴۰۵/۰۷/۲۵ - 2026-10-16",
+        "title": "پاکسازی کامل ۱۲۹ خطای ممیزی محیط توسعه (Zero IDE Problems) و تثبیت پایداری سیستم",
+        "badge": "Current Enterprise",
+        "badge_color": "success",
+        "categories": {
+            "🚀 Architecture & Features": [
+                "رفع کامل ۱۲۹ خطای سینتکس، اعتبارسنجی و لایه گزارش در تمپلیت‌های Jinja2 و محیط توسعه (Zero IDE Problems).",
+                "تفکیک اسکریپت‌های چارت و نمودار با کانفیگ استاندارد application/json و حذف تداخل‌های مفسر جاوااسکریپت.",
+                "پیکربندی خودکار و بهینه‌سازی موتور تحلیل Pylance و Pyright با ایجاد pyrightconfig.json و .vscode/settings.json جهت اتصال به venv پروژه."
+            ],
+            "🛡️ Security & RBAC Hardening": [
+                "تثبیت ۱۰۰ درصدی آزمون ۴ لایه شکارچی باگ (Deep Bug Hunter) روی ۲۶ روت و ۵ نقش سازمانی با صفر باگ و صفر خطای ۵۰۰/۴۲۲.",
+                "همگام‌سازی کامل پایگاه داده لوکال و سرور با پروتکل Zero Ghost UI."
+            ]
+        }
+    },
+    {
         "version": "3.2.0",
         "date": "۱۴۰۵/۰۷/۲۴ - 2026-10-15",
         "title": "داشبورد مدیریتی SaaS (الهام‌گرفته از FlowFin و Salezy) و ۴ ارتقاء سازمانی نوسا (Nosa ERP)",
-        "badge": "Current Enterprise",
-        "badge_color": "success",
+        "badge": "Previous Stable",
+        "badge_color": "secondary",
         "categories": {
             "🚀 Architecture & Features": [
                 "بازطراحی کامل داشبورد مدیریتی با ۴ کارت شاخص کلیدی تصمیم‌گیری (ارزش دارایی، موجودی آزاد، خط لوله تامین و هشدارهای زنده) و هایپرلینک‌های دریل‌داون.",

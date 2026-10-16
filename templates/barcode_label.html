@@ -16,9 +16,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     body {
-      font-family: {% if is_tr %}'Inter', sans-serif{% else %}'Vazirmatn', Tahoma, sans-serif{% endif %} !important;
+      font-family: 'Vazirmatn', 'Inter', Tahoma, sans-serif !important;
       background: #e2e8f0;
       padding: 30px;
+    }
+    html[lang="tr"] body {
+      font-family: 'Inter', sans-serif !important;
+    }
+    html[lang="fa"] body {
+      font-family: 'Vazirmatn', Tahoma, sans-serif !important;
     }
     .label-box {
       width: 100mm;

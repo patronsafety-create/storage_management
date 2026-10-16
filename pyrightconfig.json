@@ -1,0 +1,15 @@
+{
+  "venvPath": ".",
+  "venv": "venv",
+  "typeCheckingMode": "off",
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    ".git",
+    "venv",
+    "scripts",
+    "tests"
+  ]
+}

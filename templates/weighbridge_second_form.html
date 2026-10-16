@@ -108,10 +108,12 @@
 {% endblock %}
 
 {% block scripts %}
+<input type="hidden" id="firstWeightVal" value="{{ (ticket.gross_weight or ticket.tare_weight) | float }}">
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const isTr = (document.documentElement.lang === 'tr');
-    const firstWeight = parseFloat('{{ (ticket.gross_weight or ticket.tare_weight) | float }}') || 0;
+    const firstWeightInput = document.getElementById('firstWeightVal');
+    const firstWeight = firstWeightInput ? (parseFloat(firstWeightInput.value) || 0) : 0;
     const secondInput = document.getElementById('second_weight');
     const netDisplay = document.getElementById('netWeightDisplay');
     const tonDisplay = document.getElementById('netTonDisplay');

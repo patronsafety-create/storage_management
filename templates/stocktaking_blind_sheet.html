@@ -12,10 +12,16 @@
 
   <style>
     body {
-      font-family: {% if is_tr %}'Inter', sans-serif{% else %}'Vazirmatn', sans-serif{% endif %};
+      font-family: 'Vazirmatn', 'Inter', sans-serif;
       background: #f8fafc;
       color: #0f172a;
       padding: 24px;
+    }
+    html[lang="tr"] body {
+      font-family: 'Inter', sans-serif;
+    }
+    html[lang="fa"] body {
+      font-family: 'Vazirmatn', sans-serif;
     }
     .sheet-card {
       background: #ffffff;

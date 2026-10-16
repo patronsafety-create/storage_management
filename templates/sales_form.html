@@ -195,10 +195,13 @@ document.addEventListener("DOMContentLoaded", function() {
             const stock = parseFloat(opt.getAttribute('data-stock')) || 0;
             const uom = opt.getAttribute('data-uom') || '';
 
+            const isTrLang = document.documentElement.lang === 'tr';
             if (stock <= 0.0001) {
-                infoDiv.innerHTML = `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50"><i class="bi bi-exclamation-octagon me-1"></i>{% if is_tr %}Stok Yok (0){% else %}موجودی در انبارها صفر است{% endif %}</span>`;
+                const noStockText = isTrLang ? 'Stok Yok (0)' : 'موجودی در انبارها صفر است';
+                infoDiv.innerHTML = `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50"><i class="bi bi-exclamation-octagon me-1"></i>${noStockText}</span>`;
             } else {
-                infoDiv.innerHTML = `<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50"><i class="bi bi-check-circle me-1"></i>{% if is_tr %}Mevcut Toplam Stok:{% else %}موجودی کل انبارها:{% endif %} ${stock.toLocaleString()} ${uom}</span>`;
+                const stockLabel = isTrLang ? 'Mevcut Toplam Stok:' : 'موجودی کل انبارها:';
+                infoDiv.innerHTML = `<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50"><i class="bi bi-check-circle me-1"></i>${stockLabel} ${stock.toLocaleString()} ${uom}</span>`;
             }
         });
     }

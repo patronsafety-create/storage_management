@@ -1,0 +1,15 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportAttributeAccessIssue": "none",
+    "reportGeneralTypeIssues": "none",
+    "reportArgumentType": "none",
+    "reportOptionalMemberAccess": "none"
+  },
+  "html.validate.scripts": false,
+  "html.validate.styles": false,
+  "files.associations": {
+    "*.html": "jinja-html"
+  }
+}
