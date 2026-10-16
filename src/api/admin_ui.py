@@ -119,7 +119,8 @@ async def create_user(
     password: str = Form(...),
     full_name: str = Form(...),
     role_id: int = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
 ):
     try:
         role = db.query(Role).filter(Role.id == role_id).first()
@@ -145,9 +146,9 @@ async def create_user(
 async def toggle_user_status(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    admin: User = Depends(require_admin)
 ):
-    if user_id == current_user.id:
+    if user_id == admin.id:
         return RedirectResponse(url="/admin/users?error=" + quote("نمی‌توانید حساب خودتان را غیرفعال کنید"), status_code=303)
 
     target = db.query(User).filter(User.id == user_id).first()
@@ -158,3 +159,61 @@ async def toggle_user_status(
     db.commit()
     status_text = "فعال" if target.is_active else "غیرفعال"
     return RedirectResponse(url="/admin/users?msg=" + quote(f"کاربر '{target.username}' {status_text} شد"), status_code=303)
+
+
+@router.get("/modules", response_class=HTMLResponse)
+async def view_modules_settings(
+    request: Request,
+    admin: User = Depends(require_admin),
+    msg: Optional[str] = None,
+    error: Optional[str] = None
+):
+    """مدیریت ماژول‌ها و سوئیچ‌های سازمانی (Modular Architecture Settings)"""
+    from src.core.modules import load_modules_config
+    modules_cfg = load_modules_config()
+    active_region = get_active_region(request)
+    is_tr = (active_region.code == "TR")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="modules_settings.html",
+        context={
+            "request": request,
+            "user": admin,
+            "is_admin": True,
+            "modules": modules_cfg,
+            "msg": msg,
+            "error": error,
+            "active_region": active_region,
+            "is_tr": is_tr
+        }
+    )
+
+
+@router.post("/modules")
+async def update_modules_settings(
+    request: Request,
+    currency_mode: str = Form("ALL"),
+    module_weighbridge: Optional[str] = Form(None),
+    module_cutting: Optional[str] = Form(None),
+    module_bagging: Optional[str] = Form(None),
+    module_compliance: Optional[str] = Form(None),
+    module_commercial: Optional[str] = Form(None),
+    admin: User = Depends(require_admin)
+):
+    """به‌روزرسانی آنی وضعیت ماژول‌ها و حالت ارزی بدون نیاز به ریست سرور"""
+    from src.core.modules import save_modules_config
+    new_cfg = {
+        "currency_mode": currency_mode,
+        "module_weighbridge": (module_weighbridge == "on"),
+        "module_cutting": (module_cutting == "on"),
+        "module_bagging": (module_bagging == "on"),
+        "module_compliance": (module_compliance == "on"),
+        "module_commercial": (module_commercial == "on"),
+    }
+    save_modules_config(new_cfg)
+    return RedirectResponse(
+        url="/admin/modules?msg=" + quote("پیکربندی ماژول‌ها و سوئیچ‌های سازمانی با موفقیت ذخیره و اعمال شد."),
+        status_code=303
+    )
+

@@ -429,6 +429,7 @@
     </div>
 
     <!-- ۴. ردیف ۴ کارت طلایی مدیریتی شیشه‌ای دارک با Drill-Down و تفکیک دقیق ملکی/امانی -->
+    {% if not is_baskool or is_admin %}
     <div class="row g-3 mb-4">
 
         <!-- کارت ۱: ارزش دارایی موجودی (با تفکیک ملکی در برابر امانی) -->
@@ -600,6 +601,24 @@
         </div>
 
     </div>
+    {% endif %}
+
+    {% if is_baskool and not is_admin %}
+    <!-- پیشخوان عملیاتی متمرکز متصدی باسکول و تردد ناوگان -->
+    <div class="glass-card p-4 mb-4 text-center">
+        <i class="bi bi-truck text-warning fs-1 mb-2 d-block"></i>
+        <h4 class="fw-bold text-white mb-2">پیشخوان عملیات باسکول و کنترل تردد ناوگان</h4>
+        <p class="text-secondary small mb-3">شما با دسترسی اپراتور باسکول وارد شده‌اید. کلیه امور نوبت‌دهی تریلی، توزین اول، توزین دوم، بررسی اضافه تناژ و صدور قبوض رسمی در کارتابل اختصاصی باسکول در دسترس است.</p>
+        <div class="d-flex justify-content-center gap-2">
+            <a href="/weighbridge" class="btn btn-warning fw-bold px-4">
+                <i class="bi bi-speedometer2 me-1"></i> ورود به صف و مدیریت قبوض باسکول
+            </a>
+            <a href="/weighbridge/new" class="btn btn-teal fw-bold px-4">
+                <i class="bi bi-plus-circle me-1"></i> ثبت نوبت توزین اول (ورود ناوگان)
+            </a>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- ۵. باکس کارتابل اسناد در انتظار تایید انباردار (فقط برای نقش‌های مجاز: Admin, Warehouse, Finance) -->
     {% if can_approve_cartable and pending_txs and pending_txs | length > 0 %}
@@ -708,6 +727,7 @@
     {% endif %}
 
     <!-- ۶. بخش تحلیلی بصری جدید: نمودار کیکی سهم موجودی انبارها + نمودار میله‌ای ۳گانه تراز زنجیره تأمین -->
+    {% if not is_baskool or is_admin %}
     <div class="row g-3 mb-4" id="executiveChartsRow">
         <!-- ستون راست: نمودار کیکی/دونات سهم موجودی انبار به تفکیک کالا -->
         <div class="col-12 col-lg-6">
@@ -781,8 +801,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- ۷. بخش مرکزی سرمه‌ای‌رنگ (FlowFin Dark Master Matrix): ماتریس جامع موجودی با فیلتر تک‌خطی انبارها و اقلام دارای موجودی -->
+    {% if not is_baskool or is_admin %}
     <div class="navy-master-panel mb-4" id="liveInventoryMatrixPanel">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div>
@@ -951,8 +973,10 @@
             </table>
         </div>
     </div>
+    {% endif %}
 
     <!-- ۷. ردیف هوشمندی موازنه و نمودارهای تحلیلی (Salezy Gauge & Flow Intelligence Station) -->
+    {% if not is_baskool or is_admin %}
     <div class="row g-3 mb-4">
 
         <!-- ستون راست: تراز جریان و روند ورود و خروج کالاهای استراتژیک -->
@@ -1095,6 +1119,7 @@
         </div>
 
     </div>
+    {% endif %}
 
 </div>
 

@@ -112,7 +112,23 @@ async def process_login(
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    # هدایت خودکار کاربر بر اساس نقش سازمانی (اپراتور باسکول مستقیماً به کنسول باسکول هدایت می‌شود)
+    user_role_names = [role.name for role in user.roles]
+    is_admin = ("Admin" in user_role_names) or (user.username == "admin")
+    is_baskool = ("Weighbridge_Operator" in user_role_names) or (user.username == "baskool")
+    is_management_or_wh = any(
+        r in user_role_names for r in [
+            "Warehouse_Supervisor", "Finance_Manager",
+            "Commercial_Officer", "Procurement_Officer", "Sales_Officer"
+        ]
+    )
+
+    if is_baskool and not (is_admin or is_management_or_wh):
+        target_url = "/weighbridge"
+    else:
+        target_url = "/dashboard"
+
+    redirect_response = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
     redirect_response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",

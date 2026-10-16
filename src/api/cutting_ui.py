@@ -15,10 +15,19 @@ from src.domain_model.enums import CuttingStatus, DocumentStatus
 from src.services.audit_service import AuditService
 from src.services.inventory_service import InventoryService
 from src.core.localization.regions import get_active_region, Region, localize_display_name
+from src.core.dependencies import allow_roles, require_module
 
-router = APIRouter(prefix="/cutting", tags=["Cutting & Remnants"])
+router = APIRouter(
+    prefix="/cutting",
+    tags=["Cutting & Remnants"],
+    dependencies=[
+        Depends(require_module("cutting")),
+        Depends(allow_roles("Admin", "Warehouse_Supervisor"))
+    ]
+)
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
+
 
 
 @router.get("", response_class=HTMLResponse)

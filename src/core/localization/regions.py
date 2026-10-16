@@ -120,17 +120,25 @@ def get_translation(key_path: str, lang: str = "fa") -> str:
 
 def get_active_region(request: Request) -> RegionConfig:
     """
-    تشخیص منطقه فعال سامانه:
-    اولویت ۱: کوکی nexus_region
-    اولویت ۲: متغیر محیطی DEFAULT_REGION
-    پیش‌فرض ایمن: IR (ایران)
+    تشخیص منطقه فعال سامانه با اولویت حالت ارزی ماژولار:
+    اگر حالت ارزی فقط ترکیه (TR_ONLY) باشد -> ترکیه تثبیت می‌شود.
+    اگر حالت ارزی فقط ایران (IR_ONLY) باشد -> ایران تثبیت می‌شود.
+    در حالت ALL (دو ارزی) -> کوکی nexus_region اولویت دارد.
     """
+    from src.core.modules import get_currency_mode
+    mode = get_currency_mode()
+    if mode == "TR_ONLY":
+        return REGIONS[Region.TR]
+    elif mode == "IR_ONLY":
+        return REGIONS[Region.IR]
+
     code = request.cookies.get("nexus_region")
     if not code:
         code = os.getenv("DEFAULT_REGION", Region.IR)
 
     code = code.upper().strip()
     return REGIONS.get(code, REGIONS[Region.IR])
+
 
 
 def format_currency(amount: float, region_code: str = "IR") -> str:
@@ -238,10 +246,15 @@ def format_date_filter(context, value, region: Any = None, include_time: bool = 
 
 
 def register_jinja_filters(jinja_templates: Any):
-    """ثبت فیلترهای بومی‌سازی دو زبانه در نمونه Jinja2Templates"""
+    """ثبت فیلترهای بومی‌سازی دو زبانه و متغیرهای جهانی ماژولار در نمونه Jinja2Templates"""
+    from src.core.modules import load_modules_config, is_module_enabled, get_currency_mode
     jinja_templates.env.filters["tr_loc"] = localize_display_name
     jinja_templates.env.filters["format_date"] = format_date_filter
     jinja_templates.env.filters["format_currency"] = format_currency
+    jinja_templates.env.globals["get_system_modules"] = load_modules_config
+    jinja_templates.env.globals["is_module_enabled"] = is_module_enabled
+    jinja_templates.env.globals["get_currency_mode"] = get_currency_mode
+
 
 
 # دیکشنری جامع ترجمه و بومی‌سازی داده‌های پایه (کالاها، دسته‌بندی‌ها، انبارها، واحدها و برندها)

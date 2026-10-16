@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_, and_, case
 from typing import Optional
@@ -42,6 +42,11 @@ async def dashboard(
     is_warehouse = ("Warehouse_Supervisor" in user_role_names) or (current_user.username in ["warehouse", "operator"])
     is_commercial = ("Commercial_Officer" in user_role_names) or (current_user.username in ["commercial", "buyer", "seller"])
     is_baskool = ("Weighbridge_Operator" in user_role_names) or (current_user.username == "baskool")
+
+    # اصل تفکیک نقش‌ها: اپراتور باسکول فقط باید عملیات باسکول و تردد ورود/خروج را ببیند و به پیشخوان باسکول هدایت می‌شود
+    is_baskool_only = is_baskool and not (is_admin or is_warehouse or is_commercial or is_finance)
+    if is_baskool_only:
+        return RedirectResponse(url="/weighbridge", status_code=303)
 
     active_region = get_active_region(request)
     is_tr = (active_region.code == "TR")

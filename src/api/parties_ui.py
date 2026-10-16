@@ -116,6 +116,15 @@ async def list_parties(
             "total_value": total_value
         })
 
+    is_warehouse = any(role.name == "Warehouse_Supervisor" for role in current_user.roles) or current_user.username in ["warehouse", "operator"]
+    can_see_finance = is_admin or any(role.name in ["Finance_Manager", "Commercial_Officer"] for role in current_user.roles) or current_user.username in ["finance", "commercial"]
+
+    if not can_see_finance:
+        for s in suppliers:
+            s["total_value"] = 0.0
+        for c in customers:
+            c["total_value"] = 0.0
+
     stats = {
         "total_suppliers": db.query(Supplier).count(),
         "total_customers": db.query(Customer).count(),
@@ -131,6 +140,8 @@ async def list_parties(
             "user": current_user,
             "current_user": current_user,
             "is_admin": is_admin,
+            "can_see_finance": can_see_finance,
+            "can_edit_parties": can_see_finance,
             "suppliers": suppliers,
             "customers": customers,
             "stats": stats,
@@ -143,6 +154,7 @@ async def list_parties(
             "is_tr": is_tr
         }
     )
+
 
 
 def to_english_digits(text: Optional[str]) -> str:

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from src.infrastructure.database import get_db
-from src.core.dependencies import allow_roles
+from src.core.dependencies import allow_roles, require_module
 from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import (
@@ -32,10 +32,14 @@ from src.core.localization.regions import get_active_region, Region, localize_di
 router = APIRouter(
     prefix="/purchases",
     tags=["Purchase Orders"],
-    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))]
+    dependencies=[
+        Depends(require_module("commercial")),
+        Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager", "Warehouse_Supervisor"))
+    ]
 )
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
+
 
 
 
@@ -74,6 +78,9 @@ async def list_purchase_orders(
     pending_receipt = sum(1 for o in orders if o.status in (PurchaseOrderStatus.CONFIRMED, PurchaseOrderStatus.PARTIALLY_RECEIVED))
     completed_orders = sum(1 for o in orders if o.status == PurchaseOrderStatus.COMPLETED)
     
+    is_warehouse = any(r.name == "Warehouse_Supervisor" for r in current_user.roles) or current_user.username in ["warehouse", "operator"]
+    can_see_finance = not is_warehouse
+
     total_value = 0.0
     for o in orders:
         for item in o.items:
@@ -91,7 +98,9 @@ async def list_purchase_orders(
             "total_orders": total_orders,
             "pending_receipt": pending_receipt,
             "completed_orders": completed_orders,
-            "total_value": total_value,
+            "total_value": total_value if can_see_finance else None,
+            "can_see_finance": can_see_finance,
+            "can_create_po": can_see_finance,
             "user": current_user,
             "active_region": active_region,
             "is_tr": is_tr
@@ -103,7 +112,7 @@ async def list_purchase_orders(
 async def new_purchase_order_form(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))
 ):
     """فرم ثبت سفارش خرید جدید (PO)"""
     active_region = get_active_region(request)
@@ -135,8 +144,9 @@ async def new_purchase_order_form(
 async def create_purchase_order(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager")),
     po_number: str = Form(...),
+
     supplier_id: int = Form(...),
     delivery_due_date: Optional[str] = Form(None),
     ownership_type: Optional[str] = Form("OWNED"),

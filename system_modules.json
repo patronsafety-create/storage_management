@@ -1,0 +1,8 @@
+{
+  "currency_mode": "ALL",
+  "module_weighbridge": true,
+  "module_cutting": true,
+  "module_bagging": true,
+  "module_compliance": true,
+  "module_commercial": true
+}

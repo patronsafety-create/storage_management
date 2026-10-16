@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, Request, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 
 from src.infrastructure.database import get_db
-from src.core.dependencies import allow_roles
+from src.core.dependencies import allow_roles, require_module
 from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import (
@@ -37,8 +38,12 @@ from src.core.localization.tr_rules import (
 router = APIRouter(
     prefix="/weighbridge",
     tags=["Weighbridge Engine"],
-    dependencies=[Depends(allow_roles("Admin", "Weighbridge_Operator", "Warehouse_Supervisor"))]
+    dependencies=[
+        Depends(require_module("weighbridge")),
+        Depends(allow_roles("Admin", "Weighbridge_Operator"))
+    ]
 )
+
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
 
@@ -49,6 +54,7 @@ async def list_weighbridge_tickets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     status_filter: Optional[str] = Query(None),
+    direction_filter: Optional[str] = Query(None),
     plate_search: Optional[str] = Query(None)
 ):
     """لیست و داشبورد نوبت‌ها و قبوض باسکول دیجیتال تریلی و ناوگان"""
@@ -67,6 +73,10 @@ async def list_weighbridge_tickets(
         query = query.filter(WeighbridgeTicket.status == WeighbridgeStatus[status_filter])
     if plate_search:
         query = query.filter(WeighbridgeTicket.truck_plate.ilike(f"%{plate_search.strip()}%"))
+    if direction_filter == "IN":
+        query = query.filter(or_(WeighbridgeTicket.supplier_id.isnot(None), WeighbridgeTicket.purchase_order_id.isnot(None)))
+    elif direction_filter == "OUT":
+        query = query.filter(or_(WeighbridgeTicket.customer_id.isnot(None), WeighbridgeTicket.sales_order_id.isnot(None)))
 
     tickets = query.all()
 
@@ -79,6 +89,8 @@ async def list_weighbridge_tickets(
     completed_tickets = sum(1 for t in tickets if t.status == WeighbridgeStatus.COMPLETED)
     overweight_alerts = sum(1 for t in tickets if t.is_overweight)
     total_net_tonnage = sum(t.net_weight or 0.0 for t in tickets if t.status == WeighbridgeStatus.COMPLETED) / 1000.0
+    inbound_count = sum(1 for t in tickets if t.supplier_id or t.purchase_order_id)
+    outbound_count = sum(1 for t in tickets if t.customer_id or t.sales_order_id)
 
     return templates.TemplateResponse(
         request=request,
@@ -87,12 +99,15 @@ async def list_weighbridge_tickets(
             "request": request,
             "tickets": tickets,
             "status_filter": status_filter,
+            "direction_filter": direction_filter,
             "plate_search": plate_search,
             "total_trucks": total_trucks,
             "in_yard": in_yard,
             "completed_tickets": completed_tickets,
             "overweight_alerts": overweight_alerts,
             "total_net_tonnage": total_net_tonnage,
+            "inbound_count": inbound_count,
+            "outbound_count": outbound_count,
             "user": current_user,
             "active_region": active_region,
             "is_tr": is_tr

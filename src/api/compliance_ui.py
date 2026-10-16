@@ -7,14 +7,22 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
 from src.infrastructure.database import get_db
-from src.core.dependencies import get_current_user
+from src.core.dependencies import get_current_user, allow_roles, require_module
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import Product, StockTransaction, Warehouse
 from src.core.localization.regions import get_active_region, Region, localize_display_name
 
-router = APIRouter(prefix="/compliance", tags=["Trade & Regulatory Compliance"])
+router = APIRouter(
+    prefix="/compliance",
+    tags=["Trade & Regulatory Compliance"],
+    dependencies=[
+        Depends(require_module("compliance")),
+        Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))
+    ]
+)
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
+
 
 
 @router.get("", response_class=HTMLResponse)

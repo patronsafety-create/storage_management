@@ -8,16 +8,39 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any
 
-CURRENT_VERSION = "3.2.3"
+CURRENT_VERSION = "3.3.0"
 CHANGELOG_FILE = "storage_changelog.json"
 
 DEFAULT_RELEASE_HISTORY: List[Dict[str, Any]] = [
     {
+        "version": "3.3.0",
+        "date": "۱۴۰۵/۰۷/۲۵ - 2026-10-16",
+        "title": "معماری ماژولار (Feature Flags)، تفکیک کامل نقش‌ها (RBAC Hardening) و کنترل منوی سیستم",
+        "badge": "Current Enterprise",
+        "badge_color": "success",
+        "categories": {
+            "🚀 Modular Architecture & Toggles": [
+                "پیاده‌سازی پنل مدیریت ماژول‌ها و سوئیچ‌های سازمانی (/admin/modules): امکان فعال/غیرفعال‌سازی آنی باسکول دیجیتال، برشکاری، کیسه‌گیری، سامانه جامع تجارت و بازرگانی بدون تغییر کد.",
+                "پیکربندی رژیم ارزی ۳ حالته: انتخاب بین دو ارزی (ریال + لیر با سوئیچر)، فقط ترکیه (حذف کامل ریال و گزینه‌های ایران) و فقط ایران (حذف کامل لیر) با اعمال آنی."
+            ],
+            "🛡️ Security & RBAC Hardening": [
+                "بستن کامل گارد‌های امنیتی روی ماژول‌های برشکاری (/cutting)، سامانه تجارت (/compliance) و کیسه‌گیری (/bagging).",
+                "پیاده‌سازی اصل چهارچشم (Four-Eyes Principle) در تأیید اسناد کاردکس: ثبت‌کننده سند نمی‌تواند خودش سند را تأیید نهایی کند.",
+                "تفکیک انبار از مالی: پنهان‌سازی سقف اعتباری و مبالغ مالی طرف‌های حساب از انباردار، و اعطای دسترسی مشاهده بار در راه خرید به سرپرست انبار جهت برنامه‌ریزی دپو."
+            ],
+            "💻 Desktop & Mobile Menu Navigation": [
+                "اتصال دکمه «منوی سیستم» به باز و بسته شدن (Collapse/Expand) سایدبار در دسکتاپ با ذخیره وضعیت در حافظه محلی مرورگر (localStorage).",
+                "تفکیک کاتالوگ کالاها و انبارها و انتقال آن به بخش انبارداری جهت جلوگیری از ورود انباردار به منوی مالی."
+            ]
+        }
+    },
+    {
         "version": "3.2.3",
         "date": "۱۴۰۵/۰۷/۲۵ - 2026-10-16",
         "title": "ایستگاه تحلیل بصری پیشخوان: نمودار دونات سهم موجودی کالاها و نمودار میله‌ای ۳گانه تراز عرضه و تقاضا",
-        "badge": "Current Enterprise",
-        "badge_color": "success",
+        "badge": "Previous Stable",
+        "badge_color": "secondary",
+
         "categories": {
             "🚀 Architecture & Visual Analytics": [
                 "نمودار دونات/کیکی سهم موجودی انبار به تفکیک کالا (Donut Chart) با نمایش درصد سهم، تناژ خالص و تولتیپ زنده دو زبانه.",

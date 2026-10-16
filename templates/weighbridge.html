@@ -36,6 +36,10 @@
         <div>
           <div class="text-secondary small mb-1">{{ 'Toplam Kabul Edilen Araç' if is_tr else 'کل ناوگان پذیرش شده' }}</div>
           <div class="fs-4 fw-bold text-light">{{ total_trucks }} {{ 'araç' if is_tr else 'دستگاه' }}</div>
+          <div class="small text-secondary mt-1">
+            <span class="text-success me-1">📥 {{ inbound_count | default(0) }} ورود</span> | 
+            <span class="text-info ms-1">📤 {{ outbound_count | default(0) }} خروج</span>
+          </div>
         </div>
         <div class="fs-2 text-teal opacity-75"><i class="bi bi-truck"></i></div>
       </div>
@@ -47,6 +51,7 @@
         <div>
           <div class="text-secondary small mb-1">{{ 'Sahada İşlemde Olanlar' if is_tr else 'در حال تخلیه/بارگیری در محوطه' }}</div>
           <div class="fs-4 fw-bold text-warning">{{ in_yard }} {{ 'araç' if is_tr else 'تریلی' }}</div>
+          <div class="small text-warning mt-1">{{ '2. Tartım Bekliyor' if is_tr else 'منتظر توزین دوم' }}</div>
         </div>
         <div class="fs-2 text-warning opacity-75"><i class="bi bi-geo-alt-fill"></i></div>
       </div>
@@ -58,6 +63,7 @@
         <div>
           <div class="text-secondary small mb-1">{{ 'Tamamlanan Tartımlar' if is_tr else 'توزین قطعی و تسویه‌شده' }}</div>
           <div class="fs-4 fw-bold text-success">{{ completed_tickets }} {{ 'fiş' if is_tr else 'قبض' }}</div>
+          <div class="small text-success mt-1">{{ 'İşlemi bitti' if is_tr else 'ترخیص شده از درب خروج' }}</div>
         </div>
         <div class="fs-2 text-success opacity-75"><i class="bi bi-check-circle-fill"></i></div>
       </div>
@@ -69,6 +75,7 @@
         <div>
           <div class="text-secondary small mb-1">{{ 'Toplam Net Tartım Tonajı' if is_tr else 'مجموع تناژ خالص توزین' }}</div>
           <div class="fs-5 fw-bold text-info">{{ "{:,.2f}".format(total_net_tonnage) }} {{ 'ton' if is_tr else 'تن' }}</div>
+          <div class="small text-info mt-1">{{ 'Kantar net hacmi' if is_tr else 'حجم خالص کالا' }}</div>
         </div>
         <div class="fs-2 text-info opacity-75"><i class="bi bi-speedometer"></i></div>
       </div>
@@ -76,28 +83,36 @@
   </div>
 </div>
 
-<!-- فیلتر و جستجوی پلاک خودرو -->
+<!-- فیلتر و جستجوی پلاک خودرو و جهت ورود/خروج -->
 <div class="glass-card p-3 mb-4">
   <form method="get" action="/weighbridge" class="row g-3 align-items-end">
-    <div class="col-md-5">
+    <div class="col-md-4">
       <label class="form-label small text-secondary">{{ 'Plaka veya Sürücü Adı Ara:' if is_tr else 'جستجوی پلاک خودرو یا نام راننده:' }}</label>
       <input type="text" name="plate_search" class="form-control bg-dark border-secondary text-light"
              placeholder="{{ 'Örn: 34 ABC 123 veya Sürücü Adı...' if is_tr else 'مثلاً: ایران ۶۸ یا نام راننده...' }}" value="{{ plate_search or '' }}">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <label class="form-label small text-secondary">{{ 'Hareket Yönü (Giriş/Çıkış):' if is_tr else 'جهت تردد کالا:' }}</label>
+      <select name="direction_filter" class="form-select bg-dark border-secondary text-light">
+        <option value="">{{ 'Tüm Hareketler (Giriş ve Çıkış)' if is_tr else 'همه ترددها (ورود و خروج)' }}</option>
+        <option value="IN" {% if direction_filter == 'IN' %}selected{% endif %}>{{ '📥 Yalnız Giriş (Alış / Tedarikçi)' if is_tr else '📥 فقط ورود کالا (خرید / تأمین‌کننده)' }}</option>
+        <option value="OUT" {% if direction_filter == 'OUT' %}selected{% endif %}>{{ '📤 Yalnız Çıkış (Satış / Müşteri)' if is_tr else '📤 فقط خروج کالا (فروش / مشتری)' }}</option>
+      </select>
+    </div>
+    <div class="col-md-3">
       <label class="form-label small text-secondary">{{ 'Kantar Durumu:' if is_tr else 'وضعیت نوبت باسکول:' }}</label>
       <select name="status_filter" class="form-select bg-dark border-secondary text-light">
         <option value="">{{ 'Tüm Durumlar' if is_tr else 'همه وضعیت‌ها' }}</option>
-        <option value="FIRST_WEIGHING" {% if status_filter == 'FIRST_WEIGHING' %}selected{% endif %}>{{ 'İlk Tartım (İkinci Tartım Bekleniyor)' if is_tr else 'توزین اول (در انتظار توزین متقابل)' }}</option>
+        <option value="FIRST_WEIGHING" {% if status_filter == 'FIRST_WEIGHING' %}selected{% endif %}>{{ 'İlk Tartım (Sahada)' if is_tr else 'توزین اول (در محوطه)' }}</option>
         <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>{{ 'Tamamlandı ve Kesinleşti' if is_tr else 'تکمیل‌شده و قطعی' }}</option>
         <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>{{ 'İptal Edildi' if is_tr else 'باطل‌شده' }}</option>
       </select>
     </div>
-    <div class="col-md-3 d-flex gap-2">
+    <div class="col-md-2 d-flex gap-2">
       <button type="submit" class="btn btn-outline-info w-100">
-        <i class="bi bi-search me-1"></i>{{ 'Ara' if is_tr else 'جستجو' }}
+        <i class="bi bi-search me-1"></i>{{ 'Filtrele' if is_tr else 'فیلتر' }}
       </button>
-      <a href="/weighbridge" class="btn btn-outline-secondary">
+      <a href="/weighbridge" class="btn btn-outline-secondary" title="{{ 'Temizle' if is_tr else 'پاک کردن فیلترها' }}">
         <i class="bi bi-x-circle"></i>
       </a>
     </div>
@@ -112,7 +127,7 @@
         <tr>
           <th class="py-3 px-3">{{ 'Fiş No' if is_tr else 'شماره قبض' }}</th>
           <th>{{ 'Araç Plakası' if is_tr else 'پلاک ناوگان' }}</th>
-          <th>{{ 'Sürücü / Araç Tipi' if is_tr else 'راننده / خودرو' }}</th>
+          <th>{{ 'Sürücü ve Sevkiyat Yönü' if is_tr else 'راننده و جهت تردد' }}</th>
           <th>{{ 'Malzeme ve Depo' if is_tr else 'کالا و انبار' }}</th>
           <th>{{ 'Brüt (Dolu)' if is_tr else 'ناخالص (پر)' }}</th>
           <th>{{ 'Dara (Boş)' if is_tr else 'تار (خالی)' }}</th>
@@ -136,16 +151,21 @@
             <td class="small">
               <strong class="text-light">{{ t.driver_name }}</strong>
               <div class="text-secondary">{{ t.truck_type | tr_loc(is_tr) }}</div>
-              {% if not is_baskool %}
-                {% if t.supplier %}
-                  <div class="small text-success"><i class="bi bi-box-arrow-in-down me-1"></i>{{ t.supplier.name | tr_loc(is_tr) }}</div>
-                {% elif t.customer %}
-                  <div class="small text-info"><i class="bi bi-box-arrow-up-right me-1"></i>{{ t.customer.name | tr_loc(is_tr) }}</div>
-                {% endif %}
-              {% else %}
-                {% if t.reference_doc %}
-                  <div class="small text-teal font-monospace"><i class="bi bi-file-earmark-text me-1"></i>{{ t.reference_doc }}</div>
-                {% endif %}
+              {% if t.supplier or t.purchase_order_id %}
+                <div class="small text-success fw-semibold mt-1">
+                  <i class="bi bi-box-arrow-in-down me-1"></i>
+                  <span>{{ 'Giriş / Tedarikçi:' if is_tr else '📥 ورود کالا:' }}</span>
+                  <span class="text-light">{{ t.supplier.name | tr_loc(is_tr) if t.supplier else ('سفارش خرید #' ~ t.purchase_order_id) }}</span>
+                </div>
+              {% elif t.customer or t.sales_order_id %}
+                <div class="small text-info fw-semibold mt-1">
+                  <i class="bi bi-box-arrow-up-right me-1"></i>
+                  <span>{{ 'Çıkış / Müşteri:' if is_tr else '📤 خروج کالا:' }}</span>
+                  <span class="text-light">{{ t.customer.name | tr_loc(is_tr) if t.customer else ('سفارش فروش #' ~ t.sales_order_id) }}</span>
+                </div>
+              {% endif %}
+              {% if t.reference_doc %}
+                <div class="small text-secondary font-monospace"><i class="bi bi-file-earmark-text me-1"></i>{{ t.reference_doc }}</div>
               {% endif %}
             </td>
             <td class="small">

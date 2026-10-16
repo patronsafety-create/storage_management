@@ -69,3 +69,11 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="دسترسی غیرمجاز. این عملیات فقط برای مدیر کل سیستم امکان‌پذیر است."
         )
     return current_user
+
+
+def require_module(module_name: str):
+    """گارد اعتبارسنجی فعال بودن ماژول در سطح روت‌های FastAPI"""
+    from src.core.modules import check_module_access
+    def module_checker():
+        check_module_access(module_name)
+    return module_checker

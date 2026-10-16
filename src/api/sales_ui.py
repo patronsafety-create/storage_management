@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from src.infrastructure.database import get_db
-from src.core.dependencies import allow_roles
+from src.core.dependencies import allow_roles, require_module
 from src.api.auth import get_current_user
 from src.domain_model.auth_models import User
 from src.domain_model.inventory_models import (
@@ -32,10 +32,14 @@ from src.core.localization.regions import get_active_region, Region, localize_di
 router = APIRouter(
     prefix="/sales",
     tags=["Sales Orders"],
-    dependencies=[Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))]
+    dependencies=[
+        Depends(require_module("commercial")),
+        Depends(allow_roles("Admin", "Commercial_Officer", "Finance_Manager"))
+    ]
 )
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["tr_loc"] = localize_display_name
+
 
 
 @router.get("", response_class=HTMLResponse)

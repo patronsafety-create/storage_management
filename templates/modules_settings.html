@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ 'Modüler Sistem ve Özellik Yönetimi' if is_tr else 'مدیریت ماژول‌ها و سوئیچ‌های سازمانی | نکسوس‌پور' }}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-10">
+
+    <!-- هدر صفحه -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+      <div>
+        <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+          <i class="bi bi-toggles text-teal fs-3"></i>
+          <span>{{ 'Modüler Sistem ve Özellik Anahtarları (Feature Flags)' if is_tr else 'مدیریت ماژول‌ها و سوئیچ‌های سازمانی (Feature Toggles)' }}</span>
+        </h4>
+        <p class="text-secondary small mb-0">
+          {{ 'Kod değiştirmeden sistem bölümlerini (kantar, torbalama, kesim, para birimi) anında açıp kapatın.' if is_tr else 'کنترل دینامیک و بدون نیاز به تغییر کد: روشن/خاموش کردن باسکول، کیسه‌گیری، برشکاری، سامانه تجارت و حالت ارزی ریال/لیر.' }}
+        </p>
+      </div>
+
+      <a href="/admin/users" class="btn btn-glass btn-sm">
+        <i class="bi bi-people me-1"></i>
+        <span>{{ 'Kullanıcı Yönetimi' if is_tr else 'مدیریت کاربران' }}</span>
+      </a>
+    </div>
+
+    <!-- فرم مدیریت ماژول‌ها -->
+    <form method="POST" action="/admin/modules" class="needs-validation">
+
+      <!-- کارت ۱: مدیریت حالت ارزی و منطقه (Currency & Regional Localization) -->
+      <div class="glass-card p-4 mb-4 shadow-sm">
+        <div class="d-flex align-items-center gap-2 border-bottom border-secondary border-opacity-25 pb-3 mb-3">
+          <div class="brand-logo-box" style="width: 36px; height: 36px; font-size: 1rem;">
+            <i class="bi bi-cash-coin"></i>
+          </div>
+          <div>
+            <h6 class="fw-bold mb-0 text-light">{{ 'Para Birimi ve Bölgesel Rejim Ayarı' if is_tr else 'تنظیمات واحد پولی و رژیم ارزی سامانه' }}</h6>
+            <small class="text-secondary">{{ 'امکان حذف کامل بخش ریالی یا لیر و مدیریت سوئیچر ارزی بدون دستکاری در کد' }}</small>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <!-- گزینه ۱: دو ارزی (ریال + لیر) -->
+          <div class="col-md-4">
+            <label class="p-3 rounded-3 border w-100 h-100 d-flex flex-column justify-content-between cursor-pointer transition-all {% if modules.currency_mode == 'ALL' %}border-teal bg-teal bg-opacity-10{% else %}border-secondary border-opacity-25 bg-dark bg-opacity-50{% endif %}">
+              <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="fs-4">🇮🇷 🇹🇷</span>
+                  <input type="radio" name="currency_mode" value="ALL" class="form-check-input" {% if modules.currency_mode == 'ALL' %}checked{% endif %}>
+                </div>
+                <strong class="d-block text-light mb-1">{{ 'Çift Para Birimi (IRR + TRY)' if is_tr else 'سامانه جامع دو ارزی (ریال + لیر)' }}</strong>
+                <p class="text-secondary small mb-0" style="font-size: 0.78rem;">
+                  {{ 'Kullanıcı istediği zaman üst menüden Türkiye ve İran arasında geçiş yapabilir.' if is_tr else 'سوئیچر پرچم در بالای صفحه فعال است و کاربر می‌تواند آزادانه بین ریال ایران و لیر ترکیه جابجا شود.' }}
+                </p>
+              </div>
+            </label>
+          </div>
+
+          <!-- گزینه ۲: فقط ترکیه (لیر ₺) -->
+          <div class="col-md-4">
+            <label class="p-3 rounded-3 border w-100 h-100 d-flex flex-column justify-content-between cursor-pointer transition-all {% if modules.currency_mode == 'TR_ONLY' %}border-teal bg-teal bg-opacity-10{% else %}border-secondary border-opacity-25 bg-dark bg-opacity-50{% endif %}">
+              <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="fs-4">🇹🇷</span>
+                  <input type="radio" name="currency_mode" value="TR_ONLY" class="form-check-input" {% if modules.currency_mode == 'TR_ONLY' %}checked{% endif %}>
+                </div>
+                <strong class="d-block text-light mb-1">{{ 'Sadece Türkiye (₺ TRY - Tek Rejim)' if is_tr else 'فقط ترکیه (حذف کامل بخش ریالی)' }}</strong>
+                <p class="text-secondary small mb-0" style="font-size: 0.78rem;">
+                  {{ 'İran/Riyal seçenekleri tamamen gizlenir. Sistem sadece Türk Lirası, KDV (%20) ve Türk plakası ile çalışır.' if is_tr else 'گزینه‌های ریال و ایران کاملاً مخفی می‌شوند. سامانه تک‌ارزی لیر ترکیه با KDV، Tevkifat و تقویم میلادی تثبیت می‌شود.' }}
+                </p>
+              </div>
+            </label>
+          </div>
+
+          <!-- گزینه ۳: فقط ایران (ریال) -->
+          <div class="col-md-4">
+            <label class="p-3 rounded-3 border w-100 h-100 d-flex flex-column justify-content-between cursor-pointer transition-all {% if modules.currency_mode == 'IR_ONLY' %}border-teal bg-teal bg-opacity-10{% else %}border-secondary border-opacity-25 bg-dark bg-opacity-50{% endif %}">
+              <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="fs-4">🇮🇷</span>
+                  <input type="radio" name="currency_mode" value="IR_ONLY" class="form-check-input" {% if modules.currency_mode == 'IR_ONLY' %}checked{% endif %}>
+                </div>
+                <strong class="d-block text-light mb-1">{{ 'Sadece İran (Riyal - Tek Rejim)' if is_tr else 'فقط ایران (حذف کامل بخش لیر)' }}</strong>
+                <p class="text-secondary small mb-0" style="font-size: 0.78rem;">
+                  {{ 'Türkiye seçenekleri gizlenir. Sistem sadece İran Riyali, %10 KDV ve Şemsi takvim ile çalışır.' if is_tr else 'سوئیچر ترکیه پنهان می‌شود و سامانه تماماً روی ریال، تقویم شمسی و ارزش افزوده ۱۰٪ ایران قفل می‌گردد.' }}
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- کارت ۲: سوئیچ‌های ماژول‌های عملیاتی (Operational Feature Toggles) -->
+      <div class="glass-card p-4 mb-4 shadow-sm">
+        <div class="d-flex align-items-center gap-2 border-bottom border-secondary border-opacity-25 pb-3 mb-3">
+          <div class="brand-logo-box" style="width: 36px; height: 36px; font-size: 1rem;">
+            <i class="bi bi-puzzle-fill"></i>
+          </div>
+          <div>
+            <h6 class="fw-bold mb-0 text-light">{{ 'Operasyonel Modül Anahtarları' if is_tr else 'سوئیچ‌های روشن/خاموش ماژول‌های عملیاتی' }}</h6>
+            <small class="text-secondary">{{ 'با خاموش کردن هر ماژول، منوها، داشبورد و روت‌های مربوطه فوراً غیرفعال می‌شوند' }}</small>
+          </div>
+        </div>
+
+        <div class="row g-3">
+
+          <!-- ۱. ماژول باسکول دیجیتال -->
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 border border-secondary border-opacity-25 bg-dark bg-opacity-50 d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 rounded bg-warning bg-opacity-10 text-warning fs-4">
+                  <i class="bi bi-truck"></i>
+                </div>
+                <div>
+                  <strong class="d-block text-light">{{ 'Tır Kantarı Modülü' if is_tr else 'ماژول باسکول دیجیتال تریلی' }}</strong>
+                  <span class="text-secondary small">{{ 'نوبت‌دهی، توزین پر/خالی و صدور قبوض باسکول' }}</span>
+                </div>
+              </div>
+              <div class="form-check form-switch fs-4">
+                <input class="form-check-input cursor-pointer" type="checkbox" name="module_weighbridge" id="modWeighbridge" {% if modules.module_weighbridge %}checked{% endif %}>
+              </div>
+            </div>
+          </div>
+
+          <!-- ۲. ماژول بازرگانی خرید و فروش -->
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 border border-secondary border-opacity-25 bg-dark bg-opacity-50 d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 rounded bg-info bg-opacity-10 text-info fs-4">
+                  <i class="bi bi-briefcase"></i>
+                </div>
+                <div>
+                  <strong class="d-block text-light">{{ 'Ticaret Modülü (PO & SO)' if is_tr else 'ماژول بازرگانی (سفارشات خرید و فروش)' }}</strong>
+                  <span class="text-secondary small">{{ 'قراردادها، پیش‌فاکتورها، سفارشات خرید PO و فروش SO' }}</span>
+                </div>
+              </div>
+              <div class="form-check form-switch fs-4">
+                <input class="form-check-input cursor-pointer" type="checkbox" name="module_commercial" id="modCommercial" {% if modules.module_commercial %}checked{% endif %}>
+              </div>
+            </div>
+          </div>
+
+          <!-- ۳. ماژول برشکاری و کارمزد آهن‌آلات -->
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 border border-secondary border-opacity-25 bg-dark bg-opacity-50 d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 rounded bg-danger bg-opacity-10 text-danger fs-4">
+                  <i class="bi bi-scissors"></i>
+                </div>
+                <div>
+                  <strong class="d-block text-light">{{ 'Çelik Kesim ve Fire Modülü' if is_tr else 'ماژول برشکاری و کارمزد آهن‌آلات' }}</strong>
+                  <span class="text-secondary small">{{ 'برش میلگرد و تیرآهن، انبار ته‌شاخه‌ها و مدیریت پرتی' }}</span>
+                </div>
+              </div>
+              <div class="form-check form-switch fs-4">
+                <input class="form-check-input cursor-pointer" type="checkbox" name="module_cutting" id="modCutting" {% if modules.module_cutting %}checked{% endif %}>
+              </div>
+            </div>
+          </div>
+
+          <!-- ۴. ماژول کیسه‌گیری اوره -->
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 border border-secondary border-opacity-25 bg-dark bg-opacity-50 d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 rounded bg-success bg-opacity-10 text-success fs-4">
+                  <i class="bi bi-box2"></i>
+                </div>
+                <div>
+                  <strong class="d-block text-light">{{ 'Üre Torbalama ve Paketleme' if is_tr else 'ماژول کیسه‌گیری اوره و پتروشیمی' }}</strong>
+                  <span class="text-secondary small">{{ 'تبدیل فله اوره به کیسه ۵۰ کیلویی و جامبوبگ ۱ تنی' }}</span>
+                </div>
+              </div>
+              <div class="form-check form-switch fs-4">
+                <input class="form-check-input cursor-pointer" type="checkbox" name="module_bagging" id="modBagging" {% if modules.module_bagging %}checked{% endif %}>
+              </div>
+            </div>
+          </div>
+
+          <!-- ۵. ماژول سامانه جامع تجارت -->
+          <div class="col-md-12">
+            <div class="p-3 rounded-3 border border-secondary border-opacity-25 bg-dark bg-opacity-50 d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 rounded bg-purple bg-opacity-10 text-purple fs-4" style="color: #c084fc;">
+                  <i class="bi bi-bank2"></i>
+                </div>
+                <div>
+                  <strong class="d-block text-light">{{ 'Mevzuat ve e-İrsaliye Entegrasyonu (NTSW)' if is_tr else 'ماژول سامانه جامع تجارت (NTSW / صمت)' }}</strong>
+                  <span class="text-secondary small">{{ 'استعلام کد شناسه IRC، ثبت اسناد انبار در سامانه جامع تجارت و گزارشات قانونی وزارت صمت' }}</span>
+                </div>
+              </div>
+              <div class="form-check form-switch fs-4">
+                <input class="form-check-input cursor-pointer" type="checkbox" name="module_compliance" id="modCompliance" {% if modules.module_compliance %}checked{% endif %}>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- دکمه ذخیره -->
+      <div class="d-flex justify-content-end gap-2 mb-5">
+        <a href="/dashboard" class="btn btn-outline-secondary px-4">
+          {{ 'İptal' if is_tr else 'انصراف' }}
+        </a>
+        <button type="submit" class="btn btn-primary px-4 fw-bold d-flex align-items-center gap-2" style="background: linear-gradient(135deg, var(--accent-teal), #0097a7); border: none;">
+          <i class="bi bi-check2-circle fs-5"></i>
+          <span>{{ 'Ayarları Kaydet ve Hemen Uygula' if is_tr else 'ذخیره و اعمال آنی تنظیمات' }}</span>
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

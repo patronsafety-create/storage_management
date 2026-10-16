@@ -321,7 +321,7 @@ async def process_transaction(
 async def get_stock_balance(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager", "Commercial_Officer"))
 ):
     stock_balances = InventoryService.calculate_stock_balances(db)
     active_region = get_active_region(request)
@@ -346,7 +346,7 @@ async def get_stock_balance(
 async def list_transactions(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager", "Commercial_Officer")),
     tx_type: Optional[str] = Query(None),
     product_id: Optional[int] = Query(None),
     page: int = Query(1, ge=1)
@@ -420,7 +420,7 @@ async def kardex(
     request: Request,
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager", "Commercial_Officer")),
     warehouse_id: Optional[int] = Query(None)
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
@@ -918,17 +918,26 @@ async def approve_transaction(
     qc_approved: Optional[bool] = Form(True),
     qc_notes: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor", "Finance_Manager"))
+    current_user: User = Depends(allow_roles("Admin", "Warehouse_Supervisor"))
 ):
     """تایید نهایی سند و اعمال در کاردکس موجودی، ثبت کنترل کیفیت QC و به‌روزرسانی پیشرفت سفارشات خرید/فروش"""
-    require_roles(current_user, {"Admin", "Warehouse_Supervisor", "Finance_Manager"})
+    require_roles(current_user, {"Admin", "Warehouse_Supervisor"})
 
     tx = db.query(StockTransaction).filter(StockTransaction.id == tx_id).first()
     if not tx:
         raise HTTPException(status_code=404, detail="سند یافت نشد")
+
+    # رعایت اصل چهارچشم (Four-Eyes Principle): ثبت‌کننده سند نمی‌تواند خودش تصویب‌کننده نهایی باشد
+    is_admin = any(r.name == "Admin" for r in current_user.roles) or current_user.username == "admin"
+    if not is_admin and tx.created_by_user_id and tx.created_by_user_id == current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="اصل چهارچشم (Four-Eyes Principle): ثبت‌کننده سند انبار نمی‌تواند خودش سند را تأیید نهایی کند. تأیید باید توسط سرپرست یا مدیر دیگری انجام شود."
+        )
     
     if tx.status == DocumentStatus.APPROVED:
         return RedirectResponse(url="/inventory/transactions?msg=" + quote(f"سند #{tx.id} قبلاً تأیید شده است"), status_code=303)
+
 
     # اگر سند خروجی است، کنترل موجودی
     if tx.transaction_type == TransactionType.OUT:

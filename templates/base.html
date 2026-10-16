@@ -1,7 +1,9 @@
 <!doctype html>
+{% set modules = get_system_modules() if get_system_modules is defined else {} %}
 {% set active_region_code = request.cookies.get('nexus_region', 'IR') %}
 {% set is_tr = (active_region_code == 'TR') %}
 <html lang="{{ 'tr' if is_tr else 'fa' }}" dir="{{ 'ltr' if is_tr else 'rtl' }}" data-bs-theme="dark">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -685,6 +687,7 @@
         top: 62px;
         border-inline-end: 1px solid var(--glass-border);
         z-index: 1020;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .sidebar-backdrop {
         display: none !important;
@@ -695,11 +698,39 @@
         width: calc(100% - 280px);
         display: flex;
         flex-direction: column;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .mobile-close-btn {
         display: none !important;
       }
+
+      /* جمع‌شدن سایدبار در دسکتاپ هنگام کلیک روی دکمه منوی سیستم */
+      body.sidebar-collapsed .app-sidebar {
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        border-inline-end: none !important;
+        overflow: hidden !important;
+      }
+      html[dir="rtl"] body.sidebar-collapsed .app-sidebar {
+        transform: translateX(100%) !important;
+        margin-inline-end: -280px !important;
+      }
+      html[dir="ltr"] body.sidebar-collapsed .app-sidebar {
+        transform: translateX(-100%) !important;
+        margin-inline-end: 0 !important;
+        margin-inline-start: -280px !important;
+      }
+      body.sidebar-collapsed .app-main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+      }
     }
+
 
     /* Mobile Mode (< 768px): Hidden off-canvas drawer with touch backdrop */
     @media (max-width: 767.98px) {
@@ -841,11 +872,11 @@
   <header id="mobileTopBar" class="mobile-topbar d-flex d-md-none align-items-center justify-content-between px-3">
     <div class="d-flex align-items-center gap-2">
       <!-- Hamburger Toggle Button (44px touch target) -->
-      <button type="button" class="btn btn-glass d-flex align-items-center justify-content-center p-0" style="width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 12px;" onclick="toggleMobileSidebar(true)" aria-label="Open Navigation Menu" title="منوی سیستم">
+      <button type="button" class="btn btn-glass d-flex align-items-center justify-content-center p-0" style="width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 12px;" onclick="toggleSidebar()" aria-label="Open Navigation Menu" title="منوی سیستم">
         <i class="bi bi-list fs-3 text-teal"></i>
       </button>
 
-      <a href="/dashboard" class="d-flex align-items-center gap-2 text-decoration-none">
+      <a href="{{ '/weighbridge' if (is_baskool and not (is_admin or is_warehouse or is_commercial or is_finance)) else '/dashboard' }}" class="d-flex align-items-center gap-2 text-decoration-none">
         <div class="brand-logo-box" style="width: 36px; height: 36px; font-size: 1.05rem; border-radius: 10px;">
           <i class="bi bi-box-seam-fill"></i>
         </div>
@@ -854,7 +885,8 @@
     </div>
 
     <div class="d-flex align-items-center gap-2">
-      <!-- سوئیچر کشور و زبان -->
+      <!-- سوئیچر کشور و زبان (فقط در حالت دو ارزی ALL) -->
+      {% if modules.currency_mode == 'ALL' %}
       <div class="dropdown">
         <button class="btn btn-glass btn-sm dropdown-toggle d-flex align-items-center justify-content-center p-0" style="width: 40px; height: 40px; border-radius: 10px;" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ 'Bölge Değiştir' if is_tr else 'تغییر کشور' }}">
           {% if is_tr %}<span>🇹🇷</span>{% else %}<span>🇮🇷</span>{% endif %}
@@ -874,6 +906,7 @@
           </li>
         </ul>
       </div>
+      {% endif %}
 
       {% if user %}
       <a href="/logout" class="btn btn-glass d-flex align-items-center justify-content-center text-danger p-0" style="width: 40px; height: 40px; border-radius: 10px;" title="{{ 'Çıkış Yap' if is_tr else 'خروج از سامانه' }}">
@@ -888,12 +921,12 @@
     <div class="container-fluid px-2 d-flex justify-content-between align-items-center">
       <!-- بخش راست: دکمه منوی درختی، برند و عنوان صفحه جاری -->
       <div class="d-flex align-items-center gap-2 gap-md-3">
-        <button class="btn btn-glass px-2 py-1 px-md-3 py-md-2" type="button" onclick="toggleMobileSidebar()" title="{{ 'Sistem Menüsü' if is_tr else 'منوی سیستم' }}">
+        <button class="btn btn-glass px-2 py-1 px-md-3 py-md-2" type="button" onclick="toggleSidebar()" title="{{ 'Sistem Menüsü' if is_tr else 'منوی سیستم' }}">
           <i class="bi bi-list fs-5 align-middle"></i>
           <span class="d-none d-sm-inline ms-1 fw-bold small">{{ 'Menü' if is_tr else 'منوی سیستم' }}</span>
         </button>
 
-        <a class="navbar-brand mb-0 text-decoration-none d-flex align-items-center gap-2 me-1" href="/dashboard">
+        <a class="navbar-brand mb-0 text-decoration-none d-flex align-items-center gap-2 me-1" href="{{ '/weighbridge' if (is_baskool and not (is_admin or is_warehouse or is_commercial or is_finance)) else '/dashboard' }}">
           <div class="brand-logo-box" style="width: 36px; height: 36px; font-size: 1.1rem; border-radius: 10px;">
             <i class="bi bi-box-seam-fill"></i>
           </div>
@@ -937,20 +970,22 @@
         {% if is_admin or is_finance %}
         <a href="/admin/changelog" class="badge-edition text-decoration-none d-none d-md-flex align-items-center gap-1" title="{{ 'Sürüm Notları ve Değişiklik Günlüğü' if is_tr else 'شناسنامه نگارش‌ها و تاریخچه تغییرات' }}">
           <i class="bi bi-tag-fill text-teal"></i>
-          <span>v3.2.0 Enterprise</span>
+          <span>v3.3.0 Enterprise</span>
         </a>
         {% else %}
         <div class="badge-edition d-none d-md-flex align-items-center gap-1">
           <i class="bi bi-tag-fill text-teal"></i>
-          <span>v3.2.0 Enterprise</span>
+          <span>v3.3.0 Enterprise</span>
         </div>
         {% endif %}
+
       </div>
 
       <!-- بخش چپ: سوییچ زبان، نام و سمت فارسی کاربر، دکمه خروج -->
       {% if user %}
       <div class="d-flex align-items-center gap-2">
-        <!-- سوئیچر کشور و زبان -->
+        <!-- سوئیچر کشور و زبان (فقط در حالت دو ارزی ALL) -->
+        {% if modules.currency_mode == 'ALL' %}
         <div class="dropdown">
           <button class="btn btn-glass btn-sm dropdown-toggle d-flex align-items-center gap-1 py-1 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ 'Bölge Değiştir' if is_tr else 'تغییر کشور' }}">
             {% if is_tr %}
@@ -976,6 +1011,8 @@
             </li>
           </ul>
         </div>
+        {% endif %}
+
 
         <!-- نام و سمت فارسی کاربر -->
         <div class="user-pill d-flex align-items-center gap-2 py-1 px-2 px-md-3">
@@ -1028,16 +1065,31 @@
       <div class="sidebar-body p-3 d-flex flex-column justify-content-between flex-grow-1" style="overflow-y: auto;">
       <div class="tree-menu-container">
         
-        <!-- ۱. پیشخوان مدیریتی -->
+        <!-- ۱. پیشخوان سازمانی بر اساس نقش کاربر -->
+        {% if is_baskool and not (is_admin or is_warehouse or is_commercial or is_finance) %}
+        <div class="mb-2">
+          <a href="/weighbridge" class="sidebar-item {% if cur_url.startswith('/weighbridge') and cur_url != '/weighbridge/new' %}active{% endif %}">
+            <i class="bi bi-truck text-warning me-2"></i>
+            <span>{{ 'Kantar Gösterge Paneli' if is_tr else '⚖️ پیشخوان و صف باسکول' }}</span>
+          </a>
+        </div>
+        <div class="mb-2">
+          <a href="/weighbridge/new" class="sidebar-item {% if cur_url == '/weighbridge/new' %}active{% endif %}">
+            <i class="bi bi-plus-circle text-success me-2"></i>
+            <span>{{ 'İlk Tartım Kaydı' if is_tr else '➕ ثبت نوبت توزین اول (ورود)' }}</span>
+          </a>
+        </div>
+        {% else %}
         <div class="mb-2">
           <a href="/dashboard" class="sidebar-item {% if cur_url == '/dashboard' or cur_url == '/' %}active{% endif %}">
             <i class="bi bi-speedometer2 text-info me-2"></i>
             <span>{{ 'Gösterge Paneli' if is_tr else '📊 پیشخوان مدیریتی' }}</span>
           </a>
         </div>
+        {% endif %}
 
         <!-- ۲. بازرگانی (خرید و فروش) -->
-        {% if is_admin or is_commercial or is_finance %}
+        {% if modules.module_commercial and (is_admin or is_commercial or is_finance or is_warehouse) %}
         <div class="menu-tree-group">
           <button class="menu-tree-header {% if not is_active_commercial %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeCommercial" aria-expanded="{{ 'true' if is_active_commercial else 'false' }}">
             <span class="d-flex align-items-center gap-2">
@@ -1052,26 +1104,28 @@
                 <i class="bi bi-cart-check text-teal"></i>
                 <span>{{ 'Satın Alma Siparişleri (PO)' if is_tr else 'سفارشات خرید (PO)' }}</span>
               </a>
+              {% if is_admin or is_commercial or is_finance %}
               <a href="/sales" class="menu-subitem {% if cur_url.startswith('/sales') %}active{% endif %}">
                 <i class="bi bi-receipt text-success"></i>
                 <span>{{ 'Satış Siparişleri (SO)' if is_tr else 'سفارشات فروش (SO)' }}</span>
               </a>
+              {% endif %}
               <a href="/master-data/parties" class="menu-subitem {% if cur_url.startswith('/master-data/parties') %}active{% endif %}">
                 <i class="bi bi-people text-info"></i>
-                <span>{{ 'Cari Hesaplar (Tedarikçi/Müşteri)' if is_tr else 'طرف‌های تجاری (تأمین‌کننده/مشتری)' }}</span>
+                <span>{{ 'Cari Hesaplar (Tedarikçi/Müşteri)' if is_tr else 'طرف‌های تجاری' }}</span>
               </a>
             </div>
           </div>
         </div>
         {% endif %}
 
-        <!-- ۳. عملیات انبارداری -->
+        <!-- ۳. عملیات انبارداری و کاتالوگ کالاها -->
         {% if is_admin or is_warehouse or is_finance %}
         <div class="menu-tree-group">
           <button class="menu-tree-header {% if not is_active_inventory %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeInventory" aria-expanded="{{ 'true' if is_active_inventory else 'false' }}">
             <span class="d-flex align-items-center gap-2">
               <i class="bi bi-boxes text-warning"></i>
-              <span>{{ 'Depo Operasyonları' if is_tr else '📦 عملیات انبارداری' }}</span>
+              <span>{{ 'Depo Operasyonları ve Katalog' if is_tr else '📦 عملیات انبارداری' }}</span>
             </span>
             <i class="bi bi-chevron-down tree-chevron"></i>
           </button>
@@ -1084,6 +1138,10 @@
               <a href="/inventory/balance" class="menu-subitem {% if cur_url == '/inventory/balance' %}active{% endif %}">
                 <i class="bi bi-bar-chart-line text-teal"></i>
                 <span>{{ 'Anlık Stok Durumu' if is_tr else 'گزارش موجودی لحظه‌ای' }}</span>
+              </a>
+              <a href="/master-data/products" class="menu-subitem {% if cur_url.startswith('/master-data/products') %}active{% endif %}">
+                <i class="bi bi-box-seam text-info"></i>
+                <span>{{ 'Malzeme ve Depo Kartları' if is_tr else 'کاتالوگ کالاها و انبارها' }}</span>
               </a>
               {% if is_admin or is_warehouse %}
               <a href="/inventory/transaction" class="menu-subitem {% if cur_url == '/inventory/transaction' %}active{% endif %}">
@@ -1099,11 +1157,19 @@
                 <i class="bi bi-arrow-return-right text-danger"></i>
                 <span>{{ 'Alış / Satış İadeleri' if is_tr else 'برگشت از خرید / فروش' }}</span>
               </a>
-              {% if is_admin or is_warehouse %}
+              {% if modules.module_bagging and (is_admin or is_warehouse) %}
               <a href="/bagging" class="menu-subitem {% if cur_url.startswith('/bagging') %}active{% endif %}">
                 <i class="bi bi-box2 text-success"></i>
                 <span>{{ 'Üre Torbalama ve Paketleme' if is_tr else 'کیسه‌گیری اوره' }}</span>
               </a>
+              {% endif %}
+              {% if modules.module_cutting and (is_admin or is_warehouse) %}
+              <a href="/cutting" class="menu-subitem {% if cur_url.startswith('/cutting') %}active{% endif %}">
+                <i class="bi bi-scissors text-danger"></i>
+                <span>{{ 'Çelik Kesim ve Fire' if is_tr else 'برشکاری و کارمزد آهن‌آلات' }}</span>
+              </a>
+              {% endif %}
+              {% if is_admin or is_warehouse %}
               <a href="/inventory/stocktaking" class="menu-subitem {% if cur_url.startswith('/inventory/stocktaking') %}active{% endif %}">
                 <i class="bi bi-clipboard2-check text-primary"></i>
                 <span>{{ 'Depo Sayım ve Mutabakat' if is_tr else 'انبارگردانی' }}</span>
@@ -1114,13 +1180,13 @@
         </div>
         {% endif %}
 
-        <!-- ۴. باسکول دیجیتال -->
-        {% if is_admin or is_baskool or is_warehouse %}
+        <!-- ۴. باسکول دیجیتال (برای مدیران و کاربران دارای چند نقش) -->
+        {% if modules.module_weighbridge and (is_admin or (is_baskool and (is_warehouse or is_commercial or is_finance))) %}
         <div class="menu-tree-group">
           <button class="menu-tree-header {% if not is_active_weighbridge %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeWeighbridge" aria-expanded="{{ 'true' if is_active_weighbridge else 'false' }}">
             <span class="d-flex align-items-center gap-2">
               <i class="bi bi-truck text-warning"></i>
-              <span>{{ 'Tır Kantarı' if is_tr else '⚖️ باسکول دیجیتال' }}</span>
+              <span>{{ 'Tır Kantarı' if is_tr else '⚖️ عملیات باسکول دیجیتال' }}</span>
             </span>
             <i class="bi bi-chevron-down tree-chevron"></i>
           </button>
@@ -1135,29 +1201,23 @@
         </div>
         {% endif %}
 
-        <!-- ۵. مالی و تعاریف پایه -->
-        {% if is_admin or is_finance or is_commercial or is_warehouse %}
+        <!-- ۵. امور مالی و سال مالی -->
+        {% if is_admin or is_finance %}
         <div class="menu-tree-group">
           <button class="menu-tree-header {% if not is_active_finance %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treeFinance" aria-expanded="{{ 'true' if is_active_finance else 'false' }}">
             <span class="d-flex align-items-center gap-2">
               <i class="bi bi-coin text-info"></i>
-              <span>{{ 'Mali ve Temel Tanımlar' if is_tr else '💰 مالی و تعاریف پایه' }}</span>
+              <span>{{ 'Mali İşler ve Yıl Kapanışı' if is_tr else '💼 امور و سال مالی' }}</span>
             </span>
             <i class="bi bi-chevron-down tree-chevron"></i>
           </button>
           <div class="collapse {% if is_active_finance %}show{% endif %}" id="treeFinance">
             <div class="menu-tree-subitems">
-              {% if not is_baskool %}
-              <a href="/master-data/products" class="menu-subitem {% if cur_url.startswith('/master-data/products') %}active{% endif %}">
-                <i class="bi bi-box-seam text-info"></i>
-                <span>{{ 'Malzeme ve Depo Kartları' if is_tr else 'کاتالوگ کالاها و انبارها' }}</span>
-              </a>
-              {% endif %}
-              {% if is_admin or is_finance %}
               <a href="/inventory/fiscal-years" class="menu-subitem {% if cur_url.startswith('/inventory/fiscal') %}active{% endif %}">
                 <i class="bi bi-calendar-check text-teal"></i>
                 <span>{{ 'Mali Yıl ve Dönem Kapanışı' if is_tr else 'مدیریت سال مالی و بستن دوره' }}</span>
               </a>
+              {% if modules.module_compliance %}
               <a href="/compliance" class="menu-subitem {% if cur_url.startswith('/compliance') %}active{% endif %}">
                 <i class="bi bi-bank2 text-danger"></i>
                 <span>{{ 'e-İrsaliye ve Mevzuat' if is_tr else 'سامانه جامع تجارت' }}</span>
@@ -1184,6 +1244,10 @@
                 <i class="bi bi-person-lines-fill text-purple" style="color: #c084fc;"></i>
                 <span>{{ 'Kullanıcı ve Rol Yönetimi' if is_tr else 'مدیریت کاربران' }}</span>
               </a>
+              <a href="/admin/modules" class="menu-subitem {% if cur_url.startswith('/admin/modules') %}active{% endif %}">
+                <i class="bi bi-toggles text-teal"></i>
+                <span>{{ 'Modül ve Özellik Anahtarları' if is_tr else 'مدیریت ماژول‌ها و سوئیچ‌ها' }}</span>
+              </a>
               <a href="/admin/audit-logs" class="menu-subitem {% if cur_url.startswith('/admin/audit-logs') %}active{% endif %}">
                 <i class="bi bi-shield-check text-info"></i>
                 <span>{{ 'Güvenlik Denetim Kayıtları' if is_tr else 'لاگ حسابرسی امنیتی' }}</span>
@@ -1192,6 +1256,7 @@
           </div>
         </div>
         {% endif %}
+
 
       </div>
 
@@ -1257,9 +1322,10 @@
           {% endif %}
         </div>
         <div class="d-flex align-items-center gap-2">
-          <span class="badge-edition">{{ 'NexusPour Türkiye Kurumsal v3.2.0' if is_tr else 'NexusPour Enterprise Edition v3.2.0' }}</span>
+          <span class="badge-edition">{{ 'NexusPour Türkiye Kurumsal v3.3.0' if is_tr else 'NexusPour Enterprise Edition v3.3.0' }}</span>
           <span class="text-secondary opacity-75">{{ 'Entegre Ağır Sanayi Depo ve Tedarik Zinciri' if is_tr else 'سامانه یکپارچه انبارداری و زنجیره تامین' }}</span>
         </div>
+
       </div>
     </footer>
   </main>
@@ -1331,31 +1397,63 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    function toggleMobileSidebar(show) {
+    function toggleSidebar(forceState) {
+      const isMobile = window.innerWidth < 768;
       const sidebar = document.getElementById('appSidebar');
       const backdrop = document.getElementById('sidebarBackdrop');
       if (!sidebar) return;
 
-      if (show === undefined) {
-        show = !sidebar.classList.contains('show');
-      }
-
-      if (show) {
-        sidebar.classList.add('show');
-        if (backdrop) backdrop.classList.add('show');
-        document.body.style.overflow = 'hidden';
+      if (isMobile) {
+        let show = forceState;
+        if (show === undefined) {
+          show = !sidebar.classList.contains('show');
+        }
+        if (show) {
+          sidebar.classList.add('show');
+          if (backdrop) backdrop.classList.add('show');
+          document.body.style.overflow = 'hidden';
+        } else {
+          sidebar.classList.remove('show');
+          if (backdrop) backdrop.classList.remove('show');
+          document.body.style.overflow = '';
+        }
       } else {
-        sidebar.classList.remove('show');
-        if (backdrop) backdrop.classList.remove('show');
-        document.body.style.overflow = '';
+        // Desktop Toggle (جمع‌شدن / باز شدن سایدبار در حالت دسکتاپ)
+        if (forceState !== undefined) {
+          if (forceState) {
+            document.body.classList.remove('sidebar-collapsed');
+          } else {
+            document.body.classList.add('sidebar-collapsed');
+          }
+        } else {
+          document.body.classList.toggle('sidebar-collapsed');
+        }
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+        try {
+          localStorage.setItem('nexus_sidebar_collapsed', isCollapsed ? '1' : '0');
+        } catch (e) {}
       }
     }
 
+    function toggleMobileSidebar(show) {
+      toggleSidebar(show);
+    }
+
+    // بازگردانی وضعیت دلخواه کاربر در دسکتاپ هنگام لود صفحه
+    (function () {
+      try {
+        if (window.innerWidth >= 768 && localStorage.getItem('nexus_sidebar_collapsed') === '1') {
+          document.body.classList.add('sidebar-collapsed');
+        }
+      } catch (e) {}
+    })();
+
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
-        toggleMobileSidebar(false);
+        toggleSidebar(false);
       }
     });
+
 
     function toPersianDigits(text) {
       if (!text && text !== 0) return '';
