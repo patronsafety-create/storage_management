@@ -707,7 +707,82 @@
     </div>
     {% endif %}
 
-    <!-- ۶. بخش مرکزی سرمه‌ای‌رنگ (FlowFin Dark Master Matrix): ماتریس جامع موجودی با فیلتر تک‌خطی انبارها و اقلام دارای موجودی -->
+    <!-- ۶. بخش تحلیلی بصری جدید: نمودار کیکی سهم موجودی انبارها + نمودار میله‌ای ۳گانه تراز زنجیره تأمین -->
+    <div class="row g-3 mb-4" id="executiveChartsRow">
+        <!-- ستون راست: نمودار کیکی/دونات سهم موجودی انبار به تفکیک کالا -->
+        <div class="col-12 col-lg-6">
+            <div class="saas-chart-card d-flex flex-column justify-content-between h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">
+                            <span>🧁</span> سهم موجودی انبارها به تفکیک کالا (Donut / Pie)
+                        </h6>
+                        <small class="text-secondary">توزیع وزنی و درصد موجودی فیزیکی کالاهای مستقر در انبارها</small>
+                    </div>
+                    <span class="badge rounded-pill px-3 py-1 badge-solid-primary shadow-xs">
+                        کل: {{ "{:,.1f}".format(total_physical_stock) }} تن
+                    </span>
+                </div>
+                
+                <div style="position: relative; height: 260px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="productInventoryPieChart"></canvas>
+                </div>
+                
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-around text-center">
+                    <div>
+                        <small class="text-secondary d-block" style="font-size: 0.72rem;">تنوع اقلام فعال</small>
+                        <strong class="text-white font-monospace">{{ active_skus_count }} ردیف کالا</strong>
+                    </div>
+                    <div>
+                        <small class="text-secondary d-block" style="font-size: 0.72rem;">موجودی آزاد فروش</small>
+                        <strong class="text-emerald font-monospace">{{ "{:,.1f}".format(total_available_stock) }} تن</strong>
+                    </div>
+                    <div>
+                        <small class="text-secondary d-block" style="font-size: 0.72rem;">بلوکه حواله‌های فروش</small>
+                        <strong class="text-warning font-monospace">{{ "{:,.1f}".format(total_reserved_stock) }} تن</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ستون چپ: نمودار میله‌ای ۳گانه تراز زنجیره تأمین (موجودی فیزیکی + بار در راه خرید + تعهد فروش) -->
+        <div class="col-12 col-lg-6">
+            <div class="saas-chart-card d-flex flex-column justify-content-between h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">
+                            <span>📊</span> تراز جامع زنجیره تأمین ۳گانه (Supply & Demand Equilibrium)
+                        </h6>
+                        <small class="text-secondary">مقایسه ۳ شاخص: موجودی فعلی انبار، بارهای در راه خرید (PO) و تعهدات فروش (SO)</small>
+                    </div>
+                    <a href="/inventory/balance" class="btn btn-sm btn-outline-light border rounded-pill px-3 small">
+                        موازنه جامع ↗
+                    </a>
+                </div>
+
+                <div style="position: relative; height: 260px; width: 100%;">
+                    <canvas id="tradeSupplyDemandBarChart"></canvas>
+                </div>
+
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex justify-content-around text-center">
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="display:inline-block; width:10px; height:10px; background:#4f46e5; border-radius:2px;"></span>
+                        <small class="text-light">موجودی انبار</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="display:inline-block; width:10px; height:10px; background:#06b6d4; border-radius:2px;"></span>
+                        <small class="text-light">بار در راه (PO: {{ "{:,.1f}".format(in_transit_tonnage) }} تن)</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="display:inline-block; width:10px; height:10px; background:#f59e0b; border-radius:2px;"></span>
+                        <small class="text-light">تعهد فروش (SO: {{ "{:,.1f}".format(total_reserved_stock) }} تن)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ۷. بخش مرکزی سرمه‌ای‌رنگ (FlowFin Dark Master Matrix): ماتریس جامع موجودی با فیلتر تک‌خطی انبارها و اقلام دارای موجودی -->
     <div class="navy-master-panel mb-4" id="liveInventoryMatrixPanel">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div>
@@ -885,8 +960,8 @@
             <div class="saas-chart-card d-flex flex-column justify-content-between">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h6 class="fw-bold mb-0 text-white">📊 تراز موجودی کالاهای استراتژیک</h6>
-                        <small class="text-secondary">مقایسه موجودی فیزیکی کل با مانده آزاد قابل فروش</small>
+                        <h6 class="fw-bold mb-0 text-white">📈 روند ماهانه گردش انبار (ورودی و خروجی)</h6>
+                        <small class="text-secondary">پایش گردش تناژ ورودی و خروجی در ماه‌های سال مالی ۱۴۰۵</small>
                     </div>
                     <a href="/inventory/balance" class="btn btn-sm btn-outline-light border rounded-pill px-3 small">جزئیات موازنه ↗</a>
                 </div>
@@ -1157,83 +1232,209 @@
 
 <script id="dashboardChartConfig" type="application/json">
 {
-  "labels": [
-    {% if stock_balances %}
-      {% for item in stock_balances[:6] %}
-        "{{ item.name | default(item.product_name | default(item.product.name if item.product else 'کالا')) }}"{% if not loop.last %},{% endif %}
-      {% endfor %}
-    {% endif %}
-  ],
-  "physicalData": [
-    {% if stock_balances %}
-      {% for item in stock_balances[:6] %}
-        {% set bal = item.current_balance_ton | default(item.current_balance | default(item.balance, true) | default(0) | float) %}
-        {{ bal }}{% if not loop.last %},{% endif %}
-      {% endfor %}
-    {% endif %}
-  ],
-  "availableData": [
-    {% if stock_balances %}
-      {% for item in stock_balances[:6] %}
-        {% set avail = item.available_balance_ton | default(item.available_balance | default(0) | float) %}
-        {{ avail }}{% if not loop.last %},{% endif %}
-      {% endfor %}
-    {% endif %}
-  ],
+  "pieLabels": {{ chart_pie_labels_json | safe }},
+  "pieData": {{ chart_pie_data_json | safe }},
+  "pieColors": {{ chart_pie_colors_json | safe }},
+  "tradeLabels": {{ chart_bar3_labels_json | safe }},
+  "tradeStock": {{ chart_bar3_stock_json | safe }},
+  "tradePO": {{ chart_bar3_po_json | safe }},
+  "tradeSO": {{ chart_bar3_so_json | safe }},
+  "monthlyLabels": {{ chart_monthly_labels_json | safe }},
+  "monthlyIn": {{ chart_monthly_in_json | safe }},
+  "monthlyOut": {{ chart_monthly_out_json | safe }},
   "overallGaugeUtilization": {{ overall_gauge_utilization | default(70.8) | float }},
-  "totalAvailable": {{ total_available_stock | default(ns.total_available | default(75)) | float }},
-  "totalReserved": {{ total_reserved_stock | default(ns.total_reserved | default(25)) | float }}
+  "totalPhysicalStock": {{ total_physical_stock | default(0) | float }}
 }
 </script>
 
 <script>
-    // ۸. ترسیم نمودارهای Salezy & FlowFin با Chart.js با تم تیره و خوانا
+    // ۸. ترسیم نمودارهای تحلیلی سازمانی با Chart.js با تم لوکس تیره
     document.addEventListener("DOMContentLoaded", function () {
-        // اعمال اولیه فیلتر ماتریس (مخفی بودن ردیف‌های صفرگردش به صورت پیش‌فرض)
+        // اعمال اولیه فیلتر ماتریس
         applyMatrixFilters();
 
-        let chartConfig = { labels: [], physicalData: [], availableData: [], overallGaugeUtilization: 70.8, totalAvailable: 75, totalReserved: 25 };
+        let chartConfig = {
+            pieLabels: [], pieData: [], pieColors: [],
+            tradeLabels: [], tradeStock: [], tradePO: [], tradeSO: [],
+            monthlyLabels: [], monthlyIn: [], monthlyOut: [],
+            overallGaugeUtilization: 70.8, totalPhysicalStock: 0
+        };
+
         const configEl = document.getElementById('dashboardChartConfig');
         if (configEl && configEl.textContent.trim()) {
             try { chartConfig = JSON.parse(configEl.textContent); } catch (e) { }
         }
 
-        const labels = chartConfig.labels && chartConfig.labels.length
-            ? chartConfig.labels
-            : ['اوره فله', 'اوره جامبوبگ', 'میلگرد آجدار', 'ورق فولادی'];
-
-        const physicalData = chartConfig.physicalData && chartConfig.physicalData.length
-            ? chartConfig.physicalData
-            : [120, 85, 65, 40];
-
-        const availableData = chartConfig.availableData && chartConfig.availableData.length
-            ? chartConfig.availableData
-            : [100, 70, 50, 40];
-
         // تنظیم فونت و رنگ پیش‌فرض برای چارت‌های دارک‌مود
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = 'Vazirmatn, Tahoma, sans-serif';
 
-        // نمودار میله‌ای تراز موجودی استراتژیک
-        const barCtx = document.getElementById('inventoryComparisonBarChart');
-        if (barCtx) {
-            new Chart(barCtx, {
+        // ۱. نمودار کیکی/دونات سهم موجودی انبار به تفکیک کالا (Donut / Pie Chart)
+        const pieCtx = document.getElementById('productInventoryPieChart');
+        if (pieCtx) {
+            const pLabels = (chartConfig.pieLabels && chartConfig.pieLabels.length)
+                ? chartConfig.pieLabels
+                : ['اوره فله', 'میلگرد', 'شمش فولادی', 'ورق'];
+            const pData = (chartConfig.pieData && chartConfig.pieData.length)
+                ? chartConfig.pieData
+                : [50, 30, 15, 5];
+            const pColors = (chartConfig.pieColors && chartConfig.pieColors.length)
+                ? chartConfig.pieColors
+                : ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: pLabels,
+                    datasets: [{
+                        data: pData,
+                        backgroundColor: pColors,
+                        borderWidth: 2,
+                        borderColor: '#0f172a',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '58%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e2e8f0',
+                                boxWidth: 12,
+                                padding: 12,
+                                font: { size: 11, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${val.toLocaleString()} تن (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ۲. نمودار میله‌ای ۳گانه تراز زنجیره تأمین (موجودی فیزیکی + بار در راه خرید + تعهد فروش)
+        const tradeBarCtx = document.getElementById('tradeSupplyDemandBarChart');
+        if (tradeBarCtx) {
+            const tLabels = (chartConfig.tradeLabels && chartConfig.tradeLabels.length)
+                ? chartConfig.tradeLabels
+                : ['اوره فله', 'اوره جامبو', 'میلگرد ۱۴', 'شمش ۳SP'];
+            const tStock = (chartConfig.tradeStock && chartConfig.tradeStock.length)
+                ? chartConfig.tradeStock
+                : [120, 45, 30, 15];
+            const tPO = (chartConfig.tradePO && chartConfig.tradePO.length)
+                ? chartConfig.tradePO
+                : [50, 20, 10, 0];
+            const tSO = (chartConfig.tradeSO && chartConfig.tradeSO.length)
+                ? chartConfig.tradeSO
+                : [80, 15, 25, 5];
+
+            new Chart(tradeBarCtx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: tLabels,
                     datasets: [
                         {
-                            label: 'موجودی کل (تن)',
-                            data: physicalData,
+                            label: 'موجودی انبار (تن)',
+                            data: tStock,
                             backgroundColor: '#4f46e5',
-                            borderRadius: 6,
+                            borderRadius: 4,
+                            barPercentage: 0.75,
+                            categoryPercentage: 0.8
+                        },
+                        {
+                            label: 'خرید در راه PO (تن)',
+                            data: tPO,
+                            backgroundColor: '#06b6d4',
+                            borderRadius: 4,
+                            barPercentage: 0.75,
+                            categoryPercentage: 0.8
+                        },
+                        {
+                            label: 'تعهد فروش SO (تن)',
+                            data: tSO,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 4,
+                            barPercentage: 0.75,
+                            categoryPercentage: 0.8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e2e8f0',
+                                boxWidth: 12,
+                                font: { size: 11, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${Number(context.raw || 0).toLocaleString()} تن`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.06)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#cbd5e1', font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ۳. نمودار روند ماهانه گردش انبار (ورودی و خروجی کل دوره)
+        const monthlyCtx = document.getElementById('inventoryComparisonBarChart');
+        if (monthlyCtx) {
+            const mLabels = (chartConfig.monthlyLabels && chartConfig.monthlyLabels.length)
+                ? chartConfig.monthlyLabels
+                : ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر'];
+            const mIn = (chartConfig.monthlyIn && chartConfig.monthlyIn.length)
+                ? chartConfig.monthlyIn
+                : [120, 95, 80, 110, 130, 105, 140];
+            const mOut = (chartConfig.monthlyOut && chartConfig.monthlyOut.length)
+                ? chartConfig.monthlyOut
+                : [100, 70, 85, 95, 115, 90, 120];
+
+            new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: mLabels,
+                    datasets: [
+                        {
+                            label: 'ورودی انبار (تن)',
+                            data: mIn,
+                            backgroundColor: '#10b981',
+                            borderRadius: 5,
                             barPercentage: 0.65
                         },
                         {
-                            label: 'آزاد فروش (تن)',
-                            data: availableData,
-                            backgroundColor: '#059669',
-                            borderRadius: 6,
+                            label: 'خروجی انبار (تن)',
+                            data: mOut,
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 5,
                             barPercentage: 0.65
                         }
                     ]
@@ -1242,7 +1443,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', labels: { color: '#e2e8f0', font: { size: 12 } } }
+                        legend: { position: 'top', labels: { color: '#e2e8f0', font: { size: 11 } } }
                     },
                     scales: {
                         y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8' } },
@@ -1252,7 +1453,7 @@
             });
         }
 
-        // نمودار سرعت‌سنج نیم‌دایره ظرفیت انبارها (Salezy 70.8% Gauge Style)
+        // ۴. نمودار سرعت‌سنج نیم‌دایره ظرفیت انبارها (Salezy 70.8% Gauge Style)
         const gaugeCtx = document.getElementById('warehouseGaugeChart');
         if (gaugeCtx) {
             const utilVal = chartConfig.overallGaugeUtilization || 70.8;

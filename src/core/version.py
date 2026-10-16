@@ -8,16 +8,31 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any
 
-CURRENT_VERSION = "3.2.2"
+CURRENT_VERSION = "3.2.3"
 CHANGELOG_FILE = "storage_changelog.json"
 
 DEFAULT_RELEASE_HISTORY: List[Dict[str, Any]] = [
     {
+        "version": "3.2.3",
+        "date": "۱۴۰۵/۰۷/۲۵ - 2026-10-16",
+        "title": "ایستگاه تحلیل بصری پیشخوان: نمودار دونات سهم موجودی کالاها و نمودار میله‌ای ۳گانه تراز عرضه و تقاضا",
+        "badge": "Current Enterprise",
+        "badge_color": "success",
+        "categories": {
+            "🚀 Architecture & Visual Analytics": [
+                "نمودار دونات/کیکی سهم موجودی انبار به تفکیک کالا (Donut Chart) با نمایش درصد سهم، تناژ خالص و تولتیپ زنده دو زبانه.",
+                "نمودار میله‌ای ۳گانه تراز جامع زنجیره تأمین (Supply & Demand Equilibrium): مقایسه موجودی انبار، سفارشات خرید باز (بار در راه PO) و تعهدات فروش باز (SO) به تفکیک کالاهای اصلی.",
+                "استقرار ردیف تحلیلی اختصاصی بلافاصله زیر ۴ کارت اصلی و بالای ماتریس جامع موجودی با طراحی دارک‌گلس هماهنگ.",
+                "ارتقاء نمودار پایینی به نمایش روند ماهانه گردش انبار (گردش ورودی و خروجی در ماه‌های سال مالی ۱۴۰۵)."
+            ]
+        }
+    },
+    {
         "version": "3.2.2",
         "date": "۱۴۰۵/۰۷/۲۵ - 2026-10-16",
         "title": "ارتقاء پیشخوان اجرایی مدیریت: رفع باگ‌های بصری، نرمال‌سازی تناژ و کنترل‌های تعاملی پیشرفته",
-        "badge": "Current Enterprise",
-        "badge_color": "success",
+        "badge": "Previous Stable",
+        "badge_color": "secondary",
         "categories": {
             "🚀 Architecture & Features": [
                 "نرمال‌سازی کامل واحدهای سنجش: تبدیل خودکار کیلوگرم به تن قبل از تجمیع شاخص‌های وزنی کل انبار و بارهای در راه خرید.",

@@ -222,23 +222,123 @@ async def dashboard(
     total_outflow_sum = round(total_outflow_sum, 1)
     net_flow_sum = round(total_inflow_sum - total_outflow_sum, 1)
 
-    # الف) روند ورود و خروج ۶ کالای پرگردش
+    # ۵.۱ آماده‌سازی داده‌های نمودار کیکی (Pie/Donut Chart) سهم موجودی انبار به تفکیک کالا
+    # و نمودار میله‌ای ۳گانه تراز زنجیره تأمین (موجودی فیزیکی + بار در راه خرید + تعهد فروش)
+    product_stock_dict = {}
+    for m in enhanced_matrix:
+        p_id = m.get("product_id")
+        p_name = m.get("name") or "نامشخص"
+        b_ton = float(m.get("current_balance_ton") or 0.0)
+        if p_id not in product_stock_dict:
+            product_stock_dict[p_id] = {
+                "name": p_name,
+                "stock_ton": 0.0,
+                "po_ton": 0.0,
+                "so_ton": 0.0
+            }
+        product_stock_dict[p_id]["stock_ton"] += b_ton
+
+    # بارهای خرید در راه (PO) به تفکیک کالا
+    for po in open_pos:
+        for it in po.items:
+            if it.product_id:
+                rem_q = max(0.0, float(it.quantity or 0.0) - float(it.received_quantity or 0.0))
+                p_uom = str(it.product.uom or "").strip().lower() if it.product else ""
+                if p_uom in ["کیلوگرم", "kg", "kgm", "کیلو", "kilogram"]:
+                    rem_q = rem_q / 1000.0
+                if it.product_id not in product_stock_dict:
+                    product_stock_dict[it.product_id] = {
+                        "name": it.product.name if it.product else f"کالای #{it.product_id}",
+                        "stock_ton": 0.0,
+                        "po_ton": 0.0,
+                        "so_ton": 0.0
+                    }
+                product_stock_dict[it.product_id]["po_ton"] += rem_q
+
+    # تعهدات فروش باز در نوبت خروج (SO) به تفکیک کالا
+    for so in open_sos:
+        for it in so.items:
+            if it.product_id:
+                rem_q = max(0.0, float(it.quantity or 0.0) - float(it.delivered_quantity or 0.0))
+                p_uom = str(it.product.uom or "").strip().lower() if it.product else ""
+                if p_uom in ["کیلوگرم", "kg", "kgm", "کیلو", "kilogram"]:
+                    rem_q = rem_q / 1000.0
+                if it.product_id not in product_stock_dict:
+                    product_stock_dict[it.product_id] = {
+                        "name": it.product.name if it.product else f"کالای #{it.product_id}",
+                        "stock_ton": 0.0,
+                        "po_ton": 0.0,
+                        "so_ton": 0.0
+                    }
+                product_stock_dict[it.product_id]["so_ton"] += rem_q
+
+    # الف) ساخت داده‌های نمودار کیکی (Pie/Donut)
+    sorted_by_stock = sorted(
+        [v for v in product_stock_dict.values() if v["stock_ton"] > 0.001],
+        key=lambda x: x["stock_ton"],
+        reverse=True
+    )
+
+    pie_palette = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899", "#6366f1", "#64748b"]
+    chart_pie_labels = []
+    chart_pie_data = []
+
+    if sorted_by_stock:
+        top_pie = sorted_by_stock[:6]
+        for item in top_pie:
+            chart_pie_labels.append(item["name"])
+            chart_pie_data.append(round(item["stock_ton"], 2))
+        other_stock = sum(item["stock_ton"] for item in sorted_by_stock[6:])
+        if other_stock > 0.01:
+            chart_pie_labels.append("سایر اقلام انبار" if not is_tr else "Diğer Mallar")
+            chart_pie_data.append(round(other_stock, 2))
+    else:
+        chart_pie_labels = ["اوره فله", "میلگرد", "شمش فولادی", "ورق"] if not is_tr else ["Üre Dökme", "İnşaat Demiri", "Kütük", "Sac"]
+        chart_pie_data = [50.0, 30.0, 15.0, 5.0]
+
+    chart_pie_colors = pie_palette[:len(chart_pie_labels)]
+
+    # ب) ساخت داده‌های نمودار میله‌ای ۳گانه تراز زنجیره تأمین
+    sorted_by_activity = sorted(
+        product_stock_dict.values(),
+        key=lambda x: (x["stock_ton"] + x["po_ton"] + x["so_ton"]),
+        reverse=True
+    )
+
+    chart_bar3_labels = []
+    chart_bar3_stock = []
+    chart_bar3_po = []
+    chart_bar3_so = []
+
+    if sorted_by_activity:
+        for item in sorted_by_activity[:6]:
+            if (item["stock_ton"] + item["po_ton"] + item["so_ton"]) > 0.001:
+                chart_bar3_labels.append(item["name"][:20])
+                chart_bar3_stock.append(round(item["stock_ton"], 2))
+                chart_bar3_po.append(round(item["po_ton"], 2))
+                chart_bar3_so.append(round(item["so_ton"], 2))
+
+    if not chart_bar3_labels:
+        chart_bar3_labels = ["اوره فله", "اوره جامبو", "میلگرد ۱۴", "شمش ۳SP"] if not is_tr else ["Üre Dökme", "Üre Jumbo", "Demir 14", "Kütük 3SP"]
+        chart_bar3_stock = [120.0, 45.0, 30.0, 15.0]
+        chart_bar3_po = [50.0, 20.0, 10.0, 0.0]
+        chart_bar3_so = [80.0, 15.0, 25.0, 5.0]
+
+    # ج) روند ورود و خروج ۶ کالای پرگردش
     top_products = sorted(enhanced_matrix, key=lambda x: (x.get("total_in", 0) + x.get("total_out", 0)), reverse=True)[:6]
     chart_flow_labels = [(p.get("name") or "---")[:22] for p in top_products]
     chart_flow_in = [round(float(p.get("total_in", 0.0) or 0.0), 1) for p in top_products]
     chart_flow_out = [round(float(p.get("total_out", 0.0) or 0.0), 1) for p in top_products]
     chart_flow_uom = [str(p.get("uom") or ("تن" if not is_tr else "Ton")) for p in top_products]
 
-    # ب) روند زمانی ماهانه ورود و خروج (Monthly Velocity Trend)
+    # د) روند زمانی ماهانه ورود و خروج (Monthly Velocity Trend)
     months_fa = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
     months_tr = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
     chart_monthly_labels = months_tr[:7] if is_tr else months_fa[:7]
 
-    # محاسبه هوشمند توزیع ماهانه از تراکنش‌های سال مالی جاری
     monthly_in_data = [0.0] * 7
     monthly_out_data = [0.0] * 7
 
-    # استخراج تراکنش‌های تایید شده
     recent_all_txs = db.query(StockTransaction).filter(
         or_(StockTransaction.status == 'APPROVED', StockTransaction.status.is_(None))
     ).all()
@@ -255,13 +355,12 @@ async def dashboard(
             elif tx.transaction_type == TransactionType.OUT:
                 monthly_out_data[m_idx] = round(monthly_out_data[m_idx] + qty, 1)
 
-    # اگر داده‌های ماهانه صفر باشند، بر اساس سرجمع دوره مقادیر متناسب تنظیم می‌شوند
     if sum(monthly_in_data) <= 0.001 and total_inflow_sum > 0:
         monthly_in_data[6] = total_inflow_sum
     if sum(monthly_out_data) <= 0.001 and total_outflow_sum > 0:
         monthly_out_data[6] = total_outflow_sum
 
-    # ج) گیج نیم‌دایره ظرفیت و اشغال انبارها (Salezy 70.8% Gauge Style)
+    # هـ) گیج نیم‌دایره ظرفیت و اشغال انبارها (Salezy 70.8% Gauge Style)
     # پاکسازی و فیلتر انبارهای آزمایشی و بی‌استفاده صفر موجودی (مانند انبار شماره ۲ فولاد ۱۶۵۰۴۳ و انبار تهشاخه‌ها)
     warehouses = db.query(Warehouse).all()
     clean_warehouses = []
@@ -363,6 +462,15 @@ async def dashboard(
             "total_inflow_sum": total_inflow_sum,
             "total_outflow_sum": total_outflow_sum,
             "net_flow_sum": net_flow_sum,
+            # نمودارهای تحلیلی جدید پیشخوان (Pie Chart & 3-Bar Supply/Demand)
+            "chart_pie_labels_json": json.dumps(chart_pie_labels),
+            "chart_pie_data_json": json.dumps(chart_pie_data),
+            "chart_pie_colors_json": json.dumps(chart_pie_colors),
+            "chart_bar3_labels_json": json.dumps(chart_bar3_labels),
+            "chart_bar3_stock_json": json.dumps(chart_bar3_stock),
+            "chart_bar3_po_json": json.dumps(chart_bar3_po),
+            "chart_bar3_so_json": json.dumps(chart_bar3_so),
+            # نمودارهای قبلی
             "chart_flow_labels_json": json.dumps(chart_flow_labels),
             "chart_flow_in_json": json.dumps(chart_flow_in),
             "chart_flow_out_json": json.dumps(chart_flow_out),
