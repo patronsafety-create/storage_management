@@ -12,41 +12,31 @@
 {% set is_baskool = ('Weighbridge_Operator' in role_names) or (user and user.username == 'baskool') %}
 {% set can_see_finance = is_admin or is_finance %}
 {% set can_approve_cartable = is_admin or is_warehouse or is_finance %}
+{% set can_access_trade = is_admin or is_commercial or is_finance %}
+{% set can_access_weighbridge = is_admin or is_baskool or is_warehouse %}
+{% set can_post_transaction = is_admin or is_warehouse %}
 
-{# --- محاسبات خودکار و ایمن روی داده‌های بک‌اند (بدون نیاز به تغییر در ui.py) --- #}
+{# --- استفاده مستقیم از داده‌های نرمال‌شده بک‌اند و تفکیک انبارهای معتبر --- #}
 {% set ns = namespace(
-    active_sku_count=0,
-    total_tonnage=0.0,
-    total_reserved=0.0,
-    total_available=0.0,
-    total_valuation=0.0,
-    low_stock_count=0,
+    active_sku_count=active_skus_count | default(0),
+    total_tonnage=total_physical_stock | default(0.0),
+    total_reserved=total_reserved_stock | default(0.0),
+    total_available=total_available_stock | default(0.0),
+    total_valuation=total_inventory_valuation | default(total_owned_inventory_value | default(0.0)),
+    low_stock_count=critical_stock_count | default(0),
     warehouses=[]
 ) %}
 
-{% if stock_balances %}
-    {% for item in stock_balances %}
-        {% set bal = item.current_balance | default(item.balance, true) | default(0.0, true) | float %}
-        {% set res = item.reserved_quantity | default(0.0, true) | float %}
-        {% set avail = item.available_balance | default(bal - res, true) | float %}
-        {% set cost = item.unit_cost | default(item.weighted_average_cost, true) | default(0.0, true) | float %}
-        {% set min_st = item.min_stock | default(item.reorder_point, true) | default(5.0, true) | float %}
-        {% set wh_name = item.warehouse_name | default(item.warehouse.name if item.warehouse else 'انبار مرکزی') %}
-
-        {% if wh_name not in ns.warehouses %}
-            {% set _ = ns.warehouses.append(wh_name) %}
+{% if clean_warehouses %}
+    {% for w in clean_warehouses %}
+        {% if w.name not in ns.warehouses %}
+            {% set _ = ns.warehouses.append(w.name) %}
         {% endif %}
-
-        {% if bal > 0.0001 %}
-            {% set ns.active_sku_count = ns.active_sku_count + 1 %}
-            {% set ns.total_tonnage = ns.total_tonnage + bal %}
-            {% set ns.total_reserved = ns.total_reserved + res %}
-            {% set ns.total_available = ns.total_available + (avail if avail > 0 else 0) %}
-            {% set ns.total_valuation = ns.total_valuation + (bal * cost) %}
-        {% endif %}
-
-        {% if bal > 0 and bal <= min_st %}
-            {% set ns.low_stock_count = ns.low_stock_count + 1 %}
+    {% endfor %}
+{% elif warehouses %}
+    {% for w in warehouses %}
+        {% if w.name not in ns.warehouses %}
+            {% set _ = ns.warehouses.append(w.name) %}
         {% endif %}
     {% endfor %}
 {% endif %}
@@ -109,7 +99,7 @@
     }
 
     .kpi-card-primary .text-muted-custom {
-        color: rgba(255, 255, 255, 0.75) !important;
+        color: rgba(255, 255, 255, 0.85) !important;
     }
 
     .drill-arrow {
@@ -126,7 +116,7 @@
     }
 
     .kpi-card-primary .drill-arrow {
-        background: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.2);
         color: #ffffff;
     }
 
@@ -136,7 +126,7 @@
         color: #ffffff;
     }
 
-    /* مینی‌چارت میله‌ای پایین کارت‌ها (به سبک FlowFin) */
+    /* مینی‌چارت میله‌ای پایین کارت‌ها */
     .mini-sparkline {
         display: flex;
         align-items: flex-end;
@@ -148,55 +138,86 @@
 
     .spark-bar {
         flex: 1;
+        background: rgba(226, 232, 240, 0.8);
         border-radius: 4px;
-        background: rgba(99, 102, 241, 0.18);
-        transition: height 0.6s ease, background 0.25s ease;
-    }
-
-    .spark-bar.active {
-        background: var(--nexus-indigo);
+        transition: all 0.3s ease;
     }
 
     .kpi-card-primary .spark-bar {
         background: rgba(255, 255, 255, 0.22);
     }
 
+    .spark-bar.active {
+        background: var(--nexus-indigo);
+    }
+
     .kpi-card-primary .spark-bar.active {
         background: #38bdf8;
     }
 
-    /* پنل سرمه‌ای مرکزی (ماتریس موجودی به سبک FlowFin) */
+    /* بج‌های با کنتراست بالا و متن سفید ثابت */
+    .badge-solid-success {
+        background-color: #059669 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    .badge-solid-warning {
+        background-color: #d97706 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    .badge-solid-danger {
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    .badge-solid-primary {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    .badge-solid-indigo {
+        background-color: #4f46e5 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+
+    /* پنل ماتریس سرمه‌ای انبارها */
     .navy-master-panel {
         background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
         padding: 1.5rem;
-        box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.35);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
     }
 
     .navy-table-container {
         overflow-x: auto;
         border-radius: 14px;
-        background: rgba(15, 23, 42, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .navy-table {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
-        color: #e2e8f0;
-        font-size: 0.9rem;
+        font-size: 0.86rem;
     }
 
     .navy-table thead th {
-        background: rgba(30, 41, 59, 0.95);
+        background: #1e293b;
         color: #94a3b8;
-        font-weight: 600;
-        font-size: 0.8rem;
+        font-weight: 700;
         padding: 0.9rem 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         white-space: nowrap;
     }
 
@@ -205,12 +226,12 @@
     }
 
     .navy-table tbody tr:hover {
-        background: rgba(79, 70, 229, 0.18);
+        background: rgba(79, 70, 229, 0.22);
     }
 
     .navy-table td {
         padding: 0.9rem 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -231,9 +252,9 @@
     }
 
     .wh-filter-pill {
-        background: rgba(255, 255, 255, 0.07);
+        background: rgba(255, 255, 255, 0.08);
         color: #cbd5e1;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 10px;
         padding: 0.35rem 0.85rem;
         font-size: 0.82rem;
@@ -255,6 +276,12 @@
         padding: 1.4rem;
         height: 100%;
         box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.04);
+    }
+
+    .wh-breakdown-bar-item:hover {
+        background: #eef2ff !important;
+        border-color: #818cf8 !important;
+        transform: translateX(-3px);
     }
 
     /* دکمه‌های سریع متناسب با نقش */
@@ -300,15 +327,15 @@
     </div>
     {% endif %}
 
-    <!-- ۲. هدر هوشمند پیشخوان + دکمه‌های عملیاتی اختصاصی هر نقش (حذف دکمه‌های غیرمجاز) -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <!-- ۲. هدر هوشمند پیشخوان مدیریتی + کنترل‌های تعاملی و دکمه‌های نقشی (حذف نشانگرهای تکراری) -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
         <div>
             <div class="d-flex align-items-center gap-2">
                 <h4 class="fw-bold mb-0 text-dark">
                     {% if is_tr %}Yönetim ve Envanter Kontrol Merkezi{% else %}مرکز فرماندهی و پایش لحظه‌ای زنجیره تأمین{% endif %}
                 </h4>
-                <span class="badge bg-indigo-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1" style="font-size: 0.76rem;">
-                    سال مالی ۱۴۰۵
+                <span class="badge rounded-pill px-3 py-1 badge-solid-indigo" style="font-size: 0.76rem;">
+                    {{ 'Mali Yıl 1405' if is_tr else 'سال مالی ۱۴۰۵' }}
                 </span>
             </div>
             <p class="text-muted small mb-0 mt-1">
@@ -316,41 +343,69 @@
             </p>
         </div>
 
-        <!-- دکمه‌های سریع دقیقاً منطبق با نقش کاربر (Zero Ghost UI) -->
-        <div class="d-flex flex-wrap gap-2 header-actions-wrap">
-            {% if is_admin or is_commercial %}
-                <a href="/purchases/new" class="quick-role-btn bg-primary text-white shadow-sm">
-                    <span>📥</span> سفارش خرید جدید (PO)
-                </a>
-                <a href="/sales/new" class="quick-role-btn bg-success text-white shadow-sm">
-                    <span>📤</span> سفارش فروش جدید (SO)
-                </a>
-            {% endif %}
+        <div class="d-flex flex-wrap align-items-center gap-2 header-actions-wrap">
+            <!-- فیلتر بازه زمانی پیشخوان (Time Range Filter Pill Group) -->
+            <div class="btn-group btn-group-sm rounded-pill p-1 bg-light border shadow-sm" role="group" id="dashboardTimeRangeFilter" aria-label="بازه زمانی">
+                <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-light border-0 fw-semibold text-secondary" onclick="setTimeRangeFilter('TODAY', this)">امروز</button>
+                <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-light border-0 fw-semibold text-secondary" onclick="setTimeRangeFilter('MONTH', this)">این ماه</button>
+                <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-primary border-0 fw-semibold active text-white" onclick="setTimeRangeFilter('FY1405', this)">سال مالی ۱۴۰۵</button>
+            </div>
 
-            {% if is_admin or is_baskool %}
+            <!-- سوییچ زنده نمایش ارزی (Live Currency View Toggle) -->
+            <div class="btn-group btn-group-sm rounded-pill p-1 bg-light border shadow-sm" role="group" id="dashboardCurrencyToggle" aria-label="ارز نمایشی">
+                <button type="button" class="btn btn-sm rounded-pill px-2 py-1 {% if not is_tr %}btn-dark active text-white{% else %}btn-light text-secondary border-0{% endif %} fw-semibold" id="btnCurrIRR" onclick="toggleDashboardCurrency('IRR')">
+                    نمایش به ریال
+                </button>
+                <button type="button" class="btn btn-sm rounded-pill px-2 py-1 {% if is_tr %}btn-dark active text-white{% else %}btn-light text-secondary border-0{% endif %} fw-semibold" id="btnCurrTRY" onclick="toggleDashboardCurrency('TRY')">
+                    نمایش معادل لیر ₺
+                </button>
+            </div>
+
+            <!-- دکمه خروجی اکسل مدیریت انبار (Executive Export Button) -->
+            <a href="/inventory/export/stock" class="quick-role-btn text-white shadow-sm badge-solid-success" title="دریافت فایل اکسل گزارش کل موجودی و ارزش کالاها">
+                <span>📥</span> خروجی گزارش مدیریت Excel
+            </a>
+
+            <!-- دکمه‌های سریع اختصاصی متناسب با نقش (Zero Ghost UI) -->
+            {% if is_commercial and not is_admin %}
+                <a href="/purchases/new" class="quick-role-btn bg-primary text-white shadow-sm">
+                    <span>📥</span> + سفارش خرید (PO)
+                </a>
+                <a href="/sales/new" class="quick-role-btn text-white shadow-sm" style="background-color: #0284c7 !important;">
+                    <span>📤</span> + سفارش فروش (SO)
+                </a>
+            {% elif is_baskool and not is_admin %}
                 <a href="/weighbridge/new" class="quick-role-btn bg-warning text-dark shadow-sm">
                     <span>⚖️</span> ثبت توزین باسکول
                 </a>
-            {% endif %}
-
-            {% if is_admin or is_warehouse %}
+            {% else %}
+                {% if can_post_transaction %}
                 <a href="/inventory/transaction" class="quick-role-btn bg-dark text-white shadow-sm">
                     <span>📦</span> ثبت رسید / حواله انبار
                 </a>
+                {% endif %}
+                {% if is_admin %}
+                <a href="/purchases/new" class="quick-role-btn bg-primary text-white shadow-sm">
+                    <span>📥</span> + سفارش خرید
+                </a>
+                <a href="/sales/new" class="quick-role-btn text-white shadow-sm" style="background-color: #0284c7 !important;">
+                    <span>📤</span> + سفارش فروش
+                </a>
+                {% endif %}
             {% endif %}
 
             <a href="/inventory/balance" class="quick-role-btn bg-light text-dark border">
-                <span>📊</span> گزارش جامع موجودی
+                <span>📊</span> موازنه کل
             </a>
         </div>
     </div>
 
-    <!-- ۳. ردیف ۴ کارت طلایی مدیریتی با قابلیت Drill-Down (کلیک مستقیم به واحد مربوطه) -->
+    <!-- ۳. ردیف ۴ کارت طلایی مدیریتی با قابلیت Drill-Down و تفکیک دقیق ملکی/امانی و مایکرولینک‌ها -->
     <div class="row g-3 mb-4">
 
-        <!-- کارت ۱: ارزش دارایی موجودی (برای مدیر و مالی) / تنوع اقلام فعال (برای انبار و سایرین) -->
+        <!-- کارت ۱: ارزش دارایی موجودی (با تفکیک ملکی در برابر امانی) / تنوع اقلام فعال -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <a href="{% if can_see_finance %}/inventory/balance{% else %}/master-data/products{% endif %}" class="kpi-card-link" title="کلیک جهت مشاهده ریز ارزش و موجودی کالاها">
+            <a href="/inventory/balance" class="kpi-card-link" title="کلیک جهت مشاهده تفکیک ارزش ملکی و امانی در گزارش موازنه انبار">
                 <div class="kpi-card kpi-card-primary">
                     <div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -361,16 +416,30 @@
                         </div>
                         <h3 class="fw-bold mb-1" style="letter-spacing: -0.5px;">
                             {% if can_see_finance %}
-                                {{ "{:,.0f}".format(ns.total_valuation) }} <small class="fs-6 fw-normal">{{ currency_label }}</small>
+                                <span class="kpi-currency-val" data-val-irr="{{ total_inventory_valuation | default(ns.total_valuation) }}">{{ "{:,.0f}".format(total_inventory_valuation | default(ns.total_valuation)) }}</span>
+                                <small class="fs-6 fw-normal currency-unit">{{ currency_label }}</small>
                             {% else %}
-                                {{ ns.active_sku_count }} <small class="fs-6 fw-normal">کالای فعال در انبار</small>
+                                {{ active_skus_count | default(ns.active_sku_count) }} <small class="fs-6 fw-normal">کالای فعال در انبار</small>
                             {% endif %}
                         </h3>
-                        <div class="d-flex align-items-center gap-2 mt-2">
-                            <span class="badge bg-success bg-opacity-25 text-white border border-light border-opacity-25 rounded-pill px-2 py-1" style="font-size: 0.73rem;">
-                                ▲ {{ ns.active_sku_count }} ردیف کالای دارای موجودی مثبت
+                        
+                        {% if can_see_finance %}
+                        <!-- بج‌های تفکیکی ملکی و امانی با متن کاملاً خوانا و سفید (#ffffff) -->
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="badge rounded-pill px-2 py-1 badge-solid-success shadow-xs" style="font-size: 0.73rem;">
+                                🏢 ملکی: <span class="kpi-currency-val" data-val-irr="{{ total_owned_inventory_value }}">{{ "{:,.0f}".format(total_owned_inventory_value) }}</span>
+                            </span>
+                            <span class="badge rounded-pill px-2 py-1 badge-solid-primary shadow-xs" style="font-size: 0.73rem;">
+                                🤝 امانی: <span class="kpi-currency-val" data-val-irr="{{ total_consignment_inventory_value }}">{{ "{:,.0f}".format(total_consignment_inventory_value) }}</span>
                             </span>
                         </div>
+                        {% else %}
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <span class="badge rounded-pill px-2 py-1 badge-solid-success shadow-xs" style="font-size: 0.73rem;">
+                                ▲ {{ active_skus_count | default(ns.active_sku_count) }} ردیف کالای دارای موجودی مثبت
+                            </span>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="mini-sparkline">
                         <div class="spark-bar" style="height: 45%;"></div>
@@ -385,7 +454,7 @@
             </a>
         </div>
 
-        <!-- کارت ۲: موجودی فیزیکی کل و مانده آزاد قابل فروش (هایپرلینک به گزارش موجودی) -->
+        <!-- کارت ۲: موجودی فیزیکی کل (نرمال‌شده بر حسب تن) و مانده آزاد قابل فروش -->
         <div class="col-12 col-sm-6 col-xl-3">
             <a href="/inventory/balance" class="kpi-card-link" title="کلیک جهت مشاهده تفکیک موجودی فیزیکی و رزرو شده در انبارها">
                 <div class="kpi-card">
@@ -395,15 +464,15 @@
                             <span class="drill-arrow">↗</span>
                         </div>
                         <h3 class="fw-bold text-dark mb-1">
-                            {{ "{:,.2f}".format(ns.total_tonnage) }} <small class="fs-6 fw-normal text-muted">واحد کل</small>
+                            {{ "{:,.2f}".format(total_physical_stock | default(ns.total_tonnage)) }} <small class="fs-6 fw-normal text-muted">تن در انبارها</small>
                         </h3>
                         <div class="d-flex flex-wrap gap-1 mt-2">
-                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1" style="font-size: 0.73rem;">
-                                آزاد قابل فروش: {{ "{:,.2f}".format(ns.total_available) }}
+                            <span class="badge rounded-pill px-2 py-1 badge-solid-success shadow-xs" style="font-size: 0.73rem;">
+                                آزاد فروش: {{ "{:,.2f}".format(total_available_stock | default(ns.total_available)) }} تن
                             </span>
-                            {% if ns.total_reserved > 0 %}
-                            <span class="badge bg-warning-subtle text-dark rounded-pill px-2 py-1" style="font-size: 0.73rem;">
-                                رزرو حواله: {{ "{:,.2f}".format(ns.total_reserved) }}
+                            {% if (total_reserved_stock | default(ns.total_reserved)) > 0 %}
+                            <span class="badge rounded-pill px-2 py-1 badge-solid-warning shadow-xs" style="font-size: 0.73rem;">
+                                رزرو حواله: {{ "{:,.2f}".format(total_reserved_stock | default(ns.total_reserved)) }} تن
                             </span>
                             {% endif %}
                         </div>
@@ -421,72 +490,85 @@
             </a>
         </div>
 
-        <!-- کارت ۳: کارتابل اسناد در انتظار تایید و زنجیره تامین (هایپرلینک به کارتابل تراکنش‌ها) -->
+        <!-- کارت ۳: زنجیره تأمین و پایپ‌لاین بارهای در راه (با مایکرولینک‌های مستقیم به خرید و فروش) -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <a href="{% if is_baskool %}/weighbridge{% else %}/inventory/transactions{% endif %}" class="kpi-card-link" title="کلیک جهت ورود به کارتابل اسناد و رهگیری محموله‌ها">
-                <div class="kpi-card">
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="small fw-semibold text-secondary">📋 کارتابل انبار و بارهای در جریان</span>
-                            <span class="drill-arrow">↗</span>
-                        </div>
-                        <h3 class="fw-bold text-dark mb-1">
-                            {{ pending_txs | length if pending_txs else 0 }} <small class="fs-6 fw-normal text-muted">سند منتظر تایید</small>
-                        </h3>
-                        <div class="d-flex align-items-center gap-2 mt-2">
-                            <span class="badge {% if pending_txs and pending_txs|length > 0 %}bg-warning text-dark{% else %}bg-secondary-subtle text-secondary{% endif %} rounded-pill px-2 py-1" style="font-size: 0.73rem;">
-                                مجموع اسناد ثبت‌شده: {{ tx_count | default(0) }} سند
-                            </span>
-                        </div>
+            <div class="kpi-card">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-semibold text-secondary">📋 زنجیره تأمین و کارتابل جریان کالا</span>
+                        <a href="/inventory/transactions" class="drill-arrow text-decoration-none" title="ورود به کارتابل اسناد انبار">↗</a>
                     </div>
-                    <div class="mini-sparkline">
-                        <div class="spark-bar" style="height: 35%;"></div>
-                        <div class="spark-bar" style="height: 65%;"></div>
-                        <div class="spark-bar" style="height: 45%;"></div>
-                        <div class="spark-bar" style="height: 80%;"></div>
-                        <div class="spark-bar" style="height: 60%;"></div>
-                        <div class="spark-bar" style="height: 72%;"></div>
-                        <div class="spark-bar active" style="height: 85%; background: #f59e0b;"></div>
+                    <h3 class="fw-bold text-dark mb-1">
+                        {{ pending_txs | length if pending_txs else 0 }} <small class="fs-6 fw-normal text-muted">سند منتظر تایید</small>
+                    </h3>
+                    <!-- مایکرولینک‌های مستقیم کلیک‌پذیر با کنترل دسترسی Zero Ghost UI -->
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        {% if can_access_trade %}
+                        <a href="/purchases" class="badge text-decoration-none rounded-pill px-2 py-1 badge-solid-primary shadow-xs" style="font-size: 0.73rem;" title="مشاهده سفارشات خرید باز (PO)">
+                            📥 {{ active_po_count | default(0) }} سفارش خرید باز ↗
+                        </a>
+                        <a href="/sales" class="badge text-decoration-none rounded-pill px-2 py-1 badge-solid-success shadow-xs" style="font-size: 0.73rem;" title="مشاهده سفارشات فروش در نوبت خروج (SO)">
+                            📤 {{ open_so_count | default(0) }} فروش در نوبت خروج ↗
+                        </a>
+                        {% else %}
+                        <a href="/inventory/transactions" class="badge text-decoration-none rounded-pill px-2 py-1 badge-solid-primary shadow-xs" style="font-size: 0.73rem;" title="مشاهده اسناد و کارتابل انبار">
+                            📋 {{ active_po_count | default(0) }} سفارش در جریان ↗
+                        </a>
+                        <a href="/inventory/transactions" class="badge text-decoration-none rounded-pill px-2 py-1 badge-solid-success shadow-xs" style="font-size: 0.73rem;" title="مشاهده حواله‌های تحویل انبار">
+                            📦 {{ open_so_count | default(0) }} حواله خروج ↗
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
-            </a>
+                <div class="mini-sparkline">
+                    <div class="spark-bar" style="height: 35%;"></div>
+                    <div class="spark-bar" style="height: 65%;"></div>
+                    <div class="spark-bar" style="height: 45%;"></div>
+                    <div class="spark-bar" style="height: 80%;"></div>
+                    <div class="spark-bar" style="height: 60%;"></div>
+                    <div class="spark-bar" style="height: 72%;"></div>
+                    <div class="spark-bar active" style="height: 85%; background: #f59e0b;"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- کارت ۴: هشدارهای نقطه سفارش و کسری موجودی (هایپرلینک مستقیم به مرکز هشدارها) -->
+        <!-- کارت ۴: هشدارهای نقطه سفارش و تردد باسکول (با مایکرولینک‌های مستقیم به هشدارها و باسکول) -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <a href="/inventory/alerts" class="kpi-card-link" title="کلیک جهت مشاهده کالاهای نیازمند شارژ و زیر نقطه سفارش">
-                <div class="kpi-card">
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="small fw-semibold text-secondary">🚨 هشدار نقطه سفارش و کسری</span>
-                            <span class="drill-arrow">↗</span>
-                        </div>
-                        <h3 class="fw-bold {% if ns.low_stock_count > 0 %}text-danger{% else %}text-success{% endif %} mb-1">
-                            {{ ns.low_stock_count }} <small class="fs-6 fw-normal text-muted">قلم در مرز سفارش</small>
-                        </h3>
-                        <div class="d-flex align-items-center gap-2 mt-2">
-                            {% if ns.low_stock_count > 0 %}
-                                <span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1" style="font-size: 0.73rem;">
-                                    نیازمند بررسی و ثبت سفارش خرید (PO)
-                                </span>
-                            {% else %}
-                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1" style="font-size: 0.73rem;">
-                                    ✓ موجودی کلیه اقلام بالاتر از خط بحرانی
-                                </span>
-                            {% endif %}
-                        </div>
+            <div class="kpi-card">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-semibold text-secondary">🚨 هشدار نقطه سفارش و باسکول</span>
+                        <a href="/inventory/alerts" class="drill-arrow text-decoration-none" title="مشاهده همه هشدارها">↗</a>
                     </div>
-                    <div class="mini-sparkline">
-                        <div class="spark-bar" style="height: 50%;"></div>
-                        <div class="spark-bar" style="height: 40%;"></div>
-                        <div class="spark-bar" style="height: 60%;"></div>
-                        <div class="spark-bar" style="height: 35%;"></div>
-                        <div class="spark-bar" style="height: 55%;"></div>
-                        <div class="spark-bar" style="height: 45%;"></div>
-                        <div class="spark-bar active" style="height: 75%; background: {% if ns.low_stock_count > 0 %}#f43f5e{% else %}#10b981{% endif %};"></div>
+                    <h3 class="fw-bold {% if (critical_stock_count | default(0)) > 0 %}text-danger{% else %}text-success{% endif %} mb-1">
+                        {{ critical_stock_count | default(ns.low_stock_count) }} <small class="fs-6 fw-normal text-muted">قلم در وضعیت بحرانی</small>
+                    </h3>
+                    <!-- مایکرولینک‌های کلیک‌پذیر با متن سفید (#ffffff) و کنترل دسترسی Zero Ghost UI -->
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <a href="/inventory/alerts" class="badge text-decoration-none rounded-pill px-2 py-1 {% if (critical_stock_count | default(0)) > 0 %}badge-solid-danger{% else %}badge-solid-success{% endif %} shadow-xs" style="font-size: 0.73rem;" title="مشاهده کالاهای زیر نقطه سفارش">
+                            🚨 {{ critical_stock_count | default(0) }} کالای بحرانی ↗
+                        </a>
+                        {% if can_access_weighbridge %}
+                        <a href="/weighbridge" class="badge text-decoration-none rounded-pill px-2 py-1 badge-solid-warning shadow-xs" style="font-size: 0.73rem;" title="مشاهده وضعیت تردد کامیون‌ها در باسکول">
+                            ⚖️ {{ active_weighbridge_trucks | default(0) }} کامیون روی باسکول ↗
+                        </a>
+                        {% else %}
+                        <a href="/inventory/alerts" class="badge text-decoration-none rounded-pill px-2 py-1 badge-solid-warning shadow-xs" style="font-size: 0.73rem;" title="مشاهده وضعیت ترافیک و هشدارهای بار">
+                            ⚖️ {{ active_weighbridge_trucks | default(0) }} ناوگان فعال ↗
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
-            </a>
+                <div class="mini-sparkline">
+                    <div class="spark-bar" style="height: 50%;"></div>
+                    <div class="spark-bar" style="height: 40%;"></div>
+                    <div class="spark-bar" style="height: 60%;"></div>
+                    <div class="spark-bar" style="height: 35%;"></div>
+                    <div class="spark-bar" style="height: 55%;"></div>
+                    <div class="spark-bar" style="height: 45%;"></div>
+                    <div class="spark-bar active" style="height: 75%; background: {% if (critical_stock_count | default(0)) > 0 %}#f43f5e{% else %}#10b981{% endif %};"></div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -518,7 +600,7 @@
                         <th>طرف حساب و مقصد</th>
                         <th>مقدار وزنی / فرعی</th>
                         {% if can_see_finance %}
-                        <th>فی واحد ({{ currency_label }})</th>
+                        <th>فی واحد (<span class="currency-unit">{{ currency_label }}</span>)</th>
                         {% endif %}
                         <th>کنترل کیفیت (QC)</th>
                         <th class="text-center pe-3">عملیات تایید</th>
@@ -530,9 +612,9 @@
                         <td class="ps-3 fw-bold text-secondary">#{{ pt.id }}</td>
                         <td>
                             {% if pt.transaction_type and pt.transaction_type.value == 'IN' %}
-                                <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill">📥 ورود به انبار</span>
+                                <span class="badge rounded-pill px-2 py-1 badge-solid-success">📥 ورود به انبار</span>
                             {% else %}
-                                <span class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill">📤 خروج از انبار</span>
+                                <span class="badge rounded-pill px-2 py-1 badge-solid-danger">📤 خروج از انبار</span>
                             {% endif %}
                         </td>
                         <td>
@@ -565,7 +647,7 @@
                         </td>
                         {% if can_see_finance %}
                         <td class="fw-semibold text-emerald">
-                            {{ "{:,.0f}".format(pt.unit_price | default(0)) }}
+                            <span class="kpi-currency-val" data-val-irr="{{ pt.unit_price | default(0) }}">{{ "{:,.0f}".format(pt.unit_price | default(0)) }}</span>
                         </td>
                         {% endif %}
                         <td>
@@ -597,8 +679,8 @@
     </div>
     {% endif %}
 
-    <!-- ۵. بخش مرکزی سرمه‌ای‌رنگ (FlowFin Dark Master Matrix): «در هر انبار چه کالایی و چقدر داریم؟» -->
-    <div class="navy-master-panel mb-4">
+    <!-- ۵. بخش مرکزی سرمه‌ای‌رنگ (FlowFin Dark Master Matrix): ماتریس جامع موجودی با فیلتر هوشمند انبارها و اقلام دارای موجودی -->
+    <div class="navy-master-panel mb-4" id="liveInventoryMatrixPanel">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div>
                 <h5 class="fw-bold mb-1 text-white d-flex align-items-center gap-2">
@@ -609,15 +691,34 @@
                 </p>
             </div>
 
-            <!-- فیلتر سریع انبارها و باکس جستجوی زنده -->
+            <!-- فیلترهای تعاملی: سوئیچ عدم نمایش صفری‌ها + انتخابگر دراپ‌داون انبار + تب‌های سریع + جستجو -->
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <div class="d-flex flex-wrap gap-1" id="warehouseFilterTabs">
-                    <button type="button" class="wh-filter-pill active" onclick="filterInventoryMatrix('ALL', this)">همه انبارها</button>
-                    {% for wh in ns.warehouses %}
-                    <button type="button" class="wh-filter-pill" onclick="filterInventoryMatrix('{{ wh }}', this)">{{ wh }}</button>
+                <!-- سوئیچ مخفی‌سازی اقلام با مانده صفر (فعال به صورت پیش‌فرض) -->
+                <div class="form-check form-switch d-flex align-items-center gap-2 m-0 bg-dark bg-opacity-50 px-3 py-1 rounded-3 border border-secondary border-opacity-50">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" id="hideZeroStockToggle" checked onchange="toggleZeroStockFilter(this)" style="cursor: pointer;">
+                    <label class="form-check-label small fw-bold text-light mb-0" for="hideZeroStockToggle" style="cursor: pointer; user-select: none;">
+                        فقط اقلام دارای موجودی
+                    </label>
+                </div>
+
+                <!-- دراپ‌داون فیلتر انبارها (همگام با کلیک روی میله‌های گیج نیم‌دایره) -->
+                <select id="warehouseSelectFilter" class="form-select form-select-sm bg-dark text-light border-secondary rounded-3" style="width: 175px;" onchange="filterInventoryMatrix(this.value, null)">
+                    <option value="ALL">همه انبارها (کامل)</option>
+                    {% for wh_n in ns.warehouses %}
+                    <option value="{{ wh_n }}">{{ wh_n }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- تب‌های فیلتر انبارها -->
+                <div class="d-none d-xl-flex flex-wrap gap-1" id="warehouseFilterTabs">
+                    <button type="button" class="wh-filter-pill active" data-wh-name="ALL" onclick="filterInventoryMatrix('ALL', this)">همه</button>
+                    {% for wh_n in ns.warehouses %}
+                    <button type="button" class="wh-filter-pill" data-wh-name="{{ wh_n }}" onclick="filterInventoryMatrix('{{ wh_n }}', this)">{{ wh_n }}</button>
                     {% endfor %}
                 </div>
-                <input type="text" id="matrixSearchInput" onkeyup="searchInventoryMatrix()" class="form-control form-control-sm bg-dark text-light border-secondary rounded-3 px-3" style="width: 210px;" placeholder="🔍 جستجوی نام یا کد کالا...">
+
+                <!-- باکس جستجوی زنده -->
+                <input type="text" id="matrixSearchInput" onkeyup="searchInventoryMatrix()" class="form-control form-control-sm bg-dark text-light border-secondary rounded-3 px-3" style="width: 200px;" placeholder="🔍 جستجوی کالا یا کد...">
             </div>
         </div>
 
@@ -630,12 +731,12 @@
                         <th>موجودی فیزیکی فعلی</th>
                         <th>رزرو فروش</th>
                         <th>مانده آزاد قابل فروش</th>
-                        <th style="min-width: 150px;">وضعیت سلامت موجودی</th>
+                        <th style="min-width: 170px;">وضعیت سلامت و نقطه سفارش</th>
                         {% if can_see_finance %}
                         <th>فی میانگین موزون</th>
-                        <th>ارزش کل موجودی ({{ currency_label }})</th>
+                        <th>ارزش کل موجودی (<span class="currency-unit">{{ currency_label }}</span>)</th>
                         {% endif %}
-                        <th class="text-center">عملیات سریع</th>
+                        <th class="text-center" style="min-width: 200px;">عملیات سریع</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -646,16 +747,16 @@
                             {% set avail = item.available_balance | default(bal - res, true) | float %}
                             {% set cost = item.unit_cost | default(item.weighted_average_cost, true) | default(0.0, true) | float %}
                             {% set p_id = item.product_id | default(item.product.id if item.product else 1) %}
-                            {% set p_name = item.product_name | default(item.product.name if item.product else 'کالای انبار') %}
+                            {% set p_name = item.name | default(item.product_name | default(item.product.name if item.product else 'کالای انبار')) %}
                             {% set p_sku = item.sku | default(item.product.sku if item.product else '') %}
                             {% set p_uom = item.uom | default(item.product.uom if item.product else 'تن') %}
-                            {% set wh_name = item.warehouse_name | default(item.warehouse.name if item.warehouse else 'انبار مرکزی') %}
+                            {% set wh_name = item.warehouse | default(item.warehouse_name | default(item.warehouse.name if item.warehouse else 'انبار مرکزی')) %}
                             {% set min_st = item.min_stock | default(10.0, true) | float %}
                             {% set max_st = item.max_stock | default(200.0, true) | float %}
                             {% set pct = ((bal / max_st) * 100) | round(0) if max_st > 0 else 50 %}
                             {% set pct_clamped = 100 if pct > 100 else (5 if (bal > 0 and pct < 5) else pct) %}
 
-                            <tr class="matrix-row" data-warehouse="{{ wh_name }}">
+                            <tr class="matrix-row" data-warehouse="{{ wh_name }}" data-balance="{{ bal }}">
                                 <td>
                                     <a href="/inventory/kardex/{{ p_id }}" class="product-drill-link" title="مشاهده کاردکس مقداری این کالا">
                                         <span>{{ p_name }}</span>
@@ -677,35 +778,59 @@
                                     {{ "{:,.2f}".format(res) }}
                                 </td>
                                 <td>
-                                    <span class="badge {% if avail > 0 %}bg-success{% else %}bg-danger{% endif %} px-2 py-1 fs-6">
+                                    <span class="badge {% if avail > 0 %}badge-solid-success{% else %}badge-solid-danger{% endif %} px-2 py-1 fs-6 shadow-xs">
                                         {{ "{:,.2f}".format(avail if avail > 0 else 0) }} {{ p_uom }}
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress flex-grow-1 bg-dark" style="height: 8px; border-radius: 6px;">
-                                            <div class="progress-bar {% if bal <= 0 %}bg-danger{% elif bal <= min_st %}bg-warning{% else %}bg-info{% endif %}"
-                                                 role="progressbar" style="width: {{ pct_clamped }}%;"></div>
+                                    <!-- ستون وضعیت سلامت با متن خوانا، کنتراست بالا (#ffffff) و نوار پیشرفت -->
+                                    <div class="d-flex flex-column gap-1">
+                                        <div>
+                                            {% if bal <= 0 %}
+                                                <span class="badge rounded-pill px-2 py-1 badge-solid-danger shadow-xs" style="font-size: 0.74rem;">
+                                                    🚨 بحرانی / ناموجود
+                                                </span>
+                                            {% elif bal <= min_st %}
+                                                <span class="badge rounded-pill px-2 py-1 badge-solid-warning shadow-xs" style="font-size: 0.74rem;">
+                                                    ⚠️ نزدیک نقطه سفارش
+                                                </span>
+                                            {% else %}
+                                                <span class="badge rounded-pill px-2 py-1 badge-solid-success shadow-xs" style="font-size: 0.74rem;">
+                                                    ✓ موجودی مطلوب
+                                                </span>
+                                            {% endif %}
                                         </div>
-                                        <small class="text-secondary" style="font-size: 0.75rem;">{{ pct_clamped | int }}%</small>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1 bg-dark" style="height: 6px; border-radius: 4px;">
+                                                <div class="progress-bar {% if bal <= 0 %}bg-danger{% elif bal <= min_st %}bg-warning{% else %}bg-success{% endif %}"
+                                                     role="progressbar" style="width: {{ pct_clamped }}%;"></div>
+                                            </div>
+                                            <small class="text-secondary" style="font-size: 0.72rem;">{{ pct_clamped | int }}%</small>
+                                        </div>
                                     </div>
                                 </td>
                                 {% if can_see_finance %}
                                 <td class="text-info">
-                                    {{ "{:,.0f}".format(cost) }}
+                                    <span class="table-cost-val" data-val-irr="{{ cost }}">{{ "{:,.0f}".format(cost) }}</span>
                                 </td>
                                 <td class="fw-bold text-success">
-                                    {{ "{:,.0f}".format(bal * cost) }}
+                                    <span class="table-total-val" data-val-irr="{{ bal * cost }}">{{ "{:,.0f}".format(bal * cost) }}</span>
                                 </td>
                                 {% endif %}
                                 <td class="text-center">
-                                    <div class="d-inline-flex gap-1">
-                                        <a href="/inventory/kardex/{{ p_id }}" class="btn btn-sm btn-outline-info rounded-3 py-1 px-2" style="font-size: 0.75rem;">
-                                            کاردکس تعدادی
+                                    <!-- ستون عملیات سریع (کاردکس تعدادی، کاردکس ریالی، شارژ سریع PO) -->
+                                    <div class="d-inline-flex gap-1 align-items-center flex-wrap justify-content-center">
+                                        <a href="/inventory/kardex/{{ p_id }}" class="btn btn-sm btn-outline-info rounded-3 py-1 px-2" style="font-size: 0.75rem;" title="مشاهده گردش مقداری کالا">
+                                            📈 کاردکس تعدادی
                                         </a>
                                         {% if can_see_finance %}
-                                        <a href="/inventory/financial-kardex/{{ p_id }}" class="btn btn-sm btn-outline-warning rounded-3 py-1 px-2" style="font-size: 0.75rem;">
-                                            کاردکس ریالی
+                                        <a href="/inventory/financial-kardex/{{ p_id }}" class="btn btn-sm btn-outline-warning rounded-3 py-1 px-2" style="font-size: 0.75rem;" title="مشاهده کاردکس بهای تمام‌شده و ریالی">
+                                            💰 کاردکس ریالی
+                                        </a>
+                                        {% endif %}
+                                        {% if is_admin or is_commercial %}
+                                        <a href="/purchases/new?product_id={{ p_id }}" class="btn btn-sm {% if bal <= min_st %}btn-warning text-dark fw-bold shadow-sm{% else %}btn-outline-light text-secondary{% endif %} rounded-3 py-1 px-2" style="font-size: 0.75rem;" title="ثبت سفارش خرید فوری برای این کالا">
+                                            🛒 شارژ سریع PO
                                         </a>
                                         {% endif %}
                                     </div>
@@ -724,10 +849,10 @@
         </div>
     </div>
 
-    <!-- ۶. ردیف نمودارهای تحلیلی (به سبک Salezy: نمودار میله‌ای مقایسه موجودی + گیج نیم‌دایره ظرفیت + آخرین اسناد) -->
+    <!-- ۶. ردیف هوشمندی موازنه و نمودارهای تحلیلی (Salezy Gauge & Flow Intelligence Station) -->
     <div class="row g-3 mb-4">
 
-        <!-- ستون راست: نمودار میله‌ای موجودی فیزیکی در برابر قابل فروش -->
+        <!-- ستون راست: تراز جریان و روند ورود و خروج کالاهای استراتژیک -->
         <div class="col-12 col-lg-5">
             <div class="saas-chart-card d-flex flex-column justify-content-between">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -735,50 +860,82 @@
                         <h6 class="fw-bold mb-0 text-dark">📊 تراز موجودی کالاهای استراتژیک</h6>
                         <small class="text-muted">مقایسه موجودی فیزیکی کل با مانده آزاد قابل فروش</small>
                     </div>
-                    <a href="/inventory/balance" class="btn btn-sm btn-light border rounded-pill px-3 small">جزئیات ↗</a>
+                    <a href="/inventory/balance" class="btn btn-sm btn-light border rounded-pill px-3 small">جزئیات موازنه ↗</a>
                 </div>
-                <div style="position: relative; height: 250px; width: 100%;">
+                
+                <!-- کارت‌های آماری جریان کالا (بدون عبارت ترکی در مود فارسی) -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <div class="p-2 px-3 rounded-3 bg-light border flex-grow-1">
+                        <small class="text-secondary d-block" style="font-size: 0.74rem;">ورودی کل دوره</small>
+                        <strong class="text-success font-monospace">+{{ "{:,.1f}".format(total_inflow_sum | default(0.0)) }} تن</strong>
+                    </div>
+                    <div class="p-2 px-3 rounded-3 bg-light border flex-grow-1">
+                        <small class="text-secondary d-block" style="font-size: 0.74rem;">خروجی کل دوره</small>
+                        <strong class="text-danger font-monospace">-{{ "{:,.1f}".format(total_outflow_sum | default(0.0)) }} تن</strong>
+                    </div>
+                    <div class="p-2 px-3 rounded-3 bg-light border flex-grow-1">
+                        <small class="text-secondary d-block" style="font-size: 0.74rem;">
+                            {{ ('Net Artış' if (net_flow_sum | default(0)) >= 0 else 'Net Azalış') if is_tr else ('تراز خالص افزایش دوره' if (net_flow_sum | default(0)) >= 0 else 'تراز خالص کاهش دوره') }}
+                        </small>
+                        <strong class="font-monospace {% if (net_flow_sum | default(0)) >= 0 %}text-primary{% else %}text-warning{% endif %}">
+                            {{ "{:+,.1f}".format(net_flow_sum | default(0.0)) }} تن
+                        </strong>
+                    </div>
+                </div>
+
+                <div style="position: relative; height: 220px; width: 100%;">
                     <canvas id="inventoryComparisonBarChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- ستون وسط: نمودار سرعت‌سنج نیم‌دایره (Salezy 70.8% Gauge Style) -->
-        <div class="col-12 col-lg-3">
-            <div class="saas-chart-card d-flex flex-column justify-content-between text-center">
-                <div class="text-start mb-2">
-                    <h6 class="fw-bold mb-0 text-dark">🎯 ضریب بهره‌برداری انبارها</h6>
-                    <small class="text-muted">نسبت موجودی آزاد به کل موجودی</small>
-                </div>
-                <div style="position: relative; height: 185px; width: 100%; display: flex; align-items: center; justify-content: center;">
-                    <canvas id="warehouseGaugeChart"></canvas>
-                    {% set util_pct = ((ns.total_available / ns.total_tonnage) * 100) | round(1) if ns.total_tonnage > 0 else 100 %}
-                    <div style="position: absolute; bottom: 18px; text-align: center;">
-                        <h3 class="fw-bold text-primary mb-0">{{ util_pct }}%</h3>
-                        <small class="text-muted" style="font-size: 0.75rem;">آماده تحویل و فروش</small>
+        <!-- ستون وسط: نمودار سرعت‌سنج نیم‌دایره ظرفیت و اشغال (Salezy 70.8% Gauge Style) -->
+        <div class="col-12 col-lg-4">
+            <div class="saas-chart-card d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">🎯 ضریب بهره‌برداری انبارها</h6>
+                        <span class="badge rounded-pill px-2 py-1 badge-solid-indigo shadow-xs" style="font-size: 0.74rem;">
+                            ضریب اشغال زنده
+                        </span>
+                    </div>
+                    <small class="text-muted d-block mb-2">نسبت موجودی فیزیکی به سقف ظرفیت اسمی</small>
+                    
+                    <div style="position: relative; height: 165px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="warehouseGaugeChart"></canvas>
+                        <div style="position: absolute; bottom: 12px; text-align: center;">
+                            <h3 class="fw-bold text-primary mb-0 font-monospace">{{ overall_gauge_utilization | default(70.8) }}%</h3>
+                            <small class="text-muted" style="font-size: 0.72rem;">میانگین ضریب بهره‌برداری</small>
+                        </div>
                     </div>
                 </div>
-                <div class="border-top pt-2 mt-2 d-flex justify-content-around small">
-                    <div>
-                        <span class="text-muted d-block">کل موجودی</span>
-                        <strong class="text-dark">{{ "{:,.1f}".format(ns.total_tonnage) }}</strong>
+
+                <!-- تفکیک ظرفیت انبارها (فیلترشده از انبارهای آزمایشی بی‌استفاده) با قابلیت کلیک جهت فیلتر ماتریس موجودی -->
+                <div class="mt-2 pt-2 border-top d-flex flex-column gap-2 text-start">
+                    <div class="small fw-bold text-secondary mb-1">تفکیک اشغال انبارها (کلیک جهت فیلتر جدول):</div>
+                    {% for wb in wh_breakdown %}
+                    <div class="wh-breakdown-bar-item p-1 px-2 rounded-3" style="cursor: pointer; background: #f8fafc; border: 1px solid #e2e8f0; transition: all 0.2s;" onclick="filterInventoryMatrix('{{ wb.name }}', null)" title="کلیک جهت فیلتر ماتریس به {{ wb.name }}">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-dark fw-bold">📍 {{ wb.name }}</span>
+                            <span class="font-monospace text-primary fw-bold">{{ "{:,.1f}".format(wb.stock) }} تن ({{ wb.utilization_pct }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 6px; border-radius: 4px; background-color: #e2e8f0;">
+                            <div class="progress-bar {% if wb.utilization_pct > 85 %}bg-danger{% elif wb.utilization_pct > 65 %}bg-warning{% else %}bg-primary{% endif %}"
+                                 role="progressbar" style="width: {{ wb.utilization_pct }}%;"></div>
+                        </div>
                     </div>
-                    <div class="border-end"></div>
-                    <div>
-                        <span class="text-muted d-block">آزاد فروش</span>
-                        <strong class="text-success">{{ "{:,.1f}".format(ns.total_available) }}</strong>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
 
         <!-- ستون چپ: آخرین تراکنش‌های انبار با لینک مستقیم به چاپ سند -->
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-lg-3">
             <div class="saas-chart-card d-flex flex-column justify-content-between">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h6 class="fw-bold mb-0 text-dark">⏱️ آخرین رخدادهای انبار</h6>
-                        <small class="text-muted">۵ گردش اخیر ثبت‌شده در سیستم</small>
+                        <small class="text-muted">۵ گردش اخیر ثبت‌شده</small>
                     </div>
                     <a href="/inventory/transactions" class="btn btn-sm btn-light border rounded-pill px-3 small">همه اسناد ↗</a>
                 </div>
@@ -801,7 +958,7 @@
                                             #{{ tx.id }} 🖨️
                                         </a>
                                     </td>
-                                    <td class="text-truncate" style="max-width: 110px;">
+                                    <td class="text-truncate" style="max-width: 90px;" title="{{ tx.product.name if tx.product else '' }}">
                                         {{ tx.product.name if tx.product else ('کالای #' ~ tx.product_id) }}
                                     </td>
                                     <td class="fw-semibold">
@@ -814,11 +971,11 @@
                                     <td>
                                         {% set st_val = tx.status.value if tx.status and tx.status.value is defined else (tx.status | string) %}
                                         {% if 'APPROVED' in st_val %}
-                                            <span class="badge bg-success-subtle text-success rounded-pill">قطعی</span>
+                                            <span class="badge badge-solid-success rounded-pill px-2 py-1" style="font-size: 0.68rem;">قطعی</span>
                                         {% elif 'PENDING' in st_val %}
-                                            <span class="badge bg-warning-subtle text-dark rounded-pill">در کارتابل</span>
+                                            <span class="badge badge-solid-warning rounded-pill px-2 py-1" style="font-size: 0.68rem;">در کارتابل</span>
                                         {% else %}
-                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ st_val }}</span>
+                                            <span class="badge bg-secondary text-white rounded-pill px-2 py-1" style="font-size: 0.68rem;">{{ st_val }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -841,6 +998,12 @@
 <!-- اسکریپت‌های تعاملی: فیلتر زنده جدول، پرامپت رد سند و نمودارهای Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // حالت‌های سراسری فیلتر ماتریس موجودی
+    let currentWhFilter = 'ALL';
+    let hideZeroStock = true;
+    let currentCurrency = '{{ "TRY" if is_tr else "IRR" }}';
+    const TRY_RATE = 28500.0; // ضریب برابری محاسباتی لیر به ریال جهت نمایش معادل
+
     // ۱. دریافت دلیل رد سند از انباردار یا مدیر پیش از ارسال فرم
     function promptRejectionReason(formElement) {
         const reason = prompt("لطفاً علت رد این سند انبار (مانند کسری بار، عدم تطابق با بارنامه یا مشکل کنترل کیفیت QC) را وارد نمایید:", "عدم تطابق وزن باسکول با بارنامه");
@@ -851,15 +1014,22 @@
         return true;
     }
 
-    // ۲. فیلتر تب‌بندی انبارها در ماتریس سرمه‌ای وسط صفحه
-    function filterInventoryMatrix(warehouseName, btnElement) {
-        document.querySelectorAll('#warehouseFilterTabs .wh-filter-pill').forEach(btn => btn.classList.remove('active'));
-        btnElement.classList.add('active');
-
+    // ۲. اعمال فیلتر ترکیبی ماتریس (انبار + سرچ متنی + سوئیچ صفری‌ها)
+    function applyMatrixFilters() {
+        const searchInput = document.getElementById('matrixSearchInput');
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
         const rows = document.querySelectorAll('#liveInventoryMatrixTable tbody .matrix-row');
+
         rows.forEach(row => {
-            const rowWh = row.getAttribute('data-warehouse');
-            if (warehouseName === 'ALL' || rowWh === warehouseName) {
+            const rowWh = row.getAttribute('data-warehouse') || '';
+            const rowBal = parseFloat(row.getAttribute('data-balance') || '0');
+            const rowText = row.innerText.toLowerCase();
+
+            const matchWh = (currentWhFilter === 'ALL' || rowWh === currentWhFilter);
+            const matchQuery = (!query || rowText.includes(query));
+            const matchZero = (!hideZeroStock || rowBal > 0.0001);
+
+            if (matchWh && matchQuery && matchZero) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
@@ -867,14 +1037,93 @@
         });
     }
 
-    // ۳. جستجوی آنی نام یا کد کالا در ماتریس موجودی
-    function searchInventoryMatrix() {
-        const query = document.getElementById('matrixSearchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#liveInventoryMatrixTable tbody .matrix-row');
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
+    // ۳. فیلتر انبارها (همگام‌سازی تب‌ها، دراپ‌داون و کلیک روی میله‌های گیج نیم‌دایره)
+    function filterInventoryMatrix(warehouseName, btnElement) {
+        currentWhFilter = warehouseName;
+
+        // همگام‌سازی تب‌های بالای جدول
+        document.querySelectorAll('#warehouseFilterTabs .wh-filter-pill').forEach(btn => {
+            if (btn.getAttribute('data-wh-name') === warehouseName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
         });
+
+        // همگام‌سازی دراپ‌داون انبارها
+        const whSelect = document.getElementById('warehouseSelectFilter');
+        if (whSelect) {
+            whSelect.value = warehouseName;
+        }
+
+        applyMatrixFilters();
+
+        // اسکرول نرم به ماتریس در صورت فراخوانی از کلیک روی گیج
+        if (!btnElement) {
+            const panel = document.getElementById('liveInventoryMatrixPanel');
+            if (panel) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+    // ۴. سوئیچ مخفی‌سازی اقلام با مانده صفر
+    function toggleZeroStockFilter(checkbox) {
+        hideZeroStock = checkbox.checked;
+        applyMatrixFilters();
+    }
+
+    // ۵. جستجوی متنی لحظه‌ای در ماتریس
+    function searchInventoryMatrix() {
+        applyMatrixFilters();
+    }
+
+    // ۶. تغییر زنده ارز نمایشی پیشخوان (ریال / لیر ₺)
+    function toggleDashboardCurrency(targetCurr) {
+        currentCurrency = targetCurr;
+        const btnIRR = document.getElementById('btnCurrIRR');
+        const btnTRY = document.getElementById('btnCurrTRY');
+
+        if (targetCurr === 'TRY') {
+            if (btnTRY) { btnTRY.className = 'btn btn-sm rounded-pill px-3 py-1 btn-dark active text-white fw-bold shadow-xs'; }
+            if (btnIRR) { btnIRR.className = 'btn btn-sm rounded-pill px-3 py-1 btn-light text-secondary border-0 fw-semibold'; }
+        } else {
+            if (btnIRR) { btnIRR.className = 'btn btn-sm rounded-pill px-3 py-1 btn-dark active text-white fw-bold shadow-xs'; }
+            if (btnTRY) { btnTRY.className = 'btn btn-sm rounded-pill px-3 py-1 btn-light text-secondary border-0 fw-semibold'; }
+        }
+
+        const isTry = (targetCurr === 'TRY');
+        const symbol = isTry ? '₺' : 'ریال';
+
+        document.querySelectorAll('.kpi-currency-val').forEach(el => {
+            const raw = parseFloat(el.getAttribute('data-val-irr') || '0');
+            const converted = isTry ? (raw / TRY_RATE) : raw;
+            el.textContent = Math.round(converted).toLocaleString();
+        });
+
+        document.querySelectorAll('.currency-unit').forEach(el => {
+            el.textContent = symbol;
+        });
+
+        document.querySelectorAll('.table-cost-val').forEach(el => {
+            const raw = parseFloat(el.getAttribute('data-val-irr') || '0');
+            const converted = isTry ? (raw / TRY_RATE) : raw;
+            el.textContent = Math.round(converted).toLocaleString();
+        });
+
+        document.querySelectorAll('.table-total-val').forEach(el => {
+            const raw = parseFloat(el.getAttribute('data-val-irr') || '0');
+            const converted = isTry ? (raw / TRY_RATE) : raw;
+            el.textContent = Math.round(converted).toLocaleString();
+        });
+    }
+
+    // ۷. کنترل فیلتر بازه زمانی (Time Range Filter Pill Group)
+    function setTimeRangeFilter(range, btn) {
+        document.querySelectorAll('#dashboardTimeRangeFilter button').forEach(b => {
+            b.className = 'btn btn-sm rounded-pill px-3 py-1 btn-light border-0 fw-semibold text-secondary';
+        });
+        btn.className = 'btn btn-sm rounded-pill px-3 py-1 btn-primary border-0 fw-semibold active text-white shadow-xs';
     }
 </script>
 
@@ -883,35 +1132,39 @@
   "labels": [
     {% if stock_balances %}
       {% for item in stock_balances[:6] %}
-        "{{ item.product_name | default(item.product.name if item.product else 'کالا') }}"{% if not loop.last %},{% endif %}
+        "{{ item.name | default(item.product_name | default(item.product.name if item.product else 'کالا')) }}"{% if not loop.last %},{% endif %}
       {% endfor %}
     {% endif %}
   ],
   "physicalData": [
     {% if stock_balances %}
       {% for item in stock_balances[:6] %}
-        {{ item.current_balance | default(item.balance, true) | default(0) | float }}{% if not loop.last %},{% endif %}
+        {% set bal = item.current_balance_ton | default(item.current_balance | default(item.balance, true) | default(0) | float) %}
+        {{ bal }}{% if not loop.last %},{% endif %}
       {% endfor %}
     {% endif %}
   ],
   "availableData": [
     {% if stock_balances %}
       {% for item in stock_balances[:6] %}
-        {% set b = item.current_balance | default(item.balance, true) | default(0) | float %}
-        {% set r = item.reserved_quantity | default(0) | float %}
-        {{ item.available_balance | default(b - r, true) | float }}{% if not loop.last %},{% endif %}
+        {% set avail = item.available_balance_ton | default(item.available_balance | default(0) | float) %}
+        {{ avail }}{% if not loop.last %},{% endif %}
       {% endfor %}
     {% endif %}
   ],
-  "totalAvailable": {{ ns.total_available | default(75) | float }},
-  "totalReserved": {{ ns.total_reserved | default(25) | float }}
+  "overallGaugeUtilization": {{ overall_gauge_utilization | default(70.8) | float }},
+  "totalAvailable": {{ total_available_stock | default(ns.total_available | default(75)) | float }},
+  "totalReserved": {{ total_reserved_stock | default(ns.total_reserved | default(25)) | float }}
 }
 </script>
 
 <script>
-    // ۴. ترسیم نمودارهای Salezy & FlowFin با Chart.js
+    // ۸. ترسیم نمودارهای Salezy & FlowFin با Chart.js
     document.addEventListener("DOMContentLoaded", function () {
-        let chartConfig = { labels: [], physicalData: [], availableData: [], totalAvailable: 75, totalReserved: 25 };
+        // اعمال اولیه فیلتر ماتریس (مخفی بودن ردیف‌های صفرگردش به صورت پیش‌فرض)
+        applyMatrixFilters();
+
+        let chartConfig = { labels: [], physicalData: [], availableData: [], overallGaugeUtilization: 70.8, totalAvailable: 75, totalReserved: 25 };
         const configEl = document.getElementById('dashboardChartConfig');
         if (configEl && configEl.textContent.trim()) {
             try { chartConfig = JSON.parse(configEl.textContent); } catch (e) { }
@@ -929,7 +1182,7 @@
             ? chartConfig.availableData
             : [100, 70, 50, 40];
 
-        // نمودار میله‌ای دوگانه
+        // نمودار میله‌ای تراز موجودی استراتژیک
         const barCtx = document.getElementById('inventoryComparisonBarChart');
         if (barCtx) {
             new Chart(barCtx, {
@@ -938,16 +1191,16 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'موجودی فیزیکی کل',
+                            label: 'موجودی کل (تن)',
                             data: physicalData,
                             backgroundColor: '#4f46e5',
                             borderRadius: 6,
                             barPercentage: 0.65
                         },
                         {
-                            label: 'آزاد قابل فروش',
+                            label: 'آزاد فروش (تن)',
                             data: availableData,
-                            backgroundColor: '#10b981',
+                            backgroundColor: '#059669',
                             borderRadius: 6,
                             barPercentage: 0.65
                         }
@@ -967,17 +1220,17 @@
             });
         }
 
-        // نمودار سرعت‌سنج نیم‌دایره (Salezy Gauge)
+        // نمودار سرعت‌سنج نیم‌دایره ظرفیت انبارها (Salezy 70.8% Gauge Style)
         const gaugeCtx = document.getElementById('warehouseGaugeChart');
         if (gaugeCtx) {
-            const availTotal = chartConfig.totalAvailable || 75;
-            const reservedTotal = chartConfig.totalReserved || 25;
+            const utilVal = chartConfig.overallGaugeUtilization || 70.8;
+            const remVal = Math.max(0, 100.0 - utilVal);
             new Chart(gaugeCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['آزاد و قابل فروش', 'رزرو شده در حواله‌ها'],
+                    labels: ['اشغال‌شده', 'ظرفیت آزاد'],
                     datasets: [{
-                        data: (availTotal + reservedTotal) > 0 ? [availTotal, reservedTotal] : [80, 20],
+                        data: [utilVal, remVal],
                         backgroundColor: ['#4f46e5', '#e2e8f0'],
                         borderWidth: 0,
                         circumference: 180,

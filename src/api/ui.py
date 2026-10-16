@@ -67,11 +67,34 @@ async def dashboard(
     # ۳. ماتریس جامع انبارها و موجودی لحظه‌ای (Master Live Inventory Matrix)
     raw_balances = InventoryService.calculate_stock_balances(db, fiscal_year_id=active_fy.id if active_fy else None)
     
+    # استخراج موجودی امانی (CONSIGNMENT) به تفکیک کالا جهت محاسبه دقیق ارزش تفکیکی ملکی در برابر امانی
+    consignment_txs = (
+        db.query(
+            StockTransaction.product_id,
+            func.coalesce(func.sum(
+                case(
+                    (StockTransaction.transaction_type == TransactionType.IN, StockTransaction.quantity),
+                    else_=-StockTransaction.quantity
+                )
+            ), 0.0).label("consignment_balance")
+        )
+        .filter(
+            StockTransaction.ownership_type == "CONSIGNMENT",
+            or_(StockTransaction.status == DocumentStatus.APPROVED, StockTransaction.status.is_(None)),
+            (StockTransaction.fiscal_year_id == active_fy.id) if active_fy else True
+        )
+        .group_by(StockTransaction.product_id)
+        .all()
+    )
+    consignment_map = {row.product_id: max(0.0, float(row.consignment_balance or 0.0)) for row in consignment_txs}
+
     enhanced_matrix = []
     total_physical_stock = 0.0
     total_available_stock = 0.0
     total_owned_inventory_value = 0.0
+    total_consignment_inventory_value = 0.0
     critical_stock_count = 0
+    warning_stock_count = 0
     active_skus_set = set()
 
     for item in raw_balances:
@@ -79,33 +102,40 @@ async def dashboard(
         w_id = item["warehouse_id"]
         cur_bal = float(item.get("current_balance", 0.0) or 0.0)
 
+        # نرمال‌سازی واحدها: تبدیل کیلوگرم به تن قبل از تجمیع شاخص‌های وزنی کل انبار
+        uom_clean = str(item.get("uom") or "").strip().lower()
+        is_kg = uom_clean in ["کیلوگرم", "kg", "kgm", "کیلو", "kilogram"]
+        cur_bal_ton = (cur_bal / 1000.0) if is_kg else cur_bal
+
         if cur_bal > 0:
             active_skus_set.add(p_id)
-            total_physical_stock += cur_bal
+            total_physical_stock += cur_bal_ton
 
         avail_stock = InventoryService.get_available_stock(db, p_id, w_id, fiscal_year_id=active_fy.id if active_fy else None) if w_id else cur_bal
         avail_stock = max(0.0, float(avail_stock))
-        total_available_stock += avail_stock
+        avail_stock_ton = (avail_stock / 1000.0) if is_kg else avail_stock
+        total_available_stock += avail_stock_ton
         reserved_stock = max(0.0, cur_bal - avail_stock)
+        reserved_stock_ton = max(0.0, cur_bal_ton - avail_stock_ton)
 
         min_stk = float(item.get("min_stock", 0.0) or 0.0)
         reorder_pt = float(item.get("reorder_point", 0.0) or 0.0)
 
-        if min_stk > 0 and cur_bal <= min_stk:
+        if (min_stk > 0 and cur_bal <= min_stk) or cur_bal <= 0:
             health_status = "CRITICAL"
-            health_label = "بحرانی / کسری" if not is_tr else "Kritik / Min Altı"
+            health_label = "بحرانی / ناموجود" if not is_tr else "Kritik / Min Altı"
             health_color = "danger"
-            health_pct = 25
+            health_pct = 20 if cur_bal > 0 else 5
             critical_stock_count += 1
         elif reorder_pt > 0 and cur_bal <= reorder_pt:
             health_status = "WARNING"
-            health_label = "نقطه سفارش" if not is_tr else "Sipariş Noktası"
+            health_label = "نزدیک نقطه سفارش" if not is_tr else "Sipariş Noktası"
             health_color = "warning"
             health_pct = 60
-            critical_stock_count += 1
+            warning_stock_count += 1
         else:
             health_status = "HEALTHY"
-            health_label = "ایمن و نرمال" if not is_tr else "Güvenli / Normal"
+            health_label = "موجودی مطلوب" if not is_tr else "Güvenli / Normal"
             health_color = "success"
             health_pct = 100
 
@@ -114,13 +144,20 @@ async def dashboard(
         if is_admin or is_finance:
             unit_cost = InventoryService.get_weighted_average_cost(db, p_id, warehouse_id=w_id, fiscal_year_id=active_fy.id if active_fy else None)
             line_total_val = cur_bal * unit_cost
-            total_owned_inventory_value += line_total_val
+            cons_qty = min(cur_bal, consignment_map.get(p_id, 0.0))
+            owned_qty = max(0.0, cur_bal - cons_qty)
+            total_owned_inventory_value += owned_qty * unit_cost
+            total_consignment_inventory_value += cons_qty * unit_cost
 
         enhanced_matrix.append({
             **item,
             "current_balance": cur_bal,
+            "current_balance_ton": cur_bal_ton,
             "available_balance": avail_stock,
+            "available_balance_ton": avail_stock_ton,
             "reserved_balance": reserved_stock,
+            "reserved_balance_ton": reserved_stock_ton,
+            "is_kg": is_kg,
             "health_status": health_status,
             "health_label": health_label,
             "health_color": health_color,
@@ -144,14 +181,20 @@ async def dashboard(
                 rem_q = max(0.0, it.quantity - (it.delivered_quantity or 0.0))
                 estimated_gross_profit += (it.unit_price - c) * rem_q
 
-    # زنجیره تأمین و بارهای در راه
+    # زنجیره تأمین و بارهای در راه (نرمال‌سازی وزنی بارهای خرید به تن)
     open_pos = db.query(PurchaseOrder).filter(
         PurchaseOrder.status.in_([PurchaseOrderStatus.CONFIRMED, PurchaseOrderStatus.PARTIALLY_RECEIVED])
     ).all()
-    in_transit_tonnage = sum(
-        max(0.0, it.quantity - (it.received_quantity or 0.0))
-        for po in open_pos for it in po.items
-    )
+    in_transit_tonnage = 0.0
+    for po in open_pos:
+        for it in po.items:
+            rem_q = max(0.0, float(it.quantity or 0.0) - float(it.received_quantity or 0.0))
+            prod = it.product
+            p_uom = str(prod.uom or "").strip().lower() if prod else ""
+            if p_uom in ["کیلوگرم", "kg", "kgm", "کیلو", "kilogram"]:
+                rem_q = rem_q / 1000.0
+            in_transit_tonnage += rem_q
+    in_transit_tonnage = round(in_transit_tonnage, 2)
     active_po_count = len(open_pos)
 
     open_sos = db.query(SalesOrder).filter(
@@ -165,9 +208,18 @@ async def dashboard(
     ).count()
 
     # ۵. داده‌های نمودارهای تحلیلی سازمانی (Dual Analytical Charts & Flow Intelligence)
-    # محاسبه مجموع تناژ ورودی و خروجی کل دوره برای کارت‌های موازنه جریان
-    total_inflow_sum = round(sum(float(m.get("total_in", 0.0) or 0.0) for m in enhanced_matrix), 1)
-    total_outflow_sum = round(sum(float(m.get("total_out", 0.0) or 0.0) for m in enhanced_matrix), 1)
+    # محاسبه مجموع تناژ ورودی و خروجی کل دوره به تن (نرمال‌سازی کیلوگرم به تن)
+    total_inflow_sum = 0.0
+    total_outflow_sum = 0.0
+    for m in enhanced_matrix:
+        uom_clean = str(m.get("uom") or "").strip().lower()
+        is_kg = uom_clean in ["کیلوگرم", "kg", "kgm", "کیلو", "kilogram"]
+        in_q = float(m.get("total_in", 0.0) or 0.0)
+        out_q = float(m.get("total_out", 0.0) or 0.0)
+        total_inflow_sum += (in_q / 1000.0) if is_kg else in_q
+        total_outflow_sum += (out_q / 1000.0) if is_kg else out_q
+    total_inflow_sum = round(total_inflow_sum, 1)
+    total_outflow_sum = round(total_outflow_sum, 1)
     net_flow_sum = round(total_inflow_sum - total_outflow_sum, 1)
 
     # الف) روند ورود و خروج ۶ کالای پرگردش
@@ -195,6 +247,9 @@ async def dashboard(
         if tx.created_at:
             m_idx = min(6, max(0, (tx.created_at.month - 1) % 7))
             qty = float(tx.quantity or 0.0)
+            p_uom = str(tx.product.uom or "").strip().lower() if tx.product else ""
+            if p_uom in ["کیلوگرم", "kg", "kgm", "کیلو", "kilogram"]:
+                qty = qty / 1000.0
             if tx.transaction_type == TransactionType.IN:
                 monthly_in_data[m_idx] = round(monthly_in_data[m_idx] + qty, 1)
             elif tx.transaction_type == TransactionType.OUT:
@@ -207,18 +262,39 @@ async def dashboard(
         monthly_out_data[6] = total_outflow_sum
 
     # ج) گیج نیم‌دایره ظرفیت و اشغال انبارها (Salezy 70.8% Gauge Style)
+    # پاکسازی و فیلتر انبارهای آزمایشی و بی‌استفاده صفر موجودی (مانند انبار شماره ۲ فولاد ۱۶۵۰۴۳ و انبار تهشاخه‌ها)
     warehouses = db.query(Warehouse).all()
+    clean_warehouses = []
     wh_breakdown = []
     total_wh_cap = 0.0
     for w in warehouses:
-        w_stock = sum(m["current_balance"] for m in enhanced_matrix if m["warehouse_id"] == w.id)
-        w_cap = 500.0 if w_stock <= 400.0 else (w_stock * 1.35)
-        w_util = min(100.0, (w_stock / w_cap * 100.0)) if w_cap > 0 else 0.0
+        w_stock_ton = sum(
+            m["current_balance_ton"]
+            for m in enhanced_matrix if m["warehouse_id"] == w.id
+        )
+        w_name_clean = (w.name or "").strip()
+        is_polluted = (
+            "۱۶۵۰۴۳" in w_name_clean or
+            "165043" in w_name_clean or
+            (w_stock_ton <= 0.0001 and (
+                "تست" in w_name_clean or
+                "ته‌شاخه" in w_name_clean or
+                "تهشاخه" in w_name_clean or
+                "شماره ۲" in w_name_clean or
+                "شماره 2" in w_name_clean
+            ))
+        )
+        if is_polluted:
+            continue
+
+        clean_warehouses.append(w)
+        w_cap = 500.0 if w_stock_ton <= 400.0 else (w_stock_ton * 1.35)
+        w_util = min(100.0, (w_stock_ton / w_cap * 100.0)) if w_cap > 0 else 0.0
         wh_breakdown.append({
             "id": w.id,
             "name": w.name,
-            "stock": w_stock,
-            "capacity": w_cap,
+            "stock": round(w_stock_ton, 2),
+            "capacity": round(w_cap, 1),
             "utilization_pct": round(w_util, 1)
         })
         total_wh_cap += w_cap
@@ -263,21 +339,25 @@ async def dashboard(
             "recent_txs": recent_transactions,
             # ۴ کارت اجرایی (Top Executive KPI Cards)
             "total_owned_inventory_value": total_owned_inventory_value,
+            "total_consignment_inventory_value": total_consignment_inventory_value,
+            "total_inventory_valuation": total_owned_inventory_value + total_consignment_inventory_value,
             "estimated_gross_profit": estimated_gross_profit,
             "active_skus_count": len(active_skus_set),
-            "total_physical_stock": total_physical_stock,
-            "total_available_stock": total_available_stock,
-            "total_reserved_stock": total_reserved_stock,
+            "total_physical_stock": round(total_physical_stock, 2),
+            "total_available_stock": round(total_available_stock, 2),
+            "total_reserved_stock": round(total_reserved_stock, 2),
             "in_transit_tonnage": in_transit_tonnage,
             "active_po_count": active_po_count,
             "open_so_count": open_so_count,
             "critical_stock_count": critical_stock_count,
+            "warning_stock_count": warning_stock_count,
             "active_weighbridge_trucks": active_weighbridge_trucks,
             # ماتریس جامع انبارها
             "enhanced_matrix": enhanced_matrix,
             "stock_balances": enhanced_matrix,
             "tx_count": len(recent_transactions) if recent_transactions else 0,
-            "warehouses": warehouses,
+            "warehouses": clean_warehouses,
+            "clean_warehouses": clean_warehouses,
             "categories": categories,
             # داده‌های تفصیلی جریان و موازنه انبار
             "total_inflow_sum": total_inflow_sum,
